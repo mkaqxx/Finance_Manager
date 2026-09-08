@@ -27,13 +27,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12062bc0-2754-482f-9c6b-933e91f58a04" name="Изменения" comment="master - work version">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/statistics.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/finance_manager.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/finance_manager.h" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/json.hpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage.cpp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,6 +62,9 @@
   &quot;associatedIndex&quot;: 0
 }</component>
   <component name="ProjectId" id="3IyOJ0CEOQ26i2tMAzdidLq4A24" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -124,7 +123,7 @@
       <workItem from="1788733271742" duration="453000" />
       <workItem from="1788791609995" duration="25255000" />
       <workItem from="1788868478677" duration="85000" />
-      <workItem from="1788868581603" duration="69000" />
+      <workItem from="1788868581603" duration="1615000" />
     </task>
     <task id="LOCAL-00001" summary="Refactored logic — intermediate version">
       <option name="closed" value="true" />
@@ -150,7 +149,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788868090421</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="master - work version">
+      <option name="closed" value="true" />
+      <created>1788868800985</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1788868800985</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
