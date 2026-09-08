@@ -21,7 +21,7 @@ std::string ymd_to_string(std::chrono::year_month_day ymd) {
 }
 
 
-std::chrono::year_month_day ymd_from_string(std::string str) {
+std::chrono::year_month_day ymd_from_string(const std::string &str) {
     std::stringstream ss(str);
     unsigned y, m, d;
     char dash1, dash2;
@@ -38,6 +38,7 @@ std::string Period_to_string(Period period) {
         case Period::WEEKLY: return "weekly";
         case Period::MONTHLY: return "monthly";
         case Period::YEARLY: return "yearly";
+        default : throw std::runtime_error("Invalid period");
     }
 }
 
@@ -46,5 +47,6 @@ Period String_to_period(const std::string &period) {
     if (period == "daily") return Period::DAILY;
     else if (period == "weekly") return Period::WEEKLY;
     else if (period == "monthly") return Period::MONTHLY;
-    else return Period::YEARLY; 
+    else if (period == "yearly") return Period::YEARLY;
+    else throw std::runtime_error("Invalid period: " + period);
 }

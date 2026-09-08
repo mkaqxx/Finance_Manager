@@ -164,10 +164,14 @@ void Storage::load(std::vector<Account*>& accounts,
         double limit = b["limit"];
         double current_amount = b["current_amount"];
         Category cat{};
+        bool found = false;
         for (Category& c : categories) {
-            if (c.id == category_id) {cat = c; break;}
-
+            if (c.id == category_id) {
+                budgets.emplace_back(c, limit, current_amount);
+                found = true;
+                break;
+            }
         }
-        budgets.emplace_back(cat, limit, current_amount);
+        if (!found) throw std::runtime_error("No categories found");
     }
-}
+}   

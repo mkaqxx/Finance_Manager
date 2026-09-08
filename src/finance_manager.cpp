@@ -62,13 +62,13 @@ void Finance_manager::add_transaction(Transaction *transaction) {
 }
 
 
-void Finance_manager::add_category(Category category) {
+void Finance_manager::add_category(const Category& category) {
     categories.push_back(category);
     save_data();
 }
 
 
-void Finance_manager::add_budget(Budget budget) {
+void Finance_manager::add_budget(const Budget& budget) {
     budgets.push_back(budget);
     save_data();
 }

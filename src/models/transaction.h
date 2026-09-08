@@ -86,4 +86,4 @@ class Transfer : public Transaction {
 std::string Period_to_string(Period period);
 Period String_to_period(const std::string &period);
 std::string ymd_to_string(std::chrono::year_month_day ymd);
-std::chrono::year_month_day ymd_from_string(std::string str);
+std::chrono::year_month_day ymd_from_string(const std::string& str);

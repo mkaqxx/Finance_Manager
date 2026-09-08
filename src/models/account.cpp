@@ -12,7 +12,7 @@ std::string CurrencyToString(Currency currency) {
 }
 
 
-Currency StringToCurrency(std::string currency) {
+Currency StringToCurrency(const std::string &currency) {
     if (currency == "usd") return Currency::USD;
     else if (currency == "eur") return Currency::EUR;
     else if (currency == "rub") return Currency::RUB;

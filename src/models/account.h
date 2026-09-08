@@ -10,7 +10,7 @@ enum class Currency {
 
 
 std::string CurrencyToString(Currency currency);
-Currency StringToCurrency(std::string currency);
+Currency StringToCurrency(const std::string &currency);
 class Account {
 protected:
     unsigned id;
