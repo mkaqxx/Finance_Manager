@@ -2,8 +2,8 @@
 #include <fstream>
 #include "json.hpp"
 using json = nlohmann::json;
-#include "./models/account.h"
-#include "./models/budget.h"
+#include "../models/account.h"
+#include "../models/budget.h"
 
 
 class Storage {
