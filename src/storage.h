@@ -6,13 +6,17 @@ using json = nlohmann::json;
 #include "./models/budget.h"
 
 
-class Finance_manager;
-
-
 class Storage {
     public:
-    void load(Finance_manager &manager);
-    void save(Finance_manager &manager);
+    void load(std::vector<Account*>& accounts,
+               std::vector<Transaction*>& transactions,
+               std::vector<Category>& categories,
+               std::vector<Budget>& budgets);
+
+    void save(const std::vector<Account*>& accounts,
+              const std::vector<Transaction*>& transactions,
+              const std::vector<Category>& categories,
+              const std::vector<Budget>& budgets);
     private:
     void save_accounts(json& j, const std::vector<Account*>& accounts);
     void save_transactions(json& j, const std::vector<Transaction*>& transactions);

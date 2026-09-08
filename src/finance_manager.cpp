@@ -2,22 +2,26 @@
 
 
 Finance_manager::Finance_manager() {
-    storage.load(*this);
+    storage.load(accounts, transactions, categories, budgets);
     check_the_regular_expense_date();
 }
 
 
 Finance_manager::~Finance_manager() {
-    storage.save(*this);
+    save_data();
     for (auto* acc : accounts) delete acc;
     for (auto* t : transactions) delete t;
 }
 
 
+void Finance_manager::save_data() {
+    storage.save(accounts, transactions, categories, budgets);
+}
+
+
 void Finance_manager::add_account(Account *account) {
     accounts.push_back(account);
-    accounts_changed = true;
-    storage.save(*this);
+    save_data();
 }
 
 
@@ -34,9 +38,7 @@ void Finance_manager::add_transaction(Transaction *transaction) {
                 acc->apply_transaction(*trans);
             }
         }
-        accounts_changed = true;
-        transactions_changed = true;
-        storage.save(*this);
+        save_data();
         return;
     }
     else {
@@ -47,30 +49,28 @@ void Finance_manager::add_transaction(Transaction *transaction) {
                 acc->apply_transaction(*transaction);
             }
         }
-        for (auto &budget : budgets) {
-            if (budget.get_category().id == category_id) {
-                budget.update_amount(transaction->get_amount());
-            }
+        std::string type = transaction->get_type();
+            if (type == "expense" || type == "regular_expense"){
+                for (auto& budget : budgets) {
+                    if (budget.get_category().id == category_id) {
+                        budget.update_amount(transaction->get_amount());
+                    }
+                }
         }
-        accounts_changed = true;
-        transactions_changed = true;
-        budgets_changed = true;
-        storage.save(*this);
+        save_data();
     }
 }
 
 
 void Finance_manager::add_category(Category category) {
     categories.push_back(category);
-    categories_changed = true;
-    storage.save(*this);
+    save_data();
 }
 
 
 void Finance_manager::add_budget(Budget budget) {
     budgets.push_back(budget);
-    budgets_changed = true;
-    storage.save(*this);
+    save_data();
 }
 
 
@@ -82,18 +82,30 @@ const Category & Finance_manager::get_category_by_id( unsigned id) const {
 }
 
 
+Account *Finance_manager::get_account_by_id(unsigned id) const {
+    for (auto *acc : accounts) {
+        if (acc->get_id() == id) return acc;
+    }
+    throw std::runtime_error("Account not found");
+}
+
+
 void Finance_manager::check_the_regular_expense_date() {
     auto now = std::chrono::system_clock::now();
     std::chrono::year_month_day ymd{std::chrono::floor<std::chrono::days>(now)};
     std::vector<Transaction *> to_add;
     for (Transaction *transaction : transactions) {
         if (auto regular = dynamic_cast<RegularExpense *>(transaction)) {
-            if (regular->get_next_date() == ymd) {
-                RegularExpense* new_transaction = new RegularExpense(*regular);
-                new_transaction->update_next_date();
-                to_add.push_back(new_transaction);
+            while (regular->get_next_date() <= ymd) {
+                unsigned new_id = transactions.size() + to_add.size() + 1;
+                Expense *new_expense = new Expense(new_id, regular->get_amount(), regular->get_next_date(),
+                regular->get_category_id(), regular->get_account_id());
+                to_add.push_back(new_expense);
+                regular->update_next_date();
             }
         }
     }
-    for (Transaction* t: to_add) add_transaction(t);
+    for (Transaction * t : to_add) {
+        add_transaction(t);
+    }
 }
