@@ -10,7 +10,7 @@ add_executable(src main.cpp
         models/account.cpp
         models/budget.h
         models/budget.cpp
-        storage.h
-        finance_manager.h
-        storage.cpp
-        finance_manager.cpp)
+        core/storage.h
+        core/finance_manager.h
+        core/storage.cpp
+        core/finance_manager.cpp)
