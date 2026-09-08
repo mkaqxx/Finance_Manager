@@ -26,13 +26,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="12062bc0-2754-482f-9c6b-933e91f58a04" name="Изменения" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/finance_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/finance_manager.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/finance_manager.h" beforeDir="false" afterPath="$PROJECT_DIR$/finance_manager.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/storage.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/storage.h" beforeDir="false" afterPath="$PROJECT_DIR$/storage.h" afterDir="false" />
-    </list>
+    <list default="true" id="12062bc0-2754-482f-9c6b-933e91f58a04" name="Изменения" comment="Refactored logic — intermediate version" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -118,8 +112,17 @@
       <workItem from="1777119224627" duration="706000" />
       <workItem from="1777120679998" duration="333000" />
       <workItem from="1788733271742" duration="453000" />
-      <workItem from="1788791609995" duration="23860000" />
+      <workItem from="1788791609995" duration="24188000" />
     </task>
+    <task id="LOCAL-00001" summary="Refactored logic — intermediate version">
+      <option name="closed" value="true" />
+      <created>1788866060589</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1788866060589</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -130,6 +133,10 @@
     <isAutomaticFoundErrors value="true" />
     <isAutomaticReloadCMake value="true" />
     <isAutomaticBootstrapAfterUpdate value="false" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Refactored logic — intermediate version" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactored logic — intermediate version" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

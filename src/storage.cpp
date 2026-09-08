@@ -163,9 +163,10 @@ void Storage::load(std::vector<Account*>& accounts,
         unsigned category_id = b["category_id"];
         double limit = b["limit"];
         double current_amount = b["current_amount"];
-        Category cat;
+        Category cat{};
         for (Category& c : categories) {
-            if (c.id == category_id) cat = c;
+            if (c.id == category_id) {cat = c; break;}
+
         }
         budgets.emplace_back(cat, limit, current_amount);
     }
