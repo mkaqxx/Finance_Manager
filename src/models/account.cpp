@@ -58,3 +58,14 @@ void Account::apply_transaction(Transaction &transaction) {
     }
 }
 
+
+double SavingsAccount::monthly_required() const {
+    auto today = std::chrono::system_clock::now();
+    std::chrono::year_month_day ymd{
+        std::chrono::floor<std::chrono::days>(today)};
+    int months_left =
+        (static_cast<int>(deadline.year()) - static_cast<int>(ymd.year())) * 12
+        + (static_cast<unsigned>(deadline.month()) - static_cast<unsigned>(ymd.month()));
+    if (months_left <= 0) return goal_amount - balance;
+    return (goal_amount - balance) / months_left;
+}

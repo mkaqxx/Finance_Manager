@@ -1,6 +1,9 @@
 #pragma once
 #include "storage.h"
+#include "report.h"
 #include <vector>
+#include "../json.hpp"
+using json = nlohmann::json;
 
 class Finance_manager {
     private:
@@ -24,4 +27,8 @@ class Finance_manager {
     const Category &get_category_by_id( unsigned id) const;
     Account *get_account_by_id( unsigned id) const;
     void check_the_regular_expense_date();
+    json get_monthly_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
+    json get_category_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
+    json get_yearly_report(int year) const;
+    double get_monthly_savings_requirement(unsigned account_id) const;
 };

@@ -27,9 +27,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="12062bc0-2754-482f-9c6b-933e91f58a04" name="Изменения" comment="master - work version">
-      <change afterPath="$PROJECT_DIR$/utils/statistics.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/report.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/report.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/core/statistics.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/chrono_to_string.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/chrono_to_string.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/finance_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/core/finance_manager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/finance_manager.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/finance_manager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/json.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/json.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/storage.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/storage.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/account.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/models/account.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/account.h" beforeDir="false" afterPath="$PROJECT_DIR$/models/account.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/transaction.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/models/transaction.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/transaction.h" beforeDir="false" afterPath="$PROJECT_DIR$/models/transaction.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/statistics.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/statistics.h" beforeDir="false" afterPath="$PROJECT_DIR$/core/statistics.h" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,13 +110,14 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Finance_manager\src\core" />
       <recent name="D:\Finance_manager\src" />
     </key>
   </component>
   <component name="RunManager">
-    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
-        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
       </method>
     </configuration>
     <configuration name="src" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="src" TARGET_NAME="src" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="src" RUN_TARGET_NAME="src">
@@ -123,7 +138,8 @@
       <workItem from="1788733271742" duration="453000" />
       <workItem from="1788791609995" duration="25255000" />
       <workItem from="1788868478677" duration="85000" />
-      <workItem from="1788868581603" duration="1615000" />
+      <workItem from="1788868581603" duration="2064000" />
+      <workItem from="1788870660888" duration="9055000" />
     </task>
     <task id="LOCAL-00001" summary="Refactored logic — intermediate version">
       <option name="closed" value="true" />
@@ -157,7 +173,15 @@
       <option name="project" value="LOCAL" />
       <updated>1788868800985</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="master - work version">
+      <option name="closed" value="true" />
+      <created>1788870368192</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1788870368192</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -173,16 +197,5 @@
     <MESSAGE value="Refactored logic — intermediate version" />
     <MESSAGE value="master - work version" />
     <option name="LAST_COMMIT_MESSAGE" value="master - work version" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/models/transaction.h</url>
-          <line>1</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>

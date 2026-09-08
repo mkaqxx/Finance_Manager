@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <chrono>
+#include <sstream>
 #include "transaction.h"
 
 enum class Currency {
@@ -66,4 +69,6 @@ class SavingsAccount : public Account {
     double get_progress() const { return balance / goal_amount * 100.0; }
     double  get_goal_amount() const { return goal_amount; }
     std::chrono::year_month_day get_deadline() const { return deadline; }
+    double monthly_required() const;
+
 };

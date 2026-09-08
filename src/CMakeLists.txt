@@ -14,5 +14,9 @@ add_executable(src main.cpp
         core/finance_manager.h
         core/storage.cpp
         core/finance_manager.cpp
-        utils/statistics.h
-        utils/statistics.cpp)
+        core/statistics.h
+        core/statistics.cpp
+        core/report.h
+        core/report.cpp
+        utils/chrono_to_string.h
+        utils/chrono_to_string.cpp)

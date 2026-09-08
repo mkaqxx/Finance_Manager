@@ -90,6 +90,15 @@ Account *Finance_manager::get_account_by_id(unsigned id) const {
 }
 
 
+double Finance_manager::get_monthly_savings_requirement(unsigned account_id) const {
+    Account* acc = get_account_by_id(account_id);
+    if (auto* savings_acc = dynamic_cast<SavingsAccount*>(acc)) {
+        return savings_acc->monthly_required();
+    }
+    throw std::invalid_argument("Account is not a savings account");
+}
+
+
 void Finance_manager::check_the_regular_expense_date() {
     auto now = std::chrono::system_clock::now();
     std::chrono::year_month_day ymd{std::chrono::floor<std::chrono::days>(now)};
@@ -108,4 +117,19 @@ void Finance_manager::check_the_regular_expense_date() {
     for (Transaction * t : to_add) {
         add_transaction(t);
     }
+}
+
+json Finance_manager::get_monthly_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const {
+    MonthlyReport report(transactions, accounts, categories, from, to);
+    return report.generate();
+}
+
+json Finance_manager::get_category_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const {
+    CategoryReport report(transactions, categories, from, to);
+    return report.generate();
+}
+
+json Finance_manager::get_yearly_report(int year) const {
+    YearlyReport report(transactions, year);
+    return report.generate();
 }

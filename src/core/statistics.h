@@ -1,6 +1,8 @@
 #pragma once
-#include "../core/finance_manager.h"
-
+#include "../models/account.h"
+#include "../models/budget.h"
+#include  <chrono>
+#include <vector>
 
 struct CategoryStat {
     Category category;
@@ -8,9 +10,9 @@ struct CategoryStat {
 };
 
 
-struct monthly_sum {
-    double month_income;
-    double month_expense;
+struct Monthly_sum {
+    double month_income = 0.0;
+    double month_expense = 0.0;
 };
 
 class Statistics {
@@ -34,5 +36,5 @@ class Statistics {
         std::chrono::year_month_day from,
         std::chrono::year_month_day to) const;
 
-    monthly_sum monthly_summary(const std::vector<Transaction *> &transactions, int year) const;
+    std::vector<Monthly_sum> monthly_summary(const std::vector<Transaction *> &transactions, int year) const;
 };
