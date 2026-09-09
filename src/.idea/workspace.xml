@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BackendCodeEditorMiscSettings">
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
+    <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="abc9d3a5-6699-4cf7-9d98-04265dbc1fba" name="Изменения" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/finance_manager.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/finance_manager.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/report.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/report.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/statistics.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/statistics.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/storage.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/storage.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/json.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/.idea/editor.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/.idea/src.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/account.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/account.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/budget.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/budget.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/transaction.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/transaction.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/chrono_to_string.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/chrono_to_string.h" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="3J5J9xVEZzNONDhIdsbHP8UKUNn" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.RadMigrateCodeStyle": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "master",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="abc9d3a5-6699-4cf7-9d98-04265dbc1fba" name="Изменения" comment="" />
+      <created>1777119223003</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1777119223003</updated>
+      <workItem from="1777119224627" duration="706000" />
+      <workItem from="1777120679998" duration="333000" />
+      <workItem from="1788944852434" duration="78000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
