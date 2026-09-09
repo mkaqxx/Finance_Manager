@@ -133,3 +133,27 @@ json Finance_manager::get_yearly_report(int year) const {
     YearlyReport report(transactions, year);
     return report.generate();
 }
+
+
+double Finance_manager::get_balance() const {
+    Statistics stats;
+    return stats.total_balance(accounts);
+}
+
+
+double Finance_manager::get_expenses_for_month() {
+    auto now = std::chrono::system_clock::now();
+    auto days = std::chrono::time_point_cast<std::chrono::days>(now);
+    std::chrono::year_month_day today{days};
+    Statistics stats;
+    return stats.total_expense(transactions, today, today);
+}
+
+
+double Finance_manager::get_incomes_for_month() {
+    auto now = std::chrono::system_clock::now();
+    auto days = std::chrono::time_point_cast<std::chrono::days>(now);
+    std::chrono::year_month_day today{days};
+    Statistics stats;
+    return stats.total_income(transactions, today, today);
+}

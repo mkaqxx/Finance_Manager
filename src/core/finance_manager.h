@@ -31,4 +31,7 @@ class Finance_manager {
     json get_category_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
     json get_yearly_report(int year) const;
     double get_monthly_savings_requirement(unsigned account_id) const;
+    double get_balance() const;
+    double get_expenses_for_month();
+    double get_incomes_for_month();
 };
