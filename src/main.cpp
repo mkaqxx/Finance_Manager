@@ -82,8 +82,163 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
     }
 
     return response.dump();
+    });
+
+
+    w.bind("addTransaction", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            unsigned id = manager.get_transactions().size() + 1;
+            double amount = data["amount"];
+            auto date = ymd_from_string(data["date"]);
+            std::string type = data["type"];
+            unsigned account_id = data["account_id"];
+            unsigned category_id = 0;
+
+            if (type == "expense" || type == "regular_expense" || type == "transfer") {
+            Account* acc = manager.get_account_by_id(account_id); //[cite: 7, 8]
+            if (acc->get_balance() < amount) {
+                return "{\"error\":\"Недостаточно средств на счете!\"}";
+            }
+        }
+            if (type != "transfer") category_id = data["category_id"];
+            if ( type == "income") {
+                manager.add_transaction(new Income(id, amount, date, category_id, account_id));
+            }
+            else if (type == "expense") {
+                manager.add_transaction(new Expense (id, amount, date,  category_id, account_id) );
+            }
+            else if (type == "transfer") {
+                unsigned destination_id = data["destination_id"];
+                manager.add_transaction(new Transfer(id, amount, date, account_id, destination_id));
+            }
+            else if (type == "regular_expense") {
+                Period p = String_to_period(data["period"]);
+                manager.add_transaction(new RegularExpense(id, amount, date, category_id, account_id, date, p));
+            }
+            return "{\"status\":\"success\"}";
+        }
+        catch(const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
+    w.bind("addAccount", [&manager](std::string seq) -> std::string {
+    try {
+        json args = json::parse(seq);
+        json data = args[0];
+
+        // Генерируем новый ID (размер массива счетов + 1)
+        unsigned id = manager.get_accounts().size() + 1;
+        std::string name = data["name"];
+        double balance = data["balance"];
+        Currency currency = StringToCurrency(data["currency"]); //[cite: 1]
+        std::string type = data["type"];
+
+        if (type == "cash_account") {
+            manager.add_account(new CashAccount(id, name, balance, currency)); //[cite: 2, 7]
+        } else if (type == "bank_account") {
+            std::string digits = data["last_four_digits"];
+            manager.add_account(new BankAccount(id, name, balance, currency, digits)); //[cite: 2, 7]
+        } else if (type == "savings_account") {
+            double goal = data["goal_amount"];
+            std::chrono::year_month_day deadline = ymd_from_string(data["deadline"]);
+            manager.add_account(new SavingsAccount(id, name, balance, currency, goal, deadline)); //[cite: 2, 7]
+        }
+
+        return "{\"status\":\"success\"}";
+    } catch (const std::exception& e) {
+        return "{\"error\":\"" + std::string(e.what()) + "\"}";
+    }
+    });
+
+
+    w.bind("getBudgets", [&manager](std::string seq) -> std::string {
+    json response = json::array();
+    for (const auto& budget : manager.get_budgets()) { //[cite: 8]
+        json b;
+        b["category_id"] = budget.get_category().id; //[cite: 4]
+        b["name"] = budget.get_category().name; //[cite: 4]
+        b["color"] = budget.get_category().color; //[cite: 4]
+        b["limit"] = budget.get_limit(); //[cite: 4]
+        b["current_amount"] = budget.get_current_amount(); //[cite: 4]
+        b["status"] = status_to_string(budget.get_status()); //[cite: 4]
+        response.push_back(b);
+    }
+    return response.dump();
 });
 
+    w.bind("addBudget", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+
+            unsigned cat_id = data["category_id"];
+            double limit = data["limit"];
+
+            Category cat = manager.get_category_by_id(cat_id); //[cite: 7, 8]
+            manager.add_budget(Budget(cat, limit, 0.0)); //[cite: 4, 7, 8]
+
+            return "{\"status\":\"success\"}";
+        } catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
+
+    w.bind("addCategory", [&manager](std::string seq) -> std::string {
+    try {
+        json args = json::parse(seq);
+        json data = args[0];
+
+        unsigned id = manager.get_categories().size() + 1; //[cite: 8]
+        std::string name = data["name"];
+        std::string type_str = data["type"];
+        std::string color = data["color"];
+
+        TransactionType type = t_type_from_string(type_str); //[cite: 3, 4]
+        Category new_cat{id, type, name, color}; //[cite: 4]
+
+        manager.add_category(new_cat); //[cite: 7, 8]
+
+        return "{\"status\":\"success\"}";
+    } catch (const std::exception& e) {
+        return "{\"error\":\"" + std::string(e.what()) + "\"}";
+    }
+});
+
+
+
+    w.bind("getCategoryReport", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            auto from = ymd_from_string(data[0]);
+            auto to = ymd_from_string(data[1]);
+            json report = manager.get_category_report(from, to);
+            return report.dump();
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
+    w.bind("getYearlyReport", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            int year = data[0];
+            json report = manager.get_yearly_report(year);
+            return report.dump();
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
 
     w.navigate("file:///D:/Finance_manager/assets/index.html");
     w.run();

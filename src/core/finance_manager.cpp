@@ -34,7 +34,7 @@ void Finance_manager::add_transaction(Transaction *transaction) {
             if (acc->get_id() == source_id) {
                acc->apply_transaction(*trans);
             }
-            else if (acc->get_id() == dest_id) {
+            if (acc->get_id() == dest_id) {
                 acc->apply_transaction(*trans);
             }
         }
@@ -146,7 +146,8 @@ double Finance_manager::get_expenses_for_month() {
     auto days = std::chrono::time_point_cast<std::chrono::days>(now);
     std::chrono::year_month_day today{days};
     Statistics stats;
-    return stats.total_expense(transactions, today, today);
+    std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
+    return stats.total_expense(transactions, first_day, today);
 }
 
 
@@ -155,5 +156,6 @@ double Finance_manager::get_incomes_for_month() {
     auto days = std::chrono::time_point_cast<std::chrono::days>(now);
     std::chrono::year_month_day today{days};
     Statistics stats;
-    return stats.total_income(transactions, today, today);
+    std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
+    return stats.total_income(transactions, first_day, today);
 }

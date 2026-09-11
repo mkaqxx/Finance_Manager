@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <head>
     <meta charset="UTF-8">
     <title>Finance Manager</title>
@@ -95,6 +96,7 @@
         <li><a onclick="switchPage('accounts', this)">Счета</a></li>
         <li><a onclick="switchPage('transactions', this)">Транзакции</a></li>
         <li><a onclick="switchPage('budget', this)">Бюджет</a></li>
+        <li><a onclick="switchPage('analytics', this)">Аналитика</a></li>
     </ul>
 </div>
 
@@ -116,6 +118,126 @@
             <div class="amount" id="incomes-val" style = "color: #00FF00;">Загрузка..</div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Всплывающее окно добавления транзакции -->
+<div id="tx-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+        <h2 style="margin-bottom: 20px; color: #fff;">Новая транзакция</h2>
+        <form id="tx-form">
+            <input type="number" id="tx-amount" placeholder="Сумма" step="0.01" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="date" id="tx-date" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+
+            <!-- Добавлен обработчик onchange -->
+            <select id="tx-type" onchange="toggleTxFields()" style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="expense">Расход</option>
+                <option value="income">Доход</option>
+                <option value="regular_expense">Постоянный расход</option>
+                <option value="transfer">Перевод</option>
+            </select>
+
+            <select id="tx-account" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="" disabled selected>Счет списания...</option>
+            </select>
+
+            <!-- Новое поле: Счет зачисления (только для переводов) -->
+            <select id="tx-dest-account" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="" disabled selected>Счет зачисления...</option>
+            </select>
+
+            <!-- Новое поле: Период (только для регулярных) -->
+            <select id="tx-period" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="daily">Ежедневно</option>
+                <option value="weekly">Еженедельно</option>
+                <option value="monthly">Ежемесячно</option>
+                <option value="yearly">Ежегодно</option>
+            </select>
+
+            <select id="tx-category" required style="width: 100%; margin-bottom: 24px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="" disabled selected>Выберите категорию...</option>
+            </select>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="closeTxModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
+                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Всплывающее окно добавления счета -->
+<div id="account-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+        <h2 style="margin-bottom: 20px; color: #fff;">Новый счет</h2>
+        <form id="account-form">
+            <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="number" id="acc-balance" placeholder="Начальный баланс" step="0.01" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+
+            <select id="acc-currency" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="rub">RUB - Российский рубль</option>
+                <option value="byn">BYN - Белорусский рубль</option>
+                <option value="usd">USD - Доллар США</option>
+                <option value="eur">EUR - Евро</option>
+            </select>
+
+            <select id="acc-type" onchange="toggleAccountFields()" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="cash_account">Наличные</option>
+                <option value="bank_account">Банковский счет</option>
+                <option value="savings_account">Сберегательный счет (копилка)</option>
+            </select>
+
+            <!-- Динамические поля -->
+            <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры (напр. 1234)" maxlength="4" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="date" id="acc-deadline" style="display: none; width: 100%; margin-bottom: 24px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="closeAccountModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
+                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Добавить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="budget-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+        <h2 style="margin-bottom: 20px; color: #fff;">Установить лимит бюджета</h2>
+        <form id="budget-form">
+            <select id="budget-category" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="" disabled selected>Выберите категорию...</option>
+            </select>
+            <input type="number" id="budget-limit" placeholder="Лимит (напр. 15000)" step="0.01" required style="width: 100%; margin-bottom: 24px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="closeBudgetModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
+                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="category-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+        <h2 style="margin-bottom: 20px; color: #fff;">Новая категория</h2>
+        <form id="category-form">
+            <input type="text" id="cat-name" placeholder="Название (напр. Продукты)" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+
+            <select id="cat-type" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+                <option value="expense">Расход</option>
+                <option value="income">Доход</option>
+            </select>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                <label style="color: #b3b3b3;">Цвет маркера:</label>
+                <input type="color" id="cat-color" value="#1db954" style="background: transparent; border: none; cursor: pointer; height: 32px; width: 32px;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="closeCategoryModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
+                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Добавить</button>
+            </div>
+        </form>
     </div>
 </div>
 
