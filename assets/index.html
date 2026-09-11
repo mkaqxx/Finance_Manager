@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ru">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <head>
     <meta charset="UTF-8">
     <title>Finance Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -18,7 +18,7 @@
             height: 100vh;
             overflow: hidden;
         }
-        /* Боковая панель в стиле Spotify */
+        /* Боковая панель */
         .sidebar {
             width: 240px;
             background-color: #000000;
@@ -49,7 +49,7 @@
         .nav-links li a:hover, .nav-links li a.active {
             color: #ffffff;
         }
-        /* Основная область контента */
+        /* Основная область */
         .main-content {
             flex: 1;
             background: linear-gradient(180deg, #202020 0%, #121212 100%);
@@ -69,10 +69,7 @@
             background-color: #181818;
             padding: 20px;
             border-radius: 8px;
-            transition: background-color 0.3s;
-        }
-        .card:hover {
-            background-color: #282828;
+            border: 1px solid #282828;
         }
         .card h3 {
             font-size: 16px;
@@ -82,13 +79,42 @@
         .card .amount {
             font-size: 24px;
             font-weight: bold;
-            color: #1db954;
+        }
+        /* Модальные окна */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #181818;
+            padding: 24px;
+            border-radius: 8px;
+            width: 400px;
+            border: 1px solid #282828;
+        }
+        .form-input {
+            width: 100%; margin-bottom: 12px; padding: 10px;
+            background: #282828; color: #fff; border: none; border-radius: 4px;
+        }
+        .btn-primary {
+            padding: 8px 16px; background: #1db954; color: #000;
+            font-weight: bold; border: none; border-radius: 4px; cursor: pointer;
+        }
+        .btn-secondary {
+            padding: 8px 16px; background: transparent; color: #b3b3b3;
+            border: none; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<!-- Сайдбар -->
+<!-- Боковая панель -->
 <div class="sidebar">
     <div class="logo">🎵 FinanceManager</div>
     <ul class="nav-links">
@@ -100,147 +126,281 @@
     </ul>
 </div>
 
-<!-- Контент -->
+<!-- Основной контент -->
 <div class="main-content">
     <h1 id="page-title">Главная</h1>
     <div id="page-content">
-        <div class="card-grid">
-            <div class="card">
-                <h3>Общий баланс</h3>
-                <div class="amount"id="balance-val">Загрузка..</div>
+
+        <!-- ВЬЮХА: ГЛАВНАЯ -->
+        <div id="view-dashboard" class="page-view">
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Общий баланс</h3>
+                    <div class="amount" id="balance-val" style="color: #fff;">Загрузка..</div>
+                </div>
+                <div class="card">
+                    <h3>Расходы за месяц</h3>
+                    <div class="amount" id="expenses-val" style="color: #e91429;">Загрузка..</div>
+                </div>
+                <div class="card">
+                    <h3>Доход за месяц</h3>
+                    <div class="amount" id="incomes-val" style="color: #1db954;">Загрузка..</div>
+                </div>
             </div>
-            <div class="card">
-                <h3>Расходы за месяц</h3>
-                <div class="amount"  id="expenses-val" style="color: #e91429;">Загрузка..</div>
-            </div>
-            <div class="card">
-            <h3>Доход за месяц</h3>
-            <div class="amount" id="incomes-val" style = "color: #00FF00;">Загрузка..</div>
+            <div style="margin-top: 32px;">
+                <h3 style="margin-bottom: 16px; color: #fff;">Топ расходов за месяц</h3>
+                <div id="top-categories-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
             </div>
         </div>
+
+        <!-- ВЬЮХА: СЧЕТА -->
+        <div id="view-accounts" class="page-view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                <button onclick="openAccountModal()" class="btn-primary">+ Добавить счет</button>
+            </div>
+            <div id="accounts-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+
+        <!-- ВЬЮХА: ТРАНЗАКЦИИ -->
+        <div id="view-transactions" class="page-view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                <button onclick="openTxModal()" class="btn-primary">+ Добавить</button>
+            </div>
+            <div style="background: #181818; border-radius: 8px; padding: 20px;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                    <tr style="border-bottom: 1px solid #333; color: #b3b3b3;">
+                        <th style="padding: 12px 8px;">Дата</th>
+                        <th style="padding: 12px 8px;">Категория</th>
+                        <th style="padding: 12px 8px;">Сумма</th>
+                    </tr>
+                    </thead>
+                    <tbody id="transactions-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ВЬЮХА: БЮДЖЕТ -->
+        <div id="view-budget" class="page-view" style="display: none;">
+            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <button onclick="openCategoryModal()" style="padding: 8px 16px; background: #282828; color: #fff; border: 1px solid #333; border-radius: 4px; cursor: pointer;">+ Новая категория</button>
+                <button onclick="openBudgetModal()" class="btn-primary">+ Установить лимит</button>
+            </div>
+            <h3 style="margin-bottom: 16px; color: #fff;">Мои категории</h3>
+            <div id="categories-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
+
+            <h3 style="margin-top: 32px; margin-bottom: 16px; color: #fff;">Бюджеты</h3>
+            <div id="budget-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
+        </div>
+
+        <!-- ВЬЮХА: АНАЛИТИКА -->
+        <div id="view-analytics" class="page-view" style="display: none;">
+            <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+                <input type="month" id="analytics-month" class="form-input" style="width: auto; margin: 0;">
+                <button onclick="loadAnalytics()" class="btn-primary">Применить</button>
+            </div>
+            <div class="card-grid" style="margin-bottom: 24px;">
+                <div class="card">
+                    <h3>Доход за месяц</h3>
+                    <div class="amount" id="stat-income" style="color: #1db954;">0 ₽</div>
+                </div>
+                <div class="card">
+                    <h3>Расходы за месяц</h3>
+                    <div class="amount" id="stat-expense" style="color: #e91429;">0 ₽</div>
+                </div>
+                <div class="card">
+                    <h3>Общий баланс</h3>
+                    <div class="amount" id="stat-balance" style="color: #fff;">0 ₽</div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                <div class="card" style="display: flex; flex-direction: column; align-items: center;">
+                    <h3 style="align-self: flex-start;">Структура расходов</h3>
+                    <div style="width: 100%; max-width: 250px;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Годовой отчет</h3>
+                    <canvas id="yearlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<!-- Всплывающее окно добавления транзакции -->
-<div id="tx-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+<!-- ================== МОДАЛЬНЫЕ ОКНА ================== -->
+
+<!-- Модалка: Транзакция -->
+<div id="tx-modal" class="modal-overlay">
+    <div class="modal-content">
         <h2 style="margin-bottom: 20px; color: #fff;">Новая транзакция</h2>
         <form id="tx-form">
-            <input type="number" id="tx-amount" placeholder="Сумма" step="0.01" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-            <input type="date" id="tx-date" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-
-            <!-- Добавлен обработчик onchange -->
-            <select id="tx-type" onchange="toggleTxFields()" style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="number" id="tx-amount" placeholder="Сумма" step="0.01" required class="form-input">
+            <input type="date" id="tx-date" required class="form-input">
+            <select id="tx-type" onchange="toggleTxFields()" class="form-input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
                 <option value="regular_expense">Постоянный расход</option>
                 <option value="transfer">Перевод</option>
             </select>
-
-            <select id="tx-account" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <select id="tx-account" required class="form-input">
                 <option value="" disabled selected>Счет списания...</option>
             </select>
-
-            <!-- Новое поле: Счет зачисления (только для переводов) -->
-            <select id="tx-dest-account" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <select id="tx-dest-account" style="display: none;" class="form-input">
                 <option value="" disabled selected>Счет зачисления...</option>
             </select>
-
-            <!-- Новое поле: Период (только для регулярных) -->
-            <select id="tx-period" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <select id="tx-period" style="display: none;" class="form-input">
                 <option value="daily">Ежедневно</option>
                 <option value="weekly">Еженедельно</option>
                 <option value="monthly">Ежемесячно</option>
                 <option value="yearly">Ежегодно</option>
             </select>
-
-            <select id="tx-category" required style="width: 100%; margin-bottom: 24px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <select id="tx-category" required class="form-input" style="margin-bottom: 24px;">
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
-
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeTxModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
-                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Сохранить</button>
+                <button type="button" onclick="closeTxModal()" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Всплывающее окно добавления счета -->
-<div id="account-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+<!-- Модалка: Счет -->
+<div id="account-modal" class="modal-overlay">
+    <div class="modal-content">
         <h2 style="margin-bottom: 20px; color: #fff;">Новый счет</h2>
         <form id="account-form">
-            <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-            <input type="number" id="acc-balance" placeholder="Начальный баланс" step="0.01" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-
-            <select id="acc-currency" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required class="form-input">
+            <input type="number" id="acc-balance" placeholder="Начальный баланс" step="0.01" required class="form-input">
+            <select id="acc-currency" required class="form-input">
                 <option value="rub">RUB - Российский рубль</option>
                 <option value="byn">BYN - Белорусский рубль</option>
                 <option value="usd">USD - Доллар США</option>
                 <option value="eur">EUR - Евро</option>
             </select>
-
-            <select id="acc-type" onchange="toggleAccountFields()" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <select id="acc-type" onchange="toggleAccountFields()" required class="form-input">
                 <option value="cash_account">Наличные</option>
                 <option value="bank_account">Банковский счет</option>
                 <option value="savings_account">Сберегательный счет (копилка)</option>
             </select>
-
-            <!-- Динамические поля -->
-            <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры (напр. 1234)" maxlength="4" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-            <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none; width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-            <input type="date" id="acc-deadline" style="display: none; width: 100%; margin-bottom: 24px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-
+            <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры (напр. 1234)" maxlength="4" style="display: none;" class="form-input">
+            <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none;" class="form-input">
+            <input type="date" id="acc-deadline" style="display: none; margin-bottom: 24px;" class="form-input">
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeAccountModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
-                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Добавить</button>
+                <button type="button" onclick="closeAccountModal()" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Добавить</button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="budget-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+<!-- Модалка: Бюджет -->
+<div id="budget-modal" class="modal-overlay">
+    <div class="modal-content">
         <h2 style="margin-bottom: 20px; color: #fff;">Установить лимит бюджета</h2>
         <form id="budget-form">
-            <select id="budget-category" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <select id="budget-category" required class="form-input">
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
-            <input type="number" id="budget-limit" placeholder="Лимит (напр. 15000)" step="0.01" required style="width: 100%; margin-bottom: 24px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-
+            <input type="number" id="budget-limit" placeholder="Лимит" step="0.01" required class="form-input" style="margin-bottom: 24px;">
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeBudgetModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
-                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Сохранить</button>
+                <button type="button" onclick="closeBudgetModal()" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="category-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: #181818; padding: 24px; border-radius: 8px; width: 400px; border: 1px solid #282828;">
+<!-- Модалка: Категория -->
+<div id="category-modal" class="modal-overlay">
+    <div class="modal-content">
         <h2 style="margin-bottom: 20px; color: #fff;">Новая категория</h2>
         <form id="category-form">
-            <input type="text" id="cat-name" placeholder="Название (напр. Продукты)" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
-
-            <select id="cat-type" required style="width: 100%; margin-bottom: 12px; padding: 10px; background: #282828; color: #fff; border: none; border-radius: 4px;">
+            <input type="text" id="cat-name" placeholder="Название (напр. Продукты)" required class="form-input">
+            <select id="cat-type" required class="form-input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
             </select>
-
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
                 <label style="color: #b3b3b3;">Цвет маркера:</label>
                 <input type="color" id="cat-color" value="#1db954" style="background: transparent; border: none; cursor: pointer; height: 32px; width: 32px;">
             </div>
-
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeCategoryModal()" style="padding: 8px 16px; background: transparent; color: #b3b3b3; border: none; cursor: pointer;">Отмена</button>
-                <button type="submit" style="padding: 8px 16px; background: #1db954; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Добавить</button>
+                <button type="button" onclick="closeCategoryModal()" class="btn-secondary">Отмена</button>
+                <button type="submit" class="btn-primary">Добавить</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- ================== ШАБЛОНЫ (TEMPLATES) ================== -->
+
+<template id="tpl-top-category">
+    <div style="display: flex; justify-content: space-between; padding: 14px 16px; background: #181818; border: 1px solid #282828; border-radius: 8px;">
+        <span class="tc-name" style="font-weight: bold;"></span>
+        <span class="tc-amount" style="font-weight: bold; color: #fff;"></span>
+    </div>
+</template>
+
+<template id="tpl-account-card">
+    <div class="card" style="padding: 16px 20px; cursor: pointer;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div class="acc-name" style="font-weight: bold; font-size: 16px; color: #fff;"></div>
+                <div class="acc-meta" style="color: #b3b3b3; font-size: 12px; margin-top: 4px;"></div>
+            </div>
+            <div class="acc-balance" style="font-size: 18px; font-weight: bold; color: #1db954;"></div>
+        </div>
+    </div>
+</template>
+
+<template id="tpl-transaction-row">
+    <tr style="border-bottom: 1px solid #282828;">
+        <td class="tx-date" style="padding: 12px 8px;"></td>
+        <td class="tx-category" style="padding: 12px 8px;"></td>
+        <td class="tx-amount" style="padding: 12px 8px; font-weight: bold;"></td>
+    </tr>
+</template>
+
+<template id="tpl-category-card">
+    <div class="card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="cat-color-dot" style="width: 16px; height: 16px; border-radius: 50%;"></div>
+            <div>
+                <div class="cat-name" style="font-weight: bold; color: #fff; font-size: 15px;"></div>
+                <div class="cat-type" style="font-size: 12px; color: #b3b3b3; margin-top: 4px;"></div>
+            </div>
+        </div>
+        <button class="cat-delete-btn" style="background: transparent; color: #e91429; border: none; cursor: pointer; font-size: 18px;">×</button>
+    </div>
+</template>
+
+<template id="tpl-budget-bar">
+    <div class="card" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="b-name" style="font-weight: bold;"></span>
+            <span style="color: #b3b3b3;">
+                <span class="b-current" style="color: #fff;"></span> / <span class="b-limit"></span> (<span class="b-percent-text"></span>%)
+            </span>
+        </div>
+        <div style="width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
+            <div class="b-progress-bar" style="height: 100%; transition: width 0.3s;"></div>
+        </div>
+    </div>
+</template>
+
+<!-- ================== СКРИПТЫ ================== -->
+<script src="js/api.js"></script>
 <script src="js/app.js"></script>
+<script src="js/pages/dashboard.js"></script>
+<script src="js/pages/accounts.js"></script>
+<script src="js/pages/transactions.js"></script>
+<script src="js/pages/budget.js"></script>
+<script src="js/pages/analytics.js"></script>
+<script src="js/modals.js"></script>
+
 </body>
 </html>
