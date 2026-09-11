@@ -2,8 +2,12 @@ let categoryChartInstance = null;
 let yearlyChartInstance = null;
 
 async function loadAnalytics() {
-    const monthVal = document.getElementById('analytics-month').value;
-    if (!monthVal) return;
+    const monthInput = document.getElementById('analytics-month');
+    if (!monthInput.value) {
+        const now = new Date();
+        monthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+    const monthVal = monthInput.value;
     const [yearStr, monthStr] = monthVal.split('-');
     const year = parseInt(yearStr), month = parseInt(monthStr);
     const firstDay = `${yearStr}-${monthStr}-01`;

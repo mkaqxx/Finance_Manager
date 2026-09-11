@@ -116,7 +116,7 @@
 
 <!-- Боковая панель -->
 <div class="sidebar">
-    <div class="logo">🎵 FinanceManager</div>
+    <div class="logo">$ FinanceManager</div>
     <ul class="nav-links">
         <li><a class="active" onclick="switchPage('dashboard', this)">Главная</a></li>
         <li><a onclick="switchPage('accounts', this)">Счета</a></li>
@@ -274,17 +274,17 @@
         <h2 style="margin-bottom: 20px; color: #fff;">Новый счет</h2>
         <form id="account-form">
             <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required class="form-input">
-            <input type="number" id="acc-balance" placeholder="Начальный баланс" step="0.01" required class="form-input">
+            <input type="number" id="acc-balance" placeholder="Баланс" step="0.01" required class="form-input">
             <select id="acc-currency" required class="form-input">
-                <option value="rub">RUB - Российский рубль</option>
                 <option value="byn">BYN - Белорусский рубль</option>
                 <option value="usd">USD - Доллар США</option>
                 <option value="eur">EUR - Евро</option>
+                <option value="rub">RUB - Российский рубль</option>
             </select>
             <select id="acc-type" onchange="toggleAccountFields()" required class="form-input">
                 <option value="cash_account">Наличные</option>
                 <option value="bank_account">Банковский счет</option>
-                <option value="savings_account">Сберегательный счет (копилка)</option>
+                <option value="savings_account">Копилка</option>
             </select>
             <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры (напр. 1234)" maxlength="4" style="display: none;" class="form-input">
             <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none;" class="form-input">
@@ -300,7 +300,7 @@
 <!-- Модалка: Бюджет -->
 <div id="budget-modal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px; color: #fff;">Установить лимит бюджета</h2>
+        <h2 style="margin-bottom: 20px; color: #fff;">Установить лимит расходов</h2>
         <form id="budget-form">
             <select id="budget-category" required class="form-input">
                 <option value="" disabled selected>Выберите категорию...</option>
@@ -346,13 +346,21 @@
 </template>
 
 <template id="tpl-account-card">
-    <div class="card" style="padding: 16px 20px; cursor: pointer;">
+    <div class="card account-card-item" style="padding: 16px 20px; cursor: pointer; margin-bottom: 12px; transition: background 0.2s;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div class="acc-name" style="font-weight: bold; font-size: 16px; color: #fff;"></div>
                 <div class="acc-meta" style="color: #b3b3b3; font-size: 12px; margin-top: 4px;"></div>
             </div>
             <div class="acc-balance" style="font-size: 18px; font-weight: bold; color: #1db954;"></div>
+        </div>
+        <!-- Скрытые детали -->
+        <div class="acc-details" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #282828; color: #b3b3b3; font-size: 14px;">
+            <p style="margin: 4px 0;"><strong style="color:#fff;">ID счета:</strong> <span class="det-id"></span></p>
+            <p style="margin: 4px 0;"><strong style="color:#fff;">Тип:</strong> <span class="det-type"></span></p>
+            <div style="margin-top: 12px;">
+                <button onclick="event.stopPropagation(); alert('Скоро: редактирование')" style="background: #282828; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Редактировать</button>
+            </div>
         </div>
     </div>
 </template>
