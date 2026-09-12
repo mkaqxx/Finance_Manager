@@ -12,13 +12,13 @@ const windowAPI = {
     },
     getAccounts: () => windowAPI.fetch('getAccounts'),
     getTransactions: () => windowAPI.fetch('getTransactions'),
-    addAccount: (data) => windowAPI.fetch('addAccount', [data]),
-    addTransaction: (data) => windowAPI.fetch('addTransaction', [data]),
+    addAccount: (data) => windowAPI.fetch('addAccount', data),
+    addTransaction: (data) => windowAPI.fetch('addTransaction', data),
     getCategories: () => windowAPI.fetch('getCategories'),
     getBudgets: () => windowAPI.fetch('getBudgets'),
-    addCategory: (data) => windowAPI.fetch('addCategory', [data]),
-    addBudget: (data) => windowAPI.fetch('addBudget', [data]),
+    addCategory: (data) => windowAPI.fetch('addCategory', data),
+    addBudget: (data) => windowAPI.fetch('addBudget', data),
     getMonthlyDashboard: () => windowAPI.fetch('getMonthlyDashboard'),
-    getCategoryReport: (from, to) => windowAPI.fetch('getCategoryReport', [[from, to]]),
-    getYearlyReport: (year) => windowAPI.fetch('getYearlyReport', [[year]])
+    getCategoryReport: (from, to) => windowAPI.fetch('getCategoryReport', [from, to]),
+    getYearlyReport: (year) => windowAPI.fetch('getYearlyReport', [year])
 };

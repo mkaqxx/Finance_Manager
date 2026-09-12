@@ -76,6 +76,8 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         else if (auto* sav_acc = dynamic_cast<SavingsAccount*>(acc)) {
             a["goal"] = sav_acc->get_goal_amount();
             a["progress"] = sav_acc->get_progress();
+            a["monthly_required"] = sav_acc->monthly_required();
+            a["deadline"] = ymd_to_string(sav_acc->get_deadline())
         }
 
         response.push_back(a);
@@ -88,7 +90,7 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
     w.bind("addTransaction", [&manager](std::string seq) -> std::string {
         try {
             json args = json::parse(seq);
-            json data = args[0][0];
+            json data = args[0];
             unsigned id = manager.get_transactions().size() + 1;
             double amount = data["amount"];
             auto date = ymd_from_string(data["date"]);
@@ -128,7 +130,7 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
     w.bind("addAccount", [&manager](std::string seq) -> std::string {
     try {
         json args = json::parse(seq);
-        json data = args[0][0];
+        json data = args[0];
 
         // Генерируем новый ID (размер массива счетов + 1)
         unsigned id = manager.get_accounts().size() + 1;
@@ -173,7 +175,7 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
     w.bind("addBudget", [&manager](std::string seq) -> std::string {
         try {
             json args = json::parse(seq);
-            json data = args[0][0];
+            json data = args[0];
 
             unsigned cat_id = data["category_id"];
             double limit = data["limit"];
@@ -192,7 +194,7 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
     w.bind("addCategory", [&manager](std::string seq) -> std::string {
     try {
         json args = json::parse(seq);
-        json data = args[0][0];
+        json data = args[0];
 
         unsigned id = manager.get_categories().size() + 1; //[cite: 8]
         std::string name = data["name"];

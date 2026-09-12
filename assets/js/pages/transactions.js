@@ -7,7 +7,7 @@ async function loadTransactions() {
 
         data.forEach(tx => {
             const clone = template.content.cloneNode(true);
-            const category = categoriesMap[tx.category_id] || { name: "Неизвестно", color: "#ffffff" };
+            const category = categoriesMap[tx.category_id] || { name: "-", color: "#ffffff" };
             const sign = tx.type === "income" ? '+' : '-';
 
             clone.querySelector('.tx-date').textContent = tx.date;

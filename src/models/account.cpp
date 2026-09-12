@@ -46,10 +46,7 @@ std::string SavingsAccount::get_info() const {
 void Account::apply_transaction(Transaction &transaction) {
     if (auto* transfer = dynamic_cast<Transfer*>(&transaction)) {
         if (transfer->get_account_id() == id) {
-            if (balance > transfer->get_amount()) {
-                transfer->apply_to_source(balance);
-            }
-            else { throw std::runtime_error("Not enough money");}
+            transfer->apply_to_source(balance);
         }
         if (transfer->get_destination_id() == id) {
             transfer->apply_to_destination(balance);
