@@ -76,8 +76,8 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         else if (auto* sav_acc = dynamic_cast<SavingsAccount*>(acc)) {
             a["goal"] = sav_acc->get_goal_amount();
             a["progress"] = sav_acc->get_progress();
-            a["monthly_required"] = sav_acc->monthly_required();
-            a["deadline"] = ymd_to_string(sav_acc->get_deadline())
+            a["monthly_required"] = static_cast<int>(sav_acc->monthly_required()) +1;
+            a["deadline"] = ymd_to_string(sav_acc->get_deadline());
         }
 
         response.push_back(a);
@@ -241,6 +241,40 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
             return "{\"error\":\"" + std::string(e.what()) + "\"}";
         }
     });
+
+
+    w.bind("getTransactionsByAccount", [&manager](std::string seq) -> std::string {
+        try {
+           json args = json::parse(seq);
+           json data = args[0];
+           unsigned id = data[0];
+           json response = json::array();
+           for (auto * transaction : manager.get_transactions()) {
+               if (transaction->get_account_id() == id) {
+                   json t;
+                   t["id"] = transaction->get_id();
+                   t["amount"] = transaction->get_amount();
+                   t["date"] = ymd_to_string(transaction->get_date());
+                   t["type"] = transaction->get_type();
+                   t["category_id"] = transaction->get_category_id();;
+                   t["account_id"] = transaction->get_account_id();
+                   if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
+                       t["next_date"] =ymd_to_string(reg_exp->get_next_date());
+                       t["period"] = Period_to_string(reg_exp->get_period());
+                   }
+                   else if (auto* transfer = dynamic_cast<Transfer*>(transaction)) {
+                       t["destination_id"] = transfer->get_destination_id();
+                   }
+                   response.push_back(t);
+               }
+           }
+            return  response.dump();
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
 
     w.navigate("file:///D:/Finance_manager/assets/index.html");
     w.run();

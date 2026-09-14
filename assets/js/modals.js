@@ -140,3 +140,68 @@ document.getElementById('category-form').addEventListener('submit', async (e) =>
         if (document.getElementById('view-budget').style.display === 'block') renderCategories();
     } catch (error) { alert(error.message); }
 });
+
+
+function openAccountDetailModal(acc) {
+    // показываем окно
+    document.getElementById('account-detail-modal').style.display = 'flex';
+
+    // заполняем название
+    document.getElementById('modal-acc-name').textContent = acc.name;
+
+    // заполняем информацию
+    const sym = { 'rub': '₽', 'usd': '$', 'eur': '€', 'byn': 'Br' }[acc.currency] || acc.currency;
+    let info = `
+        <p>Баланс: <strong style="color:#fff">${acc.balance.toLocaleString()} ${sym}</strong></p>
+        <p>Тип: ${acc.type}</p>
+    `;
+    if (acc.type === 'savings_account') {
+        info += `
+            <p>Цель: ${acc.goal.toLocaleString()} ${sym}</p>
+            <p>Прогресс: ${acc.progress.toFixed(1)}%</p>
+            <p>Нужно откладывать: ${acc.monthly_required.toLocaleString()} ${sym}/мес</p>
+            <p>Дедлайн: ${acc.deadline}</p>
+        `;
+    }
+    if (acc.type === 'bank_account') {
+        info += `<p>Карта: •••• ${acc.number}</p>`;
+    }
+    document.getElementById('modal-acc-info').innerHTML = info;
+
+    // загружаем транзакции
+    loadAccountTransactions(acc.id);
+}
+
+function closeAccountDetailModal() {
+    document.getElementById('account-detail-modal').style.display = 'none';
+}
+
+async function loadAccountTransactions(accountId) {
+    const container = document.getElementById('modal-acc-transactions');
+    container.innerHTML = '<span style="color:#b3b3b3">Загрузка...</span>';
+
+    try {
+        const transactions = await windowAPI.getTransactionsByAccount(accountId);
+        container.innerHTML = '';
+
+        if (!transactions.length) {
+            container.innerHTML = '<span style="color:#b3b3b3">Транзакций нет</span>';
+            return;
+        }
+
+        transactions.forEach(tx => {
+            const cat = categoriesMap[tx.category_id] || { name: '-', color: '#fff' };
+            const sign = tx.type === 'income' ? '+' : '-';
+            container.innerHTML += `
+                <div style="display:flex; justify-content:space-between; padding:10px; background:#282828; border-radius:6px;">
+                    <span style="color:#b3b3b3">${tx.date}</span>
+                    <span style="color:${cat.color}">${cat.name}</span>
+                    <span style="font-weight:bold">${sign}${tx.amount.toLocaleString()} Br</span>
+                </div>
+            `;
+        });
+    }  catch (e) {
+        console.error("Ошибка загрузки транзакций счёта:", e);
+        container.innerHTML = '<span style="color:#e91429">Ошибка загрузки</span>';
+    }
+}

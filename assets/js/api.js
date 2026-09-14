@@ -20,5 +20,6 @@ const windowAPI = {
     addBudget: (data) => windowAPI.fetch('addBudget', data),
     getMonthlyDashboard: () => windowAPI.fetch('getMonthlyDashboard'),
     getCategoryReport: (from, to) => windowAPI.fetch('getCategoryReport', [from, to]),
-    getYearlyReport: (year) => windowAPI.fetch('getYearlyReport', [year])
+    getYearlyReport: (year) => windowAPI.fetch('getYearlyReport', [year]),
+    getTransactionsByAccount: (accountId) => windowAPI.fetch('getTransactionsByAccount', [accountId])
 };

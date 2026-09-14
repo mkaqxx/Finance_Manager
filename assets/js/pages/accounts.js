@@ -26,7 +26,7 @@ async function loadAccounts() {
             }
 
             clone.querySelector('.acc-name').textContent = acc.name;
-            clone.querySelector('.acc-meta').innerHTML = `${acc.currency.toUpperCase()} • ${extraInfo}`;
+            clone.querySelector('.acc-meta').innerHTML   = `${acc.currency.toUpperCase()}  ${extraInfo}`;
             clone.querySelector('.acc-balance').textContent = `${acc.balance.toLocaleString()} ${sym}`;
 
             // Данные для скрытого блока
@@ -37,11 +37,7 @@ async function loadAccounts() {
             const cardNode = clone.querySelector('.account-card-item');
             const detailsNode = clone.querySelector('.acc-details');
 
-            cardNode.addEventListener('click', () => {
-                const isHidden = detailsNode.style.display === 'none';
-                document.querySelectorAll('.acc-details').forEach(el => el.style.display = 'none');
-                if (isHidden) detailsNode.style.display = 'block';
-            });
+            cardNode.addEventListener('click', () => openAccountDetailModal(acc));
 
             // Эффекты наведения
             cardNode.addEventListener('mouseenter', () => cardNode.style.background = '#222222');
@@ -49,5 +45,8 @@ async function loadAccounts() {
 
             container.appendChild(clone);
         });
-    } catch (error) { console.error("Ошибка загрузки счетов:", error); }
+    } catch (e) {
+        console.error("Ошибка загрузки транзакций счёта:", e);
+        container.innerHTML = '<span style="color:#e91429">Ошибка загрузки</span>';
+    }
 }
