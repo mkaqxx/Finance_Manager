@@ -30,11 +30,11 @@ struct Category {
 
 class Budget {
     protected:
-    const Category category;
+    Category category;
     double limit;
     double current_amount;
     public:
-    Budget(const Category &category, double limit, double current_amount):
+    Budget( Category &category, double limit, double current_amount):
     category(category), limit(limit), current_amount(current_amount) {}
     void update_amount(double amount) { current_amount += amount; }
     Status get_status() const;

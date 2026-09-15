@@ -159,3 +159,46 @@ double Finance_manager::get_incomes_for_month() {
     std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
     return stats.total_income(transactions, first_day, today);
 }
+
+
+void Finance_manager::remove_account(unsigned id) {
+    for (size_t i = 0; i < accounts.size(); ++i) {
+        if (accounts[i]->get_id() == id) {
+            delete accounts[i];
+            accounts.erase(accounts.begin() + i); break;
+        }
+    }
+}
+
+void Finance_manager::remove_transaction(unsigned id) {
+    for (size_t i = 0; i < transactions.size(); ++i) {
+        if (transactions[i]->get_id() == id) {
+            delete transactions[i];
+            transactions.erase(transactions.begin() + i);
+        }
+    }
+}
+
+
+void Finance_manager::remove_category(unsigned id) {
+    unsigned cat_id;
+    for (size_t i = 0; i < categories.size(); ++i) {
+        if (categories[i].id == id) {
+            transactions.erase(transactions.begin() + i);
+        }
+    }
+    for (size_t i = 0; i< budgets.size(); ++i) {
+        if (budgets[i].get_category().id == id) {
+            budgets.erase(budgets.begin() + i);
+        }
+    }
+}
+
+
+void Finance_manager::remove_budget(unsigned id) {
+    for (size_t i = 0; i< budgets.size(); ++i) {
+        if (budgets[i].get_category().id == id) {
+            budgets.erase(budgets.begin() + i);
+        }
+    }
+}

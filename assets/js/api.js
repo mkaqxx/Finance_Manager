@@ -21,5 +21,9 @@ const windowAPI = {
     getMonthlyDashboard: () => windowAPI.fetch('getMonthlyDashboard'),
     getCategoryReport: (from, to) => windowAPI.fetch('getCategoryReport', [from, to]),
     getYearlyReport: (year) => windowAPI.fetch('getYearlyReport', [year]),
-    getTransactionsByAccount: (accountId) => windowAPI.fetch('getTransactionsByAccount', [accountId])
+    getTransactionsByAccount: (accountId) => windowAPI.fetch('getTransactionsByAccount', [accountId]),
+    removeAccount: (accountId) => windowAPI.fetch('removeAccount'),
+    removeTransaction: (transactionId) => windowAPI.fetch('removeTransaction'),
+    removeCategory: (categoryId) => windowAPI.fetch('removeCategory'),
+    removeBudget: (categoryId) => windowAPI.fetch('removeBudget')
 };

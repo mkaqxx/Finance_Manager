@@ -34,4 +34,8 @@ class Finance_manager {
     double get_balance() const;
     double get_expenses_for_month();
     double get_incomes_for_month();
+    void remove_account(unsigned id);
+    void remove_transaction(unsigned id);
+    void remove_category(unsigned id);
+    void remove_budget(unsigned id);
 };

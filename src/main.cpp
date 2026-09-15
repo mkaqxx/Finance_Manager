@@ -276,6 +276,58 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
     });
 
 
+    w.bind("removeAccount", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            unsigned id = data["account_id"];
+            manager.remove_account(id);
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
+    w.bind("removeTransaction", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            unsigned id = data["transaction_id"];
+            manager.remove_transaction(id);
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
+    w.bind("removeCategory", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            unsigned id = data["category_id"];
+            manager.remove_category(id);
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
+    w.bind("removeBudget", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            unsigned id = data["category_id"];
+            manager.remove_budget(id);
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
+
     w.navigate("file:///D:/Finance_manager/assets/index.html");
     w.run();
     return 0;
