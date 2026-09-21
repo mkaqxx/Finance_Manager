@@ -22,8 +22,9 @@ const windowAPI = {
     getCategoryReport: (from, to) => windowAPI.fetch('getCategoryReport', [from, to]),
     getYearlyReport: (year) => windowAPI.fetch('getYearlyReport', [year]),
     getTransactionsByAccount: (accountId) => windowAPI.fetch('getTransactionsByAccount', [accountId]),
-    removeAccount: (accountId) => windowAPI.fetch('removeAccount'),
-    removeTransaction: (transactionId) => windowAPI.fetch('removeTransaction'),
-    removeCategory: (categoryId) => windowAPI.fetch('removeCategory'),
-    removeBudget: (categoryId) => windowAPI.fetch('removeBudget')
+    removeAccount: (accountId) => windowAPI.fetch('removeAccount', [accountId]),
+    removeTransaction: (transactionId) => windowAPI.fetch('removeTransaction', [transactionId]),
+    removeCategory: (categoryId) => windowAPI.fetch('removeCategory', [categoryId]),
+    removeBudget: (categoryId) => windowAPI.fetch('removeBudget', [categoryId]),
+    editAccount: (data) => windowAPI.fetch('editAccount', data)
 };

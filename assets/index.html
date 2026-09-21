@@ -347,6 +347,10 @@
 
         <h3 style="margin-bottom: 12px;">Последние транзакции</h3>
         <div id="modal-acc-transactions" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        <div style="display: flex; justify-content: space-between; border-top: 1px solid #282828; padding-top: 16px; margin-top: auto;">
+            <button id="btn-edit-account" class="btn-secondary" style="background: #282828; color: #fff;">Редактировать</button>
+            <button id="btn-delete-account" class="btn-secondary" style="color: #e91429;">Удалить счет</button>
+        </div>
     </div>
 </div>
 
@@ -368,14 +372,6 @@
             </div>
             <div class="acc-balance" style="font-size: 18px; font-weight: bold; color: #1db954;"></div>
         </div>
-        <!-- Скрытые детали -->
-        <div class="acc-details" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #282828; color: #b3b3b3; font-size: 14px;">
-            <p style="margin: 4px 0;"><strong style="color:#fff;">ID счета:</strong> <span class="det-id"></span></p>
-            <p style="margin: 4px 0;"><strong style="color:#fff;">Тип:</strong> <span class="det-type"></span></p>
-            <div style="margin-top: 12px;">
-                <button onclick="event.stopPropagation(); alert('Скоро: редактирование')" style="background: #282828; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Редактировать</button>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -384,6 +380,9 @@
         <td class="tx-date" style="padding: 12px 8px;"></td>
         <td class="tx-category" style="padding: 12px 8px;"></td>
         <td class="tx-amount" style="padding: 12px 8px; font-weight: bold;"></td>
+        <td style="padding: 12px 8px; text-align: right; width: 40px;">
+            <button class="tx-delete-btn" style="background: transparent; color: #e91429; border: none; cursor: pointer; font-size: 18px; line-height: 1;">×</button>
+        </td>
     </tr>
 </template>
 
@@ -411,6 +410,7 @@
         <div style="width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
             <div class="b-progress-bar" style="height: 100%; transition: width 0.3s;"></div>
         </div>
+        <button class="bud-delete-btn" style="background: transparent; color: #e91429; border: none; cursor: pointer; font-size: 18px;">×</button>
     </div>
 </template>
 

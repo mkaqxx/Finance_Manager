@@ -91,7 +91,11 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         try {
             json args = json::parse(seq);
             json data = args[0];
-            unsigned id = manager.get_transactions().size() + 1;
+            unsigned max_id = 0;
+            for (const auto* t : manager.get_transactions()) {
+            if (t->get_id() > max_id) max_id = t->get_id();
+            }
+            unsigned id = max_id + 1;
             double amount = data["amount"];
             auto date = ymd_from_string(data["date"]);
             std::string type = data["type"];
@@ -133,7 +137,11 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         json data = args[0];
 
         // Генерируем новый ID (размер массива счетов + 1)
-        unsigned id = manager.get_accounts().size() + 1;
+        unsigned max_id = 0;
+        for (const auto* a : manager.get_accounts()) {
+            if (a->get_id() > max_id) max_id = a->get_id();
+        }
+        unsigned id = max_id + 1;
         std::string name = data["name"];
         double balance = data["balance"];
         Currency currency = StringToCurrency(data["currency"]); //[cite: 1]
@@ -196,7 +204,11 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         json args = json::parse(seq);
         json data = args[0];
 
-        unsigned id = manager.get_categories().size() + 1; //[cite: 8]
+        unsigned max_id = 0;
+        for (const auto& c : manager.get_categories()) {
+            if (c.id > max_id) max_id = c.id;
+        }
+        unsigned id = max_id + 1;
         std::string name = data["name"];
         std::string type_str = data["type"];
         std::string color = data["color"];
@@ -280,8 +292,9 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         try {
             json args = json::parse(seq);
             json data = args[0];
-            unsigned id = data["account_id"];
+            unsigned id = data[0];
             manager.remove_account(id);
+            return "{\"status\":\"success\"}";
         }
         catch (const std::exception& e) {
             return "{\"error\":\"" + std::string(e.what()) + "\"}";
@@ -293,8 +306,9 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         try {
             json args = json::parse(seq);
             json data = args[0];
-            unsigned id = data["transaction_id"];
+            unsigned id = data[0];
             manager.remove_transaction(id);
+            return "{\"status\":\"success\"}";
         }
         catch (const std::exception& e) {
             return "{\"error\":\"" + std::string(e.what()) + "\"}";
@@ -306,8 +320,9 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         try {
             json args = json::parse(seq);
             json data = args[0];
-            unsigned id = data["category_id"];
+            unsigned id = data[0];
             manager.remove_category(id);
+            return "{\"status\":\"success\"}";
         }
         catch (const std::exception& e) {
             return "{\"error\":\"" + std::string(e.what()) + "\"}";
@@ -319,14 +334,43 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         try {
             json args = json::parse(seq);
             json data = args[0];
-            unsigned id = data["category_id"];
+            unsigned id = data[0];
             manager.remove_budget(id);
+            return "{\"status\":\"success\"}";
         }
         catch (const std::exception& e) {
             return "{\"error\":\"" + std::string(e.what()) + "\"}";
         }
     });
 
+
+    w.bind("editAccount", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            unsigned id = data["id"];
+            Account* edit_acc = manager.get_account_by_id(id);
+            edit_acc->set_name(data["name"]);
+            edit_acc->set_balance(data["balance"]);
+            edit_acc->set_currency(StringToCurrency(data["currency"])); //[cite: 1]
+            std::string type = data["type"];
+             if (type == "bank_account") {
+                 if (BankAccount* edit_bank = dynamic_cast<BankAccount*>(edit_acc))
+                    edit_bank->set_last_four_digits(data["last_four_digits"]);
+             }
+             else if (type == "savings_account") {
+                 if (SavingsAccount* edit_savings = dynamic_cast<SavingsAccount*>(edit_acc)) {
+                     edit_savings->set_goal_amount(data["goal_amount"]);
+                     edit_savings->set_deadline(ymd_from_string(data["deadline"]));
+                 }
+             }
+            manager.save_data();
+            return "{\"status\":\"success\"}";
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
 
     w.navigate("file:///D:/Finance_manager/assets/index.html");
     w.run();

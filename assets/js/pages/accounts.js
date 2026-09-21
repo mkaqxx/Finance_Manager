@@ -11,32 +11,17 @@ async function loadAccounts() {
             const clone = template.content.cloneNode(true);
             const sym = currencySymbols[acc.currency.toLowerCase()] || acc.currency.toUpperCase();
 
-            let extraInfo = '';
-            if (acc.type === 'bank_account' && acc.number) {
-                extraInfo = `•••• ${acc.number}`;
-            } else if (acc.type === 'savings_account') {
-                extraInfo = `
-                <div>Цель: ${acc.goal.toLocaleString()} ${sym}</div>
-                <div>Прогресс: ${acc.progress.toFixed(1)}%</div>
-                <div>Нужно откладывать: ${acc.monthly_required.toLocaleString()} ${sym}/мес</div>
-                <div>Дедлайн: ${acc.deadline}</div>
-                `;
-            } else {
-                extraInfo = 'Наличные';
-            }
+            let extraInfo = acc.type === 'bank_account' && acc.number ? `•••• ${acc.number}` :
+                acc.type === 'savings_account' && acc.goal ? `Цель: ${acc.goal.toLocaleString()} ${sym} (${acc.progress.toFixed(1)}%)` :
+                    'Наличные';
 
             clone.querySelector('.acc-name').textContent = acc.name;
-            clone.querySelector('.acc-meta').innerHTML   = `${acc.currency.toUpperCase()}  ${extraInfo}`;
+            clone.querySelector('.acc-meta').textContent = `${acc.currency.toUpperCase()} • ${extraInfo}`;
             clone.querySelector('.acc-balance').textContent = `${acc.balance.toLocaleString()} ${sym}`;
 
-            // Данные для скрытого блока
-            clone.querySelector('.det-id').textContent = acc.id;
-            clone.querySelector('.det-type').textContent = acc.type;
-
-            // Логика разворачивания (accordion)
             const cardNode = clone.querySelector('.account-card-item');
-            const detailsNode = clone.querySelector('.acc-details');
 
+            // При клике открываем модалку и передаем туда ID счета
             cardNode.addEventListener('click', () => openAccountDetailModal(acc));
 
             // Эффекты наведения
@@ -45,8 +30,5 @@ async function loadAccounts() {
 
             container.appendChild(clone);
         });
-    } catch (e) {
-        console.error("Ошибка загрузки транзакций счёта:", e);
-        container.innerHTML = '<span style="color:#e91429">Ошибка загрузки</span>';
-    }
+    } catch (error) { console.error("Ошибка загрузки счетов:", error); }
 }

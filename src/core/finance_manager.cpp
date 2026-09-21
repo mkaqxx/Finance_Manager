@@ -168,37 +168,91 @@ void Finance_manager::remove_account(unsigned id) {
             accounts.erase(accounts.begin() + i); break;
         }
     }
+
+    for (auto it = transactions.begin(); it != transactions.end(); ) {
+        if ((*it)->get_account_id() == id) {
+            delete *it; // Очищаем память объекта
+            it = transactions.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    save_data();
+}
+
+void Finance_manager::remove_category(unsigned id) {
+    // 1. Удаляем категорию
+    for (auto it = categories.begin(); it != categories.end();++it ) {
+        if (it->id == id) {
+            it = categories.erase(it);
+            break;
+        }
+    }
+
+    // 2. Удаляем все связанные с ней бюджеты
+    for (auto it = budgets.begin(); it != budgets.end(); ++it) {
+        if (it->get_category().id == id) {
+            it = budgets.erase(it);
+            break;
+        }
+    }
+
+    for (auto it = transactions.begin(); it != transactions.end(); ) {
+        if ((*it)->get_category_id() == id) {
+            delete *it; // Очищаем память объекта
+            it = transactions.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    save_data();
+}
+
+void Finance_manager::remove_budget(unsigned id) {
+    for (auto it = budgets.begin(); it != budgets.end(); ++it) {
+        if (it->get_category().id == id) {
+            it = budgets.erase(it);
+            break;
+        }
+    }
+
+    save_data();
 }
 
 void Finance_manager::remove_transaction(unsigned id) {
-    for (size_t i = 0; i < transactions.size(); ++i) {
-        if (transactions[i]->get_id() == id) {
-            delete transactions[i];
-            transactions.erase(transactions.begin() + i);
+    for (auto it = transactions.begin(); it != transactions.end(); ++it) {
+        if ((*it)->get_id() == id) {
+            Transaction* tx = *it;
+            if (tx->get_type() == "transfer") {
+                auto* transfer = dynamic_cast<Transfer*>(tx);
+                Account* src = get_account_by_id(transfer->get_account_id());
+                Account* dest = get_account_by_id(transfer->get_destination_id());
+                Income reversal_income(0, tx->get_amount(), tx->get_date(), 0, 0);
+                src->apply_transaction(reversal_income);
+                Expense reversal_expense(0, tx->get_amount(), tx->get_date(), 0, 0);
+                dest->apply_transaction(reversal_expense);
+            }
+            else {
+                Account* acc = get_account_by_id(tx->get_account_id());
+                if (tx->get_type() == "expense" || tx->get_type() == "regular_expense") {
+                    Income reversal_income(0, tx->get_amount(), tx->get_date(), 0, 0);
+                    acc->apply_transaction(reversal_income);
+                    for (auto& budget : budgets) {
+                        if (budget.get_category().id == tx->get_category_id()) {
+                            budget.update_amount(-tx->get_amount());
+                        }
+                    }
+                }
+                else if (tx->get_type() == "income") {
+                    Expense reversal_expense(0, tx->get_amount(), tx->get_date(), 0, 0);
+                    acc->apply_transaction(reversal_expense);
+                }
+            }
+            delete tx;
+            transactions.erase(it);
+            break;
         }
     }
-}
-
-
-void Finance_manager::remove_category(unsigned id) {
-    unsigned cat_id;
-    for (size_t i = 0; i < categories.size(); ++i) {
-        if (categories[i].id == id) {
-            transactions.erase(transactions.begin() + i);
-        }
-    }
-    for (size_t i = 0; i< budgets.size(); ++i) {
-        if (budgets[i].get_category().id == id) {
-            budgets.erase(budgets.begin() + i);
-        }
-    }
-}
-
-
-void Finance_manager::remove_budget(unsigned id) {
-    for (size_t i = 0; i< budgets.size(); ++i) {
-        if (budgets[i].get_category().id == id) {
-            budgets.erase(budgets.begin() + i);
-        }
-    }
+    save_data();
 }

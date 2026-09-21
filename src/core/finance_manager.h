@@ -12,8 +12,8 @@ class Finance_manager {
     std::vector<Category> categories;
     std::vector<Budget> budgets;
     Storage storage;
-    void save_data();
     public:
+    void save_data();
     Finance_manager();
     ~Finance_manager();
     void add_transaction(Transaction *transaction);

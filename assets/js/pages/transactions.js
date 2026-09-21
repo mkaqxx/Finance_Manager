@@ -15,8 +15,20 @@ async function loadTransactions() {
             catCell.textContent = category.name;
             catCell.style.color = category.color;
             clone.querySelector('.tx-amount').textContent = `${sign}${tx.amount.toLocaleString()} Br`;
+            clone.querySelector('.tx-delete-btn').onclick = () => handleRemoveTransaction(tx.id);
 
             tbody.appendChild(clone);
         });
     } catch (error) { console.error("Ошибка загрузки транзакций:", error); }
+}
+
+
+async function handleRemoveTransaction(id){
+    try{
+        await windowAPI.removeTransaction(id);
+        loadTransactions();
+    }
+    catch (e){
+        console.error("Ошибка удаления: " + e.message);
+    }
 }

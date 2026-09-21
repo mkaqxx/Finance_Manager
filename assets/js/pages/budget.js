@@ -10,7 +10,10 @@ async function renderCategories() {
             clone.querySelector('.cat-color-dot').style.backgroundColor = cat.color;
             clone.querySelector('.cat-name').textContent = cat.name;
             clone.querySelector('.cat-type').textContent = cat.type === 'expense' ? 'Расход' : 'Доход';
-            clone.querySelector('.cat-delete-btn').onclick = () => alert(`Удаление ID: ${cat.id}`);
+
+            // Вызов функции удаления категории
+            clone.querySelector('.cat-delete-btn').onclick = () => handleRemoveCategory(cat.id);
+
             container.appendChild(clone);
         });
     } catch (e) { console.error(e); }
@@ -39,7 +42,34 @@ async function renderBudgets() {
             bar.style.width = `${percent}%`;
             bar.style.backgroundColor = barColor;
 
+            // ИСПРАВЛЕНО: передаем b.category_id вместо b.id
+            clone.querySelector('.bud-delete-btn').onclick = () => handleRemoveBudget(b.category_id);
+
             container.appendChild(clone);
         });
     } catch (e) { console.error(e); }
+}
+
+// === ФУНКЦИИ УДАЛЕНИЯ (обязательно должны быть здесь) ===
+
+async function handleRemoveCategory(id) {
+    try {
+        await windowAPI.removeCategory(id);
+        await loadCategories();
+        renderCategories();
+        renderBudgets();
+    } catch (e) {
+        // ТЕПЕРЬ ОШИБКА БУДЕТ ВИДНА
+        console.error("Ошибка удаления: " + e.message);
+    }
+}
+
+async function handleRemoveBudget(categoryId) {
+    try {
+        await windowAPI.removeBudget(categoryId);
+        renderBudgets();
+    } catch (e) {
+        // ТЕПЕРЬ ОШИБКА БУДЕТ ВИДНА
+        console.error("Ошибка удаления: " + e.message);
+    }
 }

@@ -31,6 +31,9 @@ protected:
     double get_balance() const { return balance; }
     Currency get_currency() const { return currency; }
     virtual ~Account() = default;
+    void set_name(std::string new_name) { name = new_name; }
+    void set_balance(double new_balance) { balance = new_balance; }
+    void set_currency(Currency new_currency) { currency = currency; }
 };
 
 
@@ -53,6 +56,7 @@ protected:
     std::string get_type() const override { return "bank_account"; }
     std::string get_info() const override;
     std::string get_last_four_digits() const { return last_four_digits; }
+    void set_last_four_digits(std::string new_last_four_digits) { last_four_digits = new_last_four_digits; }
 };
 
 
@@ -70,5 +74,6 @@ class SavingsAccount : public Account {
     double  get_goal_amount() const { return goal_amount; }
     std::chrono::year_month_day get_deadline() const { return deadline; }
     double monthly_required() const;
-
+    void set_goal_amount(double new_goal_amount) { goal_amount = new_goal_amount; }
+    void set_deadline(std::chrono::year_month_day new_deadline) { deadline = new_deadline; }
 };

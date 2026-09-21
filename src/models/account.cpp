@@ -53,11 +53,7 @@ void Account::apply_transaction(Transaction &transaction) {
         }
     }
     else {
-        // Для всех остальных типов транзакций
-        if (balance > transaction.get_amount()) {
-            transaction.apply_to_balance(balance);
-        }
-        else { throw std::runtime_error("Not enough money");}
+        transaction.apply_to_balance(balance);
     }
 }
 

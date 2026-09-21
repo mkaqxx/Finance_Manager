@@ -77,27 +77,6 @@ function openAccountModal() {
 
 function closeAccountModal() { document.getElementById('account-modal').style.display = 'none'; }
 
-document.getElementById('account-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const type = document.getElementById('acc-type').value;
-    const data = {
-        name: document.getElementById('acc-name').value,
-        balance: parseFloat(document.getElementById('acc-balance').value),
-        currency: document.getElementById('acc-currency').value,
-        type: type
-    };
-    if (type === 'bank_account') data.last_four_digits = document.getElementById('acc-bank-digits').value;
-    else if (type === 'savings_account') {
-        data.goal_amount = parseFloat(document.getElementById('acc-goal').value);
-        data.deadline = document.getElementById('acc-deadline').value;
-    }
-
-    try {
-        await windowAPI.addAccount(data);
-        closeAccountModal();
-        if (document.getElementById('view-accounts').style.display === 'block') loadAccounts();
-    } catch (error) { alert(error.message); }
-});
 
 // --- БЮДЖЕТЫ ---
 function openBudgetModal() {
@@ -170,6 +149,29 @@ function openAccountDetailModal(acc) {
 
     // загружаем транзакции
     loadAccountTransactions(acc.id);
+
+    const deleteBtn = document.getElementById('btn-delete-account');
+    if (deleteBtn) {
+        deleteBtn.onclick = async () => {
+            // Убран confirm для предотвращения deadlock-а в WebView
+            try {
+                await windowAPI.removeAccount(acc.id); // Исправлено на acc.id
+                closeAccountDetailModal(); // Закрываем окно
+                loadAccounts(); // Перерисовываем список
+                if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
+            } catch (e) {
+                console.error("Ошибка удаления: " + e.message);
+            }
+        };
+    }
+
+    const editBtn = document.getElementById('btn-edit-account');
+    if (editBtn) {
+        editBtn.onclick = () => {
+            closeAccountDetailModal(); // Закрываем детали
+            openAccountModal(acc);     // Открываем форму редактирования с данными счета
+        };
+    }
 }
 
 function closeAccountDetailModal() {
@@ -205,3 +207,83 @@ async function loadAccountTransactions(accountId) {
         container.innerHTML = '<span style="color:#e91429">Ошибка загрузки</span>';
     }
 }
+
+
+let editingAccountId = null; // Хранит ID, если мы редактируем, иначе null
+
+function openAccountModal(editData = null) {
+    const modal = document.getElementById('account-modal');
+    const form = document.getElementById('account-form');
+    const typeSelect = document.getElementById('acc-type');
+    const currSelect = document.getElementById('acc-currency');
+    const title = modal.querySelector('h2');
+    const submitBtn = modal.querySelector('button[type="submit"]');
+
+    modal.style.display = 'flex';
+    form.reset();
+
+    if (editData) {
+        // РЕЖИМ РЕДАКТИРОВАНИЯ
+        editingAccountId = editData.id;
+        title.textContent = 'Редактировать счет';
+        submitBtn.textContent = 'Сохранить';
+
+        document.getElementById('acc-name').value = editData.name;
+        document.getElementById('acc-balance').value = editData.balance;
+        currSelect.value = editData.currency;
+        typeSelect.value = editData.type;
+
+        // Блокируем смену типа и валюты
+        typeSelect.disabled = true;
+        currSelect.disabled = true;
+
+        if (editData.type === 'bank_account') {
+            document.getElementById('acc-bank-digits').value = editData.number || '';
+        } else if (editData.type === 'savings_account') {
+            document.getElementById('acc-goal').value = editData.goal || '';
+            document.getElementById('acc-deadline').value = editData.deadline || '';
+        }
+    } else {
+        // РЕЖИМ ДОБАВЛЕНИЯ НОВОГО
+        editingAccountId = null;
+        title.textContent = 'Новый счет';
+        submitBtn.textContent = 'Добавить';
+        typeSelect.disabled = false;
+        currSelect.disabled = false;
+        document.getElementById('acc-deadline').valueAsDate = new Date();
+    }
+
+    toggleAccountFields(); // Показываем/скрываем нужные поля
+}
+
+document.getElementById('account-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const type = document.getElementById('acc-type').value;
+    const data = {
+        name: document.getElementById('acc-name').value,
+        balance: parseFloat(document.getElementById('acc-balance').value),
+        currency: document.getElementById('acc-currency').value,
+        type: type
+    };
+
+    if (type === 'bank_account') data.last_four_digits = document.getElementById('acc-bank-digits').value;
+    else if (type === 'savings_account') {
+        data.goal_amount = parseFloat(document.getElementById('acc-goal').value);
+        data.deadline = document.getElementById('acc-deadline').value;
+    }
+
+    try {
+        if (editingAccountId) {
+            data.id = editingAccountId; // Добавляем ID для редактирования
+            await windowAPI.editAccount(data);
+        } else {
+            await windowAPI.addAccount(data);
+        }
+
+        closeAccountModal();
+        if (document.getElementById('view-accounts').style.display === 'block') loadAccounts();
+        if (document.getElementById('account-detail-modal').style.display === 'flex') closeAccountDetailModal();
+    } catch (error) {
+        console.error("Ошибка сохранения:", error);
+    }
+});
