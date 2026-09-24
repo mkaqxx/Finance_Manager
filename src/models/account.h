@@ -33,7 +33,7 @@ protected:
     virtual ~Account() = default;
     void set_name(std::string new_name) { name = new_name; }
     void set_balance(double new_balance) { balance = new_balance; }
-    void set_currency(Currency new_currency) { currency = currency; }
+    void set_currency(Currency new_currency) { currency = new_currency; }
 };
 
 

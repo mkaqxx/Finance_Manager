@@ -79,28 +79,65 @@ function closeAccountModal() { document.getElementById('account-modal').style.di
 
 
 // --- БЮДЖЕТЫ ---
-function openBudgetModal() {
-    document.getElementById('budget-modal').style.display = 'flex';
-    document.getElementById('budget-form').reset();
+function openBudgetModal(editData = null) {
+    const modal = document.getElementById('budget-modal');
+    const form = document.getElementById('budget-form');
+    const title = modal.querySelector('h2');
+    const submitBtn = modal.querySelector('button[type="submit"]');
     const catSelect = document.getElementById('budget-category');
-    catSelect.innerHTML = '<option value="" disabled selected>Выберите категорию...</option>';
-    for (const [id, cat] of Object.entries(categoriesMap)) {
-        catSelect.innerHTML += `<option value="${id}">${cat.name}</option>`;
+
+    modal.style.display = 'flex';
+    form.reset();
+
+    if (editData) {
+        editingBudgetCategId = editData.category_id;
+        title.textContent = 'Редактировать лимит';
+        submitBtn.textContent = 'Сохранить';
+
+        // Предзаполняем поля
+        catSelect.innerHTML = `<option value="${editData.category_id}" selected>${editData.category_name || editData.name}</option>`;
+        catSelect.disabled = true;
+        document.getElementById('budget-limit').value = editData.limit;
+    } else {
+        editingBudgetCategId = null;
+        title.textContent = 'Установить лимит';
+        submitBtn.textContent = 'Сохранить';
+        catSelect.disabled = false;
     }
 }
+
+
+document.getElementById('budget-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const limitValue = parseFloat(document.getElementById('budget-limit').value);
+    const catId = editingBudgetCategId !== null
+        ? editingBudgetCategId
+        : parseInt(document.getElementById('budget-category').value);
+
+    const data = {
+        category_id: Number(catId),
+        limit: limitValue
+    };
+
+    try {
+        if (editingBudgetCategId) {
+            // Вызовем API редактирования
+            await windowAPI.editBudget(data);
+        } else {
+            // Обычное добавление
+            await windowAPI.addBudget(data);
+        }
+
+        document.getElementById('budget-modal').style.display = 'none';
+        renderBudgets();
+    } catch (error) {
+        alert("Ошибка: " + error.message);
+    }
+};
+
+
 function closeBudgetModal() { document.getElementById('budget-modal').style.display = 'none'; }
 
-document.getElementById('budget-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        await windowAPI.addBudget({
-            category_id: parseInt(document.getElementById('budget-category').value),
-            limit: parseFloat(document.getElementById('budget-limit').value)
-        });
-        closeBudgetModal();
-        if (document.getElementById('view-budget').style.display === 'block') renderBudgets();
-    } catch (error) { alert(error.message); }
-});
 
 // --- КАТЕГОРИИ ---
 function openCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; document.getElementById('category-form').reset(); }

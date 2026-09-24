@@ -348,29 +348,27 @@ int WINAPI WinMain(HINSTANCE hInt, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nCm
         try {
             json args = json::parse(seq);
             json data = args[0];
-            unsigned id = data["id"];
-            Account* edit_acc = manager.get_account_by_id(id);
-            edit_acc->set_name(data["name"]);
-            edit_acc->set_balance(data["balance"]);
-            edit_acc->set_currency(StringToCurrency(data["currency"])); //[cite: 1]
-            std::string type = data["type"];
-             if (type == "bank_account") {
-                 if (BankAccount* edit_bank = dynamic_cast<BankAccount*>(edit_acc))
-                    edit_bank->set_last_four_digits(data["last_four_digits"]);
-             }
-             else if (type == "savings_account") {
-                 if (SavingsAccount* edit_savings = dynamic_cast<SavingsAccount*>(edit_acc)) {
-                     edit_savings->set_goal_amount(data["goal_amount"]);
-                     edit_savings->set_deadline(ymd_from_string(data["deadline"]));
-                 }
-             }
-            manager.save_data();
+            manager.edit_account(data);
             return "{\"status\":\"success\"}";
         }
         catch (const std::exception& e) {
             return "{\"error\":\"" + std::string(e.what()) + "\"}";
         }
     });
+
+
+    w.bind("editBudget", [&manager](std::string seq) -> std::string {
+        try {
+            json args = json::parse(seq);
+            json data = args[0];
+            manager.edit_budget(data);
+            return "{\"status\":\"success\"}";
+        }
+        catch (const std::exception& e) {
+            return "{\"error\":\"" + std::string(e.what()) + "\"}";
+        }
+    });
+
 
     w.navigate("file:///D:/Finance_manager/assets/index.html");
     w.run();

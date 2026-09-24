@@ -1,3 +1,5 @@
+let editingBudgetCategId = null;
+
 async function renderCategories() {
     try {
         const categories = await windowAPI.getCategories();
@@ -44,6 +46,7 @@ async function renderBudgets() {
 
             // ИСПРАВЛЕНО: передаем b.category_id вместо b.id
             clone.querySelector('.bud-delete-btn').onclick = () => handleRemoveBudget(b.category_id);
+            clone.querySelector('.bud-edit-btn').onclick = () => openBudgetModal(b);
 
             container.appendChild(clone);
         });
@@ -73,3 +76,5 @@ async function handleRemoveBudget(categoryId) {
         console.error("Ошибка удаления: " + e.message);
     }
 }
+
+

@@ -41,4 +41,5 @@ class Budget {
     Category get_category() const { return category; }
     double get_limit() const { return limit; }
     double get_current_amount() const { return current_amount; }
+    void set_limit(double new_limit) { limit = new_limit; }
 };

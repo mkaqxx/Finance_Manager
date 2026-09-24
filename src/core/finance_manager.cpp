@@ -256,3 +256,39 @@ void Finance_manager::remove_transaction(unsigned id) {
     }
     save_data();
 }
+
+
+void Finance_manager::edit_account(json data) {
+    Account* edit_acc = get_account_by_id(data["id"]);
+    if (edit_acc) {
+        edit_acc->set_name(data["name"]);
+        edit_acc->set_balance(data["balance"]);
+        edit_acc->set_currency(StringToCurrency(data["currency"]));
+        if (data["type"] == "bank_account") {
+            if (BankAccount* edit_bank = dynamic_cast<BankAccount*>(edit_acc))
+                edit_bank->set_last_four_digits(data["last_four_digits"]);
+        }
+        else if (data["type"] == "savings_account") {
+            if (SavingsAccount* edit_savings = dynamic_cast<SavingsAccount*>(edit_acc)) {
+                edit_savings->set_goal_amount(data["goal_amount"]);
+                edit_savings->set_deadline(ymd_from_string(data["deadline"]));
+            }
+        }
+        save_data();
+    }
+    else {
+        throw std::runtime_error("Счет с таким ID не найден");
+    }
+}
+
+
+void Finance_manager::edit_budget(json data) {
+    unsigned id = data["category_id"];
+    for (auto & budget : budgets) {
+        if (budget.get_category().id == id) {
+            budget.set_limit(data["limit"]);
+            break;
+        }
+    }
+    save_data();
+}

@@ -12,8 +12,8 @@ class Finance_manager {
     std::vector<Category> categories;
     std::vector<Budget> budgets;
     Storage storage;
-    public:
     void save_data();
+    public:
     Finance_manager();
     ~Finance_manager();
     void add_transaction(Transaction *transaction);
@@ -38,4 +38,6 @@ class Finance_manager {
     void remove_transaction(unsigned id);
     void remove_category(unsigned id);
     void remove_budget(unsigned id);
+    void edit_account(json data);
+    void edit_budget(json data);
 };
