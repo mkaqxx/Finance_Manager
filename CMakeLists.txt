@@ -24,6 +24,8 @@ add_executable(FinanceManager WIN32
         src/core/statistics.cpp
         src/core/report.cpp
         src/utils/chrono_to_string.cpp
+        src/core/api_handler.h
+        src/core/api_handler.cpp
 )
 
 # 3. Пути к заголовочным файлам (включая скачанный SDK)
