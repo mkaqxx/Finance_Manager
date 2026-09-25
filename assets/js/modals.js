@@ -190,7 +190,12 @@ function openAccountDetailModal(acc) {
     const deleteBtn = document.getElementById('btn-delete-account');
     if (deleteBtn) {
         deleteBtn.onclick = async () => {
-            // Убран confirm для предотвращения deadlock-а в WebView
+            const ok = await showConfirm({
+                title: 'Удаление счёта',
+                message: `Удалить счёт "${acc.name}"? Все привязанные к нему транзакции также будут удалены.`,
+                confirmText: 'Удалить'
+            });
+            if (!ok) return;
             try {
                 await windowAPI.removeAccount(acc.id); // Исправлено на acc.id
                 closeAccountDetailModal(); // Закрываем окно
@@ -324,3 +329,31 @@ document.getElementById('account-form').addEventListener('submit', async (e) => 
         console.error("Ошибка сохранения:", error);
     }
 });
+
+
+function showConfirm({ title = 'Подтверждение', message = 'Вы уверены?', confirmText = 'Удалить', isDanger = true }) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const titleEl = document.getElementById('confirm-title');
+        const msgEl = document.getElementById('confirm-message');
+        const okBtn = document.getElementById('confirm-btn-ok');
+        const cancelBtn = document.getElementById('confirm-btn-cancel');
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        okBtn.textContent = confirmText;
+        okBtn.style.background = isDanger ? '#e91429' : '#1db954';
+
+        modal.style.display = 'flex';
+
+        function cleanup(result) {
+            modal.style.display = 'none';
+            okBtn.onclick = null;
+            cancelBtn.onclick = null;
+            resolve(result);
+        }
+
+        okBtn.onclick = () => cleanup(true);
+        cancelBtn.onclick = () => cleanup(false);
+    });
+}

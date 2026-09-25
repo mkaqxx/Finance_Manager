@@ -15,7 +15,7 @@ async function loadTransactions() {
             catCell.textContent = category.name;
             catCell.style.color = category.color;
             clone.querySelector('.tx-amount').textContent = `${sign}${tx.amount.toLocaleString()} Br`;
-            clone.querySelector('.tx-delete-btn').onclick = () => handleRemoveTransaction(tx.id);
+            clone.querySelector('.tx-delete-btn').onclick = () => handleRemoveTransaction(tx);
 
             tbody.appendChild(clone);
         });
@@ -23,9 +23,15 @@ async function loadTransactions() {
 }
 
 
-async function handleRemoveTransaction(id){
+async function handleRemoveTransaction(tx){
+    const ok = await showConfirm({
+        title: 'Удаление транзакции',
+        message: 'Удалить эту операцию? Баланс счёта будет пересчитан.',
+        confirmText: 'Удалить'
+    });
+    if (!ok) return;
     try{
-        await windowAPI.removeTransaction(id);
+        await windowAPI.removeTransaction(tx.id);
         loadTransactions();
     }
     catch (e){

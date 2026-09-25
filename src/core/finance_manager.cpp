@@ -265,4 +265,5 @@ void Finance_manager::edit_budget(unsigned id, double new_limit) {
             break;
         }
     }
+    save_data();
 }

@@ -354,6 +354,17 @@
     </div>
 </div>
 
+<div id="confirm-modal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;">
+    <div style="background: #1e1e1e; border-radius: 8px; padding: 24px; width: 360px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <h3 id="confirm-title" style="margin-top: 0; color: #fff;">Подтверждение</h3>
+        <p id="confirm-message" style="color: #b3b3b3; font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+            <button id="confirm-btn-cancel" style="background: transparent; border: 1px solid #444; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Отмена</button>
+            <button id="confirm-btn-ok" style="background: #e91429; border: none; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Удалить</button>
+        </div>
+    </div>
+</div>
+
 <!-- ================== ШАБЛОНЫ (TEMPLATES) ================== -->
 
 <template id="tpl-top-category">

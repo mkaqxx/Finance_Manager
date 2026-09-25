@@ -451,7 +451,6 @@ std::string ApiHandler::handle_edit_budget(std::string seq) {
         json args = json::parse(seq);
         json data = args[0];
         manager.edit_budget(data["category_id"], data["limit"]);
-        manager.save_data();
         return "{\"status\":\"success\"}";
     }
     catch (const std::exception& e) {

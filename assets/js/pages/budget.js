@@ -14,7 +14,7 @@ async function renderCategories() {
             clone.querySelector('.cat-type').textContent = cat.type === 'expense' ? 'Расход' : 'Доход';
 
             // Вызов функции удаления категории
-            clone.querySelector('.cat-delete-btn').onclick = () => handleRemoveCategory(cat.id);
+            clone.querySelector('.cat-delete-btn').onclick = () => handleRemoveCategory(cat);
 
             container.appendChild(clone);
         });
@@ -45,7 +45,7 @@ async function renderBudgets() {
             bar.style.backgroundColor = barColor;
 
             // ИСПРАВЛЕНО: передаем b.category_id вместо b.id
-            clone.querySelector('.bud-delete-btn').onclick = () => handleRemoveBudget(b.category_id);
+            clone.querySelector('.bud-delete-btn').onclick = () => handleRemoveBudget(b);
             clone.querySelector('.bud-edit-btn').onclick = () => openBudgetModal(b);
 
             container.appendChild(clone);
@@ -55,9 +55,15 @@ async function renderBudgets() {
 
 // === ФУНКЦИИ УДАЛЕНИЯ (обязательно должны быть здесь) ===
 
-async function handleRemoveCategory(id) {
+async function handleRemoveCategory(cat) {
     try {
-        await windowAPI.removeCategory(id);
+        const ok = await showConfirm({
+            title: 'Удаление категории',
+            message: `При удалении категории "${cat.name}" будут безвозвратно удалены все связанные с ней транзакции и лимиты. Продолжить?`,
+            confirmText: 'Да, удалить'
+        });
+        if (!ok) return;
+        await windowAPI.removeCategory(cat.id);
         await loadCategories();
         renderCategories();
         renderBudgets();
@@ -67,9 +73,16 @@ async function handleRemoveCategory(id) {
     }
 }
 
-async function handleRemoveBudget(categoryId) {
+async function handleRemoveBudget(b) {
     try {
-        await windowAPI.removeBudget(categoryId);
+        const ok = await showConfirm({
+            title: 'Удаление лимита',
+            message: `Сбросить установленный лимит для "${b.name}"?`,
+            confirmText: 'Сбросить'
+        });
+        if (!ok) return;
+
+        await windowAPI.removeBudget(b.category_id);
         renderBudgets();
     } catch (e) {
         // ТЕПЕРЬ ОШИБКА БУДЕТ ВИДНА
