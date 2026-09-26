@@ -166,6 +166,29 @@
             <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
                 <button onclick="openTxModal()" class="btn-primary">+ Добавить</button>
             </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
+                       style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; flex: 1; min-width: 220px; outline: none;">
+
+                <select id="tx-filter-type" style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: pointer; outline: none;">
+                    <option value="all">Все типы</option>
+                    <option value="income">Доходы</option>
+                    <option value="expense">Расходы</option>
+                    <option value="transfer">Переводы</option>
+                    <option value="regular_expense">Регулярные</option>
+                </select>
+
+                <select id="tx-filter-account" style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: pointer; outline: none;">
+                    <option value="all">Все счета</option>
+                </select>
+
+                <select id="tx-sort" style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: pointer; outline: none;">
+                    <option value="date-desc">Сначала новые</option>
+                    <option value="date-asc">Сначала старые</option>
+                    <option value="amount-desc">По сумме (убывание)</option>
+                    <option value="amount-asc">По сумме (возрастание)</option>
+                </select>
+            </div>
             <div style="background: #181818; border-radius: 8px; padding: 20px;">
                 <table style="width: 100%; text-align: left; border-collapse: collapse;">
                     <thead>
@@ -173,6 +196,7 @@
                         <th style="padding: 12px 8px;">Дата</th>
                         <th style="padding: 12px 8px;">Категория</th>
                         <th style="padding: 12px 8px;">Сумма</th>
+                        <th style="padding: 12px 8px; width: 40px;"></th>
                     </tr>
                     </thead>
                     <tbody id="transactions-table"></tbody>

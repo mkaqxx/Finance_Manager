@@ -303,6 +303,11 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
         }
         else if (type == "transfer") {
             unsigned destination_id = data["destination_id"];
+            Account* src = manager.get_account_by_id(account_id);
+            Account* dest = manager.get_account_by_id(destination_id);
+            if (src->get_currency() != dest->get_currency()) {
+                return "{\"error\":\"Нельзя переводить между счетами с разными валютами\"}";
+            }
             manager.add_transaction(new Transfer(id, amount, date, account_id, destination_id));
         }
         else if (type == "regular_expense") {
@@ -350,9 +355,14 @@ std::string ApiHandler::handle_add_budget(std::string seq) {
 
         unsigned cat_id = data["category_id"];
         double limit = data["limit"];
-
-        Category cat = manager.get_category_by_id(cat_id); //[cite: 7, 8]
-        manager.add_budget(Budget(cat, limit, 0.0)); //[cite: 4, 7, 8]
+        double current_amount = 0.0;
+        for (const auto* t: manager.get_transactions()) {
+            if (t->get_category_id() == cat_id && (t->get_type()=="expense" || t->get_type()=="regular_expense")) {
+                current_amount += t->get_amount();
+            }
+        }
+        Category cat = manager.get_category_by_id(cat_id);
+        manager.add_budget(Budget(cat, limit, current_amount));
 
         return "{\"status\":\"success\"}";
     } catch (const std::exception& e) {
