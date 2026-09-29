@@ -105,7 +105,7 @@
         for (auto& acc : accounts) {
             if (acc->get_id() == id) return acc.get();
         }
-        throw std::runtime_error("Account not found");
+        return nullptr;
     }
     
     
