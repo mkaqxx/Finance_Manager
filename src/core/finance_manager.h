@@ -8,30 +8,50 @@ using json = nlohmann::json;
 
 class Finance_manager {
     private:
-    std::vector<Account*> accounts;
-    std::vector<Transaction*> transactions;
+    std::vector<std::unique_ptr<Account>> accounts;
+    std::vector<std::unique_ptr<Transaction>> transactions;
     std::vector<Category> categories;
     std::vector<Budget> budgets;
     Storage storage;
     public:
-    void save_data();
+    //сохранение
+    std::expected<void, int> save_data() noexcept;
+
+    //конструктор и деструктор
     Finance_manager();
-    ~Finance_manager();
-    void add_transaction(Transaction *transaction);
-    void add_account(Account *account);
-    void add_category(const Category& category);
-    void add_budget(const Budget& budget);
-    const std::vector<Account*>& get_accounts() const { return accounts; }
-    const std::vector<Transaction*>& get_transactions() const { return transactions; }
+    ~Finance_manager() noexcept;
+
+    //для RAII
+    Finance_manager(const Finance_manager&) = delete;
+    Finance_manager& operator=(const Finance_manager&) = delete;
+
+    //Перемещающие конструкторы
+    Finance_manager(Finance_manager&&) noexcept = default;
+    Finance_manager& operator=(Finance_manager&&) noexcept = default;
+
+    //добавление
+    std::expected<void, int> add_transaction(std::unique_ptr<Transaction> transaction);
+    std::expected<void, int> add_account(std::unique_ptr<Account> account);
+    std::expected<void, int> add_category(const Category& category);
+    std::expected<void, int> add_budget(const Budget& budget);
+
+
+    //геттеры сырых указателей
+    const std::vector<Account*> get_accounts_raw() const;
+    const std::vector<Transaction*> get_transactions_raw() const;
     const std::vector<Category>& get_categories() const { return categories; }
     const std::vector<Budget>& get_budgets() const { return budgets; }
+
     const Category &get_category_by_id( unsigned id) const;
     Account *get_account_by_id( unsigned id) const;
-    void check_the_regular_expense_date();
+
+    std::expected<void, int> check_the_regular_expense_date();
     json get_monthly_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
     json get_category_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
     json get_yearly_report(int year) const;
+
     double get_monthly_savings_requirement(unsigned account_id) const;
+
     void remove_account(unsigned id);
     void remove_transaction(unsigned id);
     void remove_category(unsigned id);

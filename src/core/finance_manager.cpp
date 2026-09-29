@@ -9,28 +9,43 @@ Finance_manager::Finance_manager() {
 
 Finance_manager::~Finance_manager() {
     save_data();
-    for (auto* acc : accounts) delete acc;
-    for (auto* t : transactions) delete t;
 }
 
 
-void Finance_manager::save_data() {
-    storage.save(accounts, transactions, categories, budgets);
+std::expected<void, int> Finance_manager::save_data() noexcept {
+    return storage.save(accounts, transactions, categories, budgets);
+
 }
 
 
-void Finance_manager::add_account(Account *account) {
-    accounts.push_back(account);
-    save_data();
+const std::vector<Account*> Finance_manager::get_accounts_raw() const {
+    std::vector<const Account*> res;
+    res.reserve(accounts.size());
+    for (const auto& a : accounts) res.push_back(a.get());
+    return res;
 }
 
 
-void Finance_manager::add_transaction(Transaction *transaction) {
-    transactions.push_back(transaction);
-    if (auto* trans = dynamic_cast<Transfer *>(transaction)) {
+const std::vector<Transaction*> Finance_manager::get_transactions_raw() const {
+    std::vector<Transaction*> res;
+    res.reserve(transactions.size());
+    for (const auto& t : transactions) res.push_back(t.get());
+    return res;
+}
+
+
+std::expected<void, int> Finance_manager::add_account(std::unique_ptr<Account> account) {
+    accounts.push_back(std::move(account));
+     return save_data();
+}
+
+
+std::expected<void, int> Finance_manager::add_transaction(std::unique_ptr<Transaction> transaction) {
+    transactions.push_back(std::move(transaction));
+    if (auto* trans = dynamic_cast<Transfer *>(transaction.get())) {
         unsigned source_id = trans->get_account_id();
         unsigned dest_id = trans->get_destination_id();
-        for (auto* acc : accounts) {
+        for (const auto& acc : accounts) {
             if (acc->get_id() == source_id) {
                acc->apply_transaction(*trans);
             }
@@ -38,13 +53,13 @@ void Finance_manager::add_transaction(Transaction *transaction) {
                 acc->apply_transaction(*trans);
             }
         }
-        save_data();
-        return;
+
+        return save_data();
     }
     else {
         unsigned category_id = transaction->get_category_id();
         unsigned account_id = transaction->get_account_id();
-        for (auto *acc : accounts) {
+        for (const auto& acc : accounts) {
             if (acc->get_id() == account_id) {
                 acc->apply_transaction(*transaction);
             }
@@ -59,20 +74,20 @@ void Finance_manager::add_transaction(Transaction *transaction) {
                     }
                 }
         }
-        save_data();
+        return save_data();
     }
 }
 
 
-void Finance_manager::add_category(const Category& category) {
+std::expected<void, int> Finance_manager::add_category(const Category& category) {
     categories.push_back(category);
-    save_data();
+    return save_data();
 }
 
 
-void Finance_manager::add_budget(const Budget& budget) {
+std::expected<void, int> Finance_manager::add_budget(const Budget& budget) {
     budgets.push_back(budget);
-    save_data();
+    return save_data();
 }
 
 
@@ -85,30 +100,30 @@ const Category & Finance_manager::get_category_by_id( unsigned id) const {
 
 
 Account *Finance_manager::get_account_by_id(unsigned id) const {
-    for (auto *acc : accounts) {
-        if (acc->get_id() == id) return acc;
+    for (auto& acc : accounts) {
+        if (acc->get_id() == id) return acc.get();
     }
     throw std::runtime_error("Account not found");
 }
 
 
-void Finance_manager::check_the_regular_expense_date() {
+std::expected<void, int> Finance_manager::check_the_regular_expense_date() {
     auto now = std::chrono::system_clock::now();
     std::chrono::year_month_day ymd{std::chrono::floor<std::chrono::days>(now)};
-    std::vector<Transaction *> to_add;
-    for (Transaction *transaction : transactions) {
-        if (auto regular = dynamic_cast<RegularExpense *>(transaction)) {
+    std::vector<std::unique_ptr<Transaction>> to_add;
+    for (auto& transaction : transactions) {
+        if (auto regular = dynamic_cast<RegularExpense *>(transaction.get())) {
             while (regular->get_next_date() <= ymd) {
                 unsigned new_id = transactions.size() + to_add.size() + 1;
-                Expense *new_expense = new Expense(new_id, regular->get_amount(), regular->get_next_date(),
+                 auto new_expense = std::make_unique<Expense>(new_id, regular->get_amount(), regular->get_next_date(),
                 regular->get_category_id(), regular->get_account_id());
-                to_add.push_back(new_expense);
+                to_add.push_back(std::move(new_expense));
                 regular->update_next_date();
             }
         }
     }
-    for (Transaction * t : to_add) {
-        add_transaction(t);
+    for (auto& t : to_add) {
+       return add_transaction(std::move(t));
     }
 }
 

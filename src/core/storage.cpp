@@ -1,19 +1,19 @@
 #include "storage.h"
 
 
-void Storage::save_accounts(json& j, const std::vector<Account *> &accounts) {
+void Storage::save_accounts(json& j, const std::vector<std::unique_ptr<Account>> &accounts) {
     json accs = json::array();
-    for (Account* acc : accounts) {
+    for (const auto& acc : accounts) {
         json a;
         a["id"] = acc->get_id();
         a["name"] = acc->get_name();
         a["balance"] = acc->get_balance();
         a["type"] = acc->get_type();
         a["currency"] = CurrencyToString(acc->get_currency());
-        if (auto* bank_acc = dynamic_cast<BankAccount*>(acc)) {
+        if (auto* bank_acc = dynamic_cast<BankAccount*>(acc.get())) {
             a["last_four_digits"] = bank_acc->get_last_four_digits();
         }
-        else if (auto* save_acc = dynamic_cast<SavingsAccount*>(acc)) {
+        else if (auto* save_acc = dynamic_cast<SavingsAccount*>(acc.get())) {
             a["goal_amount"] = save_acc->get_goal_amount();
             a["deadline"] = ymd_to_string(save_acc->get_deadline());
         }
@@ -25,9 +25,9 @@ void Storage::save_accounts(json& j, const std::vector<Account *> &accounts) {
 }
 
 
-void Storage::save_transactions(json& j, const std::vector<Transaction *> &transactions) {
+void Storage::save_transactions(json& j, const std::vector<std::unique_ptr<Transaction>> &transactions) {
     json trans = json::array();
-    for (Transaction* tran : transactions) {
+    for (const auto& tran : transactions) {
         json t;
         t["id"] = tran->get_id();
         t["amount"] = tran->get_amount();
@@ -35,11 +35,11 @@ void Storage::save_transactions(json& j, const std::vector<Transaction *> &trans
         t["type"] = tran->get_type();
         t["category_id"] = tran->get_category_id();
         t["account_id"] = tran->get_account_id();
-        if (auto* reg_exp = dynamic_cast<RegularExpense*>(tran)) {
+        if (auto* reg_exp = dynamic_cast<RegularExpense*>(tran.get())) {
             t["next_date"] =ymd_to_string(reg_exp->get_next_date());
             t["period"] = Period_to_string(reg_exp->get_period());
         }
-        else if (auto* transfer = dynamic_cast<Transfer*>(tran)) {
+        else if (auto* transfer = dynamic_cast<Transfer*>(tran.get())) {
             t["destination_id"] = transfer->get_destination_id();
         }
         trans.push_back(t);
@@ -75,8 +75,8 @@ void Storage::save_budgets(json& j, const std::vector<Budget> &budgets) {
     j["budgets"] = buds;
 }
 
-void Storage::save(const std::vector<Account*>& accounts,
-                   const std::vector<Transaction*>& transactions,
+std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account>>& accounts,
+                   const std::vector<std::unique_ptr<Transaction>>& transactions,
                    const std::vector<Category>& categories,
                    const std::vector<Budget>& budgets) {
     json j;
@@ -85,29 +85,28 @@ void Storage::save(const std::vector<Account*>& accounts,
     save_categories(j, categories);
     save_budgets(j, budgets);
 
-    std::ofstream outfile (filename);
-    if (!outfile.is_open()) {
-        throw std::runtime_error("Could not open file for writing: " + filename);
-    };
+    auto res = open_out_file(filename);
+    if (!res) {
+       return std::unexpected(res.error());
+    }
+    std::ofstream outfile = std::move(res.value());
+
     outfile<<j.dump(4);
     outfile.flush();
     outfile.close();
 }
 
 
-void Storage::load(std::vector<Account*>& accounts,
-                   std::vector<Transaction*>& transactions,
+std::expected<void, int> Storage::load(std::vector<std::unique_ptr<Account>>& accounts,
+                   std::vector<std::unique_ptr<Transaction>>& transactions,
                    std::vector<Category>& categories,
                    std::vector<Budget>& budgets) {
-    std::ifstream file(filename);
-    if (!file.is_open()) return;
-    json j;try {
-        j =json::parse(file);
+    auto res = open_in_file(filename);
+    if (!res) {
+        return std::unexpected(res.error());
     }
-    catch (const json::parse_error& e) {
-        file.close();
-        return;
-    }
+    std::ifstream file = std::move(res.value());
+    json j = json::parse((file));
     file.close();
 
     for (auto& acc : j["accounts"]) {
@@ -117,16 +116,16 @@ void Storage::load(std::vector<Account*>& accounts,
         std::string type = acc["type"];
         Currency currency = StringToCurrency(acc["currency"]);
         if (type == "cash_account") {
-            accounts.push_back(new CashAccount(id, name, balance, currency));
+            accounts.push_back(std::make_unique<CashAccount>(id, name, balance, currency));
         }
         else if (type == "bank_account") {
             std::string last_four_digits = acc["last_four_digits"];
-            accounts.push_back(new BankAccount(id, name, balance, currency, last_four_digits));
+            accounts.push_back(std::make_unique<BankAccount>(id, name, balance, currency, last_four_digits));
         }
         else if (type == "savings_account") {
             double goal_amount = acc["goal_amount"];
             std::chrono::year_month_day deadline = ymd_from_string(acc["deadline"]);
-            accounts.push_back(new SavingsAccount(id, name, balance, currency, goal_amount, deadline));
+            accounts.push_back(std::make_unique<SavingsAccount>(id, name, balance, currency, goal_amount, deadline));
         }
     }
     for (auto& t: j["transactions"]) {
@@ -137,19 +136,19 @@ void Storage::load(std::vector<Account*>& accounts,
         unsigned category_id = t["category_id"];
         unsigned account_id = t["account_id"];
         if (type == "income") {
-            transactions.push_back(new Income(id, amount, date, category_id, account_id ));
+            transactions.push_back(std::make_unique<Income>(id, amount, date, category_id, account_id ));
         }
         else if (type == "expense") {
-            transactions.push_back(new Expense(id, amount, date, category_id, account_id ));
+            transactions.push_back(std::make_unique<Expense>(id, amount, date, category_id, account_id ));
         }
         else if (type== "regular_expense") {
             std::chrono::year_month_day next_date = ymd_from_string(t["next_date"]);
             Period period = String_to_period(t["period"]);
-            transactions.push_back(new RegularExpense(id, amount, date, category_id, account_id, next_date, period));
+            transactions.push_back(std::make_unique<RegularExpense>(id, amount, date, category_id, account_id, next_date, period));
         }
         else if (type == "transfer") {
             unsigned destination_id = t["destination_id"];
-            transactions.push_back(new Transfer(id, amount, date, account_id, destination_id));
+            transactions.push_back(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
         }
     }
     for (auto& c : j["categories"]) {
