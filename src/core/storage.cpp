@@ -85,7 +85,8 @@ std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account
     save_categories(j, categories);
     save_budgets(j, budgets);
 
-    auto res = open_out_file(filename);
+    std::string temp_name = filename+".tmp";
+    auto res = open_out_file(temp_name);
     if (!res) {
        return std::unexpected(res.error());
     }
@@ -94,6 +95,12 @@ std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account
     outfile<<j.dump(4);
     outfile.flush();
     outfile.close();
+    std::error_code ec;
+    std::filesystem::rename(temp_name, filename, ec);
+    if (ec) {
+        return std::unexpected(ec.value());
+    }
+    return {};
 }
 
 
@@ -101,6 +108,11 @@ std::expected<void, int> Storage::load(std::vector<std::unique_ptr<Account>>& ac
                    std::vector<std::unique_ptr<Transaction>>& transactions,
                    std::vector<Category>& categories,
                    std::vector<Budget>& budgets) {
+
+    if (!std::filesystem::exists(filename)) {
+        return {};
+    }
+    
     auto res = open_in_file(filename);
     if (!res) {
         return std::unexpected(res.error());
@@ -173,4 +185,5 @@ std::expected<void, int> Storage::load(std::vector<std::unique_ptr<Account>>& ac
         }
         if (!found) throw std::runtime_error("No categories found");
     }
+    return {};
 }   

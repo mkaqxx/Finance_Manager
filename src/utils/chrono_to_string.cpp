@@ -12,10 +12,17 @@ std::chrono::year_month_day ymd_from_string(const std::string &str) {
     std::stringstream ss(str);
     unsigned y, m, d;
     char dash1, dash2;
-    if (ss>>y>>dash1>>m>>dash2>>d && dash1 == dash2 && dash2 == '-') {
-        return std::chrono::year_month_day{std::chrono::year(y), std::chrono::month(m), std::chrono::day(d)};
+    if (ss >> y >> dash1 >> m >> dash2 >> d && dash1 == '-' && dash2 == '-') {
+        std::chrono::year_month_day ymd{
+            std::chrono::year(y),
+            std::chrono::month(m),
+            std::chrono::day(d)
+        };
+        if (ymd.ok()) {
+            return ymd;
+        }
     }
-    throw std::runtime_error("Invalid format");
+    throw std::runtime_error("Invalid or non-existent calendar date: " + str);
 }
 
 

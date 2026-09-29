@@ -64,52 +64,111 @@ void ApiHandler::register_all() {
 
 
 std::string ApiHandler::handle_get_accounts(std::string seq) {
-    try {
-        json response = json::array();
-        for (auto* acc : manager.get_accounts()) { //[cite: 8]
-            if (!acc) continue;
-            json a;
-            a["id"] = acc->get_id();
-            a["name"] = acc->get_name();
-            a["balance"] = acc->get_balance();
-            a["type"] = acc->get_type();
-            a["currency"] = CurrencyToString(acc->get_currency());
-            if (auto* bank_acc = dynamic_cast<BankAccount*>(acc)) {
-                a["number"] = bank_acc->get_last_four_digits();
-            }
-            else if (auto* sav_acc = dynamic_cast<SavingsAccount*>(acc)) {
-                a["goal"] = sav_acc->get_goal_amount();
-                a["progress"] = sav_acc->get_progress();
-                a["monthly_required"] = static_cast<int>(sav_acc->monthly_required()) +1;
-                a["deadline"] = ymd_to_string(sav_acc->get_deadline());
-            }
-
-            response.push_back(a);
+    (void)seq;
+    json response = json::array();
+    for (auto* acc : manager.get_accounts_raw()) {
+        if (!acc) continue;
+        json a;
+        a["id"] = acc->get_id();
+        a["name"] = acc->get_name();
+        a["balance"] = acc->get_balance();
+        a["type"] = acc->get_type();
+        a["currency"] = CurrencyToString(acc->get_currency());
+        if (auto* bank_acc = dynamic_cast<BankAccount*>(acc)) {
+            a["number"] = bank_acc->get_last_four_digits();
+        }
+        else if (auto* sav_acc = dynamic_cast<SavingsAccount*>(acc)) {
+            a["goal"] = sav_acc->get_goal_amount();
+            a["progress"] = sav_acc->get_progress();
+            a["monthly_required"] = static_cast<int>(sav_acc->monthly_required()) + 1;
+            a["deadline"] = ymd_to_string(sav_acc->get_deadline());
         }
 
-        return response.dump();
+        response.push_back(a);
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+
+    return response.dump();
 }
 
 
 std::string ApiHandler::handle_get_transactions(std::string seq) {
-    try {
-        json response = json::array();
-        for (auto * transaction : manager.get_transactions()) {
+    (void)seq;
+    json response = json::array();
+    for (auto* transaction : manager.get_transactions_raw()) {
+        if (!transaction) continue;
+        json t;
+        t["id"] = transaction->get_id();
+        t["amount"] = transaction->get_amount();
+        t["date"] = ymd_to_string(transaction->get_date());
+        t["type"] = transaction->get_type();
+        t["category_id"] = transaction->get_category_id();
+        t["account_id"] = transaction->get_account_id();
+        Account* acc = manager.get_account_by_id(transaction->get_account_id());
+        t["currency"] = CurrencyToString(acc->get_currency());
+        if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
+            t["next_date"] = ymd_to_string(reg_exp->get_next_date());
+            t["period"] = Period_to_string(reg_exp->get_period());
+        }
+        else if (auto* transfer = dynamic_cast<Transfer*>(transaction)) {
+            t["destination_id"] = transfer->get_destination_id();
+        }
+        response.push_back(t);
+    }
+    return response.dump();
+}
+
+
+std::string ApiHandler::handle_get_categories(std::string seq) {
+    (void)seq;
+    json response = json::array();
+    for (auto& category : manager.get_categories()) {
+        json c;
+        c["id"] = category.id;
+        c["name"] = category.name;
+        c["type"] = t_type_to_string(category.type);
+        c["color"] = category.color;
+        response.push_back(c);
+    }
+    return response.dump();
+}
+
+
+std::string ApiHandler::handle_get_budgets(std::string seq) {
+    (void)seq;
+    json response = json::array();
+    for (const auto& budget : manager.get_budgets()) {
+        json b;
+        b["category_id"] = budget.get_category().id;
+        b["name"] = budget.get_category().name;
+        b["color"] = budget.get_category().color;
+        b["limit"] = budget.get_limit();
+        b["current_amount"] = budget.get_current_amount();
+        b["status"] = status_to_string(budget.get_status());
+        response.push_back(b);
+    }
+    return response.dump();
+}
+
+
+std::string ApiHandler::handle_get_transactions_by_account(std::string seq) {
+    json args = json::parse(seq);
+    json data = args[0];
+    unsigned id = data[0];
+    json response = json::array();
+    for (auto* transaction : manager.get_transactions_raw()) {
+        if (!transaction) continue;
+        if (transaction->get_account_id() == id) {
             json t;
             t["id"] = transaction->get_id();
             t["amount"] = transaction->get_amount();
             t["date"] = ymd_to_string(transaction->get_date());
             t["type"] = transaction->get_type();
-            t["category_id"] = transaction->get_category_id();;
+            t["category_id"] = transaction->get_category_id();
             t["account_id"] = transaction->get_account_id();
-            Account * acc = manager.get_account_by_id(transaction->get_account_id());
+            Account* acc = manager.get_account_by_id(transaction->get_account_id());
             t["currency"] = CurrencyToString(acc->get_currency());
             if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
-                t["next_date"] =ymd_to_string(reg_exp->get_next_date());
+                t["next_date"] = ymd_to_string(reg_exp->get_next_date());
                 t["period"] = Period_to_string(reg_exp->get_period());
             }
             else if (auto* transfer = dynamic_cast<Transfer*>(transaction)) {
@@ -117,102 +176,19 @@ std::string ApiHandler::handle_get_transactions(std::string seq) {
             }
             response.push_back(t);
         }
-        return  response.dump();
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
-}
-
-
-std::string ApiHandler::handle_get_categories(std::string seq) {
-    try {
-        json response = json::array();
-        for (auto&  category : manager.get_categories()) {
-            json c;
-            c["id"] = category.id;
-            c["name"] = category.name;
-            c["type"] = t_type_to_string(category.type);
-            c["color"] = category.color;
-            response.push_back(c);
-        }
-        return response.dump();
-    }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
-}
-
-
-std::string ApiHandler::handle_get_budgets(std::string seq) {
-    try {
-        json response = json::array();
-        for (const auto& budget : manager.get_budgets()) { //[cite: 8]
-            json b;
-            b["category_id"] = budget.get_category().id; //[cite: 4]
-            b["name"] = budget.get_category().name; //[cite: 4]
-            b["color"] = budget.get_category().color; //[cite: 4]
-            b["limit"] = budget.get_limit(); //[cite: 4]
-            b["current_amount"] = budget.get_current_amount(); //[cite: 4]
-            b["status"] = status_to_string(budget.get_status()); //[cite: 4]
-            response.push_back(b);
-        }
-        return response.dump();
-    }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
-}
-
-
-std::string ApiHandler::handle_get_transactions_by_account(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        unsigned id = data[0];
-        json response = json::array();
-        for (auto * transaction : manager.get_transactions()) {
-            if (transaction->get_account_id() == id) {
-                json t;
-                t["id"] = transaction->get_id();
-                t["amount"] = transaction->get_amount();
-                t["date"] = ymd_to_string(transaction->get_date());
-                t["type"] = transaction->get_type();
-                t["category_id"] = transaction->get_category_id();;
-                t["account_id"] = transaction->get_account_id();
-                Account* acc = manager.get_account_by_id(transaction->get_account_id());
-                t["currency"] = CurrencyToString(acc->get_currency());
-                if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
-                    t["next_date"] =ymd_to_string(reg_exp->get_next_date());
-                    t["period"] = Period_to_string(reg_exp->get_period());
-                }
-                else if (auto* transfer = dynamic_cast<Transfer*>(transaction)) {
-                    t["destination_id"] = transfer->get_destination_id();
-                }
-                response.push_back(t);
-            }
-        }
-        return  response.dump();
-    }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    return response.dump();
 }
 
 
 std::string ApiHandler::handle_get_monthly_dashboard(std::string seq) {
-    try {
-        auto now = std::chrono::system_clock::now();
-        std::chrono::year_month_day today{std::chrono::floor<std::chrono::days>(now)};
+    (void)seq;
+    auto now = std::chrono::system_clock::now();
+    std::chrono::year_month_day today{std::chrono::floor<std::chrono::days>(now)};
+    std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
 
-        std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
-
-        json report = manager.get_monthly_report(first_day, today);
-        return report.dump();
-    }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    json report = manager.get_monthly_report(first_day, today);
+    return report.dump();
 }
 
 
@@ -232,16 +208,11 @@ std::string ApiHandler::handle_get_category_report(std::string seq) {
 
 
 std::string ApiHandler::handle_get_yearly_report(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        int year = data[0];
-        json report = manager.get_yearly_report(year);
-        return report.dump();
-    }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    json args = json::parse(seq);
+    json data = args[0];
+    int year = data[0];
+    json report = manager.get_yearly_report(year);
+    return report.dump();
 }
 
 
@@ -250,7 +221,7 @@ std::string ApiHandler::handle_add_account(std::string seq) {
         json args = json::parse(seq);
         json data = args[0];
         unsigned max_id = 0;
-        for (const auto* a : manager.get_accounts()) {
+        for (const auto* a : manager.get_accounts_raw()) {
             if (a->get_id() > max_id) max_id = a->get_id();
         }
         unsigned id = max_id + 1;
@@ -259,15 +230,22 @@ std::string ApiHandler::handle_add_account(std::string seq) {
         Currency currency = StringToCurrency(data["currency"]);
         std::string type = data["type"];
 
+        std::expected<void, int> res;
         if (type == "cash_account") {
-            manager.add_account(new CashAccount(id, name, balance, currency));
+            res = manager.add_account(std::make_unique<CashAccount>(id, name, balance, currency));
         } else if (type == "bank_account") {
             std::string digits = data["last_four_digits"];
-            manager.add_account(new BankAccount(id, name, balance, currency, digits));
+            res = manager.add_account(std::make_unique<BankAccount>(id, name, balance, currency, digits));
         } else if (type == "savings_account") {
             double goal = data["goal_amount"];
             std::chrono::year_month_day deadline = ymd_from_string(data["deadline"]);
-            manager.add_account(new SavingsAccount(id, name, balance, currency, goal, deadline));
+            res = manager.add_account(std::make_unique<SavingsAccount>(id, name, balance, currency, goal, deadline));
+        } else {
+            return "{\"error\":\"Неизвестный тип счёта\"}";
+        }
+
+        if (!res) {
+            return "{\"error\":\"Ошибка сохранения счёта (код: " + std::to_string(res.error()) + ")\"}";
         }
 
         return "{\"status\":\"success\"}";
@@ -282,7 +260,7 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
         json args = json::parse(seq);
         json data = args[0];
         unsigned max_id = 0;
-        for (const auto* t : manager.get_transactions()) {
+        for (const auto* t : manager.get_transactions_raw()) {
             if (t->get_id() > max_id) max_id = t->get_id();
         }
         unsigned id = max_id + 1;
@@ -299,11 +277,12 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
             }
         }
         if (type != "transfer") category_id = data["category_id"];
-        if ( type == "income") {
-            manager.add_transaction(new Income(id, amount, date, category_id, account_id));
+        std::expected<void, int> res;
+        if (type == "income") {
+            res = manager.add_transaction(std::make_unique<Income>(id, amount, date, category_id, account_id));
         }
         else if (type == "expense") {
-            manager.add_transaction(new Expense (id, amount, date,  category_id, account_id) );
+            res = manager.add_transaction(std::make_unique<Expense>(id, amount, date, category_id, account_id));
         }
         else if (type == "transfer") {
             unsigned destination_id = data["destination_id"];
@@ -312,15 +291,21 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
             if (src->get_currency() != dest->get_currency()) {
                 return "{\"error\":\"Нельзя переводить между счетами с разными валютами\"}";
             }
-            manager.add_transaction(new Transfer(id, amount, date, account_id, destination_id));
+            res = manager.add_transaction(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
         }
         else if (type == "regular_expense") {
             Period p = String_to_period(data["period"]);
-            manager.add_transaction(new RegularExpense(id, amount, date, category_id, account_id, date, p));
+            res = manager.add_transaction(std::make_unique<RegularExpense>(id, amount, date, category_id, account_id, date, p));
+        } else {
+            return "{\"error\":\"Неизвестный тип транзакции\"}";
+        }
+
+        if (!res) {
+            return "{\"error\":\"Ошибка сохранения транзакции (код: " + std::to_string(res.error()) + ")\"}";
         }
         return "{\"status\":\"success\"}";
     }
-    catch(const std::exception& e) {
+    catch (const std::exception& e) {
         return "{\"error\":\"" + std::string(e.what()) + "\"}";
     }
 }
@@ -343,7 +328,10 @@ std::string ApiHandler::handle_add_category(std::string seq) {
         TransactionType type = t_type_from_string(type_str);
         Category new_cat{id, type, name, color};
 
-        manager.add_category(new_cat);
+        auto res = manager.add_category(new_cat);
+        if (!res) {
+            return "{\"error\":\"Ошибка добавления категории (код: " + std::to_string(res.error()) + ")\"}";
+        }
 
         return "{\"status\":\"success\"}";
     } catch (const std::exception& e) {
@@ -360,13 +348,20 @@ std::string ApiHandler::handle_add_budget(std::string seq) {
         unsigned cat_id = data["category_id"];
         double limit = data["limit"];
         double current_amount = 0.0;
-        for (const auto* t: manager.get_transactions()) {
+        for (const auto* t: manager.get_transactions_raw()) {
             if (t->get_category_id() == cat_id && (t->get_type()=="expense" || t->get_type()=="regular_expense")) {
-                current_amount += t->get_amount();
+                Account* acc = manager.get_account_by_id(t->get_account_id());
+                // Лимиты считаются только для базовой валюты (BYN)
+                if (acc && acc->get_currency() == Currency::BYN) {
+                    current_amount += t->get_amount();
+                }
             }
         }
         Category cat = manager.get_category_by_id(cat_id);
-        manager.add_budget(Budget(cat, limit, current_amount));
+        auto res = manager.add_budget(Budget(cat, limit, current_amount));
+        if (!res) {
+            return "{\"error\":\"Ошибка добавления бюджета (код: " + std::to_string(res.error()) + ")\"}";
+        }
 
         return "{\"status\":\"success\"}";
     } catch (const std::exception& e) {
@@ -376,58 +371,50 @@ std::string ApiHandler::handle_add_budget(std::string seq) {
 
 
 std::string ApiHandler::handle_remove_account(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        unsigned id = data[0];
-        manager.remove_account(id);
-        return "{\"status\":\"success\"}";
+    json args = json::parse(seq);
+    json data = args[0];
+    unsigned id = data[0];
+    auto res = manager.remove_account(id);
+    if (!res) {
+        return "{\"error\":\"Ошибка удаления счёта (код: " + std::to_string(res.error()) + ")\"}";
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    return "{\"status\":\"success\"}";
 }
 
 
 std::string ApiHandler::handle_remove_transaction(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        unsigned id = data[0];
-        manager.remove_transaction(id);
-        return "{\"status\":\"success\"}";
+    json args = json::parse(seq);
+    json data = args[0];
+    unsigned id = data[0];
+    auto res = manager.remove_transaction(id);
+    if (!res) {
+        return "{\"error\":\"Ошибка удаления транзакции (код: " + std::to_string(res.error()) + ")\"}";
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    return "{\"status\":\"success\"}";
 }
 
 
 std::string ApiHandler::handle_remove_category(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        unsigned id = data[0];
-        manager.remove_category(id);
-        return "{\"status\":\"success\"}";
+    json args = json::parse(seq);
+    json data = args[0];
+    unsigned id = data[0];
+    auto res = manager.remove_category(id);
+    if (!res) {
+        return "{\"error\":\"Ошибка удаления категории (код: " + std::to_string(res.error()) + ")\"}";
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    return "{\"status\":\"success\"}";
 }
 
 
 std::string ApiHandler::handle_remove_budget(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        unsigned id = data[0];
-        manager.remove_budget(id);
-        return "{\"status\":\"success\"}";
+    json args = json::parse(seq);
+    json data = args[0];
+    unsigned id = data[0];
+    auto res = manager.remove_budget(id);
+    if (!res) {
+        return "{\"error\":\"Ошибка удаления бюджета (код: " + std::to_string(res.error()) + ")\"}";
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    return "{\"status\":\"success\"}";
 }
 
 
@@ -451,7 +438,10 @@ std::string ApiHandler::handle_edit_account(std::string seq) {
                 }
             }
         }
-        manager.save_data();
+        auto res = manager.save_data();
+        if (!res) {
+            return "{\"error\":\"Ошибка сохранения счёта (код: " + std::to_string(res.error()) + ")\"}";
+        }
         return "{\"status\":\"success\"}";
     }
     catch (const std::exception& e) {
@@ -461,13 +451,11 @@ std::string ApiHandler::handle_edit_account(std::string seq) {
 
 
 std::string ApiHandler::handle_edit_budget(std::string seq) {
-    try {
-        json args = json::parse(seq);
-        json data = args[0];
-        manager.edit_budget(data["category_id"], data["limit"]);
-        return "{\"status\":\"success\"}";
+    json args = json::parse(seq);
+    json data = args[0];
+    auto res = manager.edit_budget(data["category_id"], data["limit"]);
+    if (!res) {
+        return "{\"error\":\"Ошибка обновления бюджета (код: " + std::to_string(res.error()) + ")\"}";
     }
-    catch (const std::exception& e) {
-        return "{\"error\":\"" + std::string(e.what()) + "\"}";
-    }
+    return "{\"status\":\"success\"}";
 }
