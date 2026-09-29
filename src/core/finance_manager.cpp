@@ -51,9 +51,11 @@ void Finance_manager::add_transaction(Transaction *transaction) {
         }
         std::string type = transaction->get_type();
             if (type == "expense" || type == "regular_expense"){
-                for (auto& budget : budgets) {
-                    if (budget.get_category().id == category_id) {
-                        budget.update_amount(transaction->get_amount());
+                if (get_account_by_id(account_id)->get_currency() == Currency::BYN) {
+                    for (auto& budget : budgets) {
+                        if (budget.get_category().id == category_id) {
+                            budget.update_amount(transaction->get_amount());
+                        }
                     }
                 }
         }
@@ -90,15 +92,6 @@ Account *Finance_manager::get_account_by_id(unsigned id) const {
 }
 
 
-double Finance_manager::get_monthly_savings_requirement(unsigned account_id) const {
-    Account* acc = get_account_by_id(account_id);
-    if (auto* savings_acc = dynamic_cast<SavingsAccount*>(acc)) {
-        return savings_acc->monthly_required();
-    }
-    throw std::invalid_argument("Account is not a savings account");
-}
-
-
 void Finance_manager::check_the_regular_expense_date() {
     auto now = std::chrono::system_clock::now();
     std::chrono::year_month_day ymd{std::chrono::floor<std::chrono::days>(now)};
@@ -125,39 +118,13 @@ json Finance_manager::get_monthly_report(std::chrono::year_month_day from, std::
 }
 
 json Finance_manager::get_category_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const {
-    CategoryReport report(transactions, categories, from, to);
+    CategoryReport report(transactions, accounts, categories, from, to);
     return report.generate();
 }
 
 json Finance_manager::get_yearly_report(int year) const {
-    YearlyReport report(transactions, year);
+    YearlyReport report(transactions, accounts, year);
     return report.generate();
-}
-
-
-double Finance_manager::get_balance() const {
-    Statistics stats;
-    return stats.total_balance(accounts);
-}
-
-
-double Finance_manager::get_expenses_for_month() {
-    auto now = std::chrono::system_clock::now();
-    auto days = std::chrono::time_point_cast<std::chrono::days>(now);
-    std::chrono::year_month_day today{days};
-    Statistics stats;
-    std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
-    return stats.total_expense(transactions, first_day, today);
-}
-
-
-double Finance_manager::get_incomes_for_month() {
-    auto now = std::chrono::system_clock::now();
-    auto days = std::chrono::time_point_cast<std::chrono::days>(now);
-    std::chrono::year_month_day today{days};
-    Statistics stats;
-    std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
-    return stats.total_income(transactions, first_day, today);
 }
 
 
@@ -238,9 +205,11 @@ void Finance_manager::remove_transaction(unsigned id) {
                 if (tx->get_type() == "expense" || tx->get_type() == "regular_expense") {
                     Income reversal_income(0, tx->get_amount(), tx->get_date(), 0, 0);
                     acc->apply_transaction(reversal_income);
-                    for (auto& budget : budgets) {
-                        if (budget.get_category().id == tx->get_category_id()) {
-                            budget.update_amount(-tx->get_amount());
+                    if (acc->get_currency()== Currency::BYN) {
+                        for (auto& budget : budgets) {
+                            if (budget.get_category().id == tx->get_category_id()) {
+                                budget.update_amount(-tx->get_amount());
+                            }
                         }
                     }
                 }

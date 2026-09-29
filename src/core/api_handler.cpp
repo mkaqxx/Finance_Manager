@@ -106,6 +106,8 @@ std::string ApiHandler::handle_get_transactions(std::string seq) {
             t["type"] = transaction->get_type();
             t["category_id"] = transaction->get_category_id();;
             t["account_id"] = transaction->get_account_id();
+            Account * acc = manager.get_account_by_id(transaction->get_account_id());
+            t["currency"] = CurrencyToString(acc->get_currency());
             if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
                 t["next_date"] =ymd_to_string(reg_exp->get_next_date());
                 t["period"] = Period_to_string(reg_exp->get_period());
@@ -178,6 +180,8 @@ std::string ApiHandler::handle_get_transactions_by_account(std::string seq) {
                 t["type"] = transaction->get_type();
                 t["category_id"] = transaction->get_category_id();;
                 t["account_id"] = transaction->get_account_id();
+                Account* acc = manager.get_account_by_id(transaction->get_account_id());
+                t["currency"] = CurrencyToString(acc->get_currency());
                 if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
                     t["next_date"] =ymd_to_string(reg_exp->get_next_date());
                     t["period"] = Period_to_string(reg_exp->get_period());

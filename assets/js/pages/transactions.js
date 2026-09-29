@@ -100,7 +100,9 @@ function renderTransactionsTable(transactions) {
         const catCell = clone.querySelector('.tx-category');
         catCell.textContent = category.name;
         catCell.style.color = category.color;
-        clone.querySelector('.tx-amount').textContent = `${sign}${tx.amount.toLocaleString()} Br`;
+        const cur = tx.currency;
+        const sym = CURRENCY_SYMBOLS[cur];
+        clone.querySelector('.tx-amount').textContent = `${sign}${tx.amount.toLocaleString()}${sym}`;
         clone.querySelector('.tx-delete-btn').onclick = () => handleRemoveTransaction(tx);
 
         tbody.appendChild(clone);

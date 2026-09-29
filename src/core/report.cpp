@@ -2,79 +2,97 @@
 #include "../utils/chrono_to_string.h"
 
 
-
-
-
-json MonthlyReport::generate() const {
-    Statistics stats;
-    double income, expense, balance;
-    income = stats.total_income(transactions, from, to);
-    expense = stats.total_expense(transactions, from, to);
-    balance = stats.total_balance(accounts);
-    std::vector<CategoryStat> category_stats;
-    category_stats = stats.top_categories(transactions, categories, from, to, 3);
+static json build_currency_section(
+    const Statistics& stats,
+    const std::vector<Transaction*>& transactions,
+    const std::vector<Account*>& accounts,
+    const std::vector<Category>& categories,
+    std::chrono::year_month_day from,
+    std::chrono::year_month_day to,
+    Currency cur,
+    const std::string& cur_name)
+{
     json j;
-    j["type"] = "monthly";
-    j["period"] = ym_to_string(std::chrono::year_month{from.year(), from.month()});
-    j["total_income"] = income;
-    j["total_expense"] = expense;
-    j["balance"] = balance;
-    json c_stats = json::array();
-    for (auto category_stat : category_stats) {
+    j["income"]  = stats.income(transactions, accounts, from, to, cur);
+    j["expense"] = stats.expense(transactions, accounts, from, to, cur);
+    j["balance"] = stats.balance(accounts, cur);
+
+    auto top = stats.top_categories(transactions, accounts, categories, from, to, cur, 3);
+    json cats = json::array();
+    for (auto& cs : top) {
+        if (cs.amount == 0) continue;
         json c;
-        c["category_id"] =category_stat.category.id;
-        c["name"] = category_stat.category.name;
-        c["color"] = category_stat.category.color;
-        c["amount"] = category_stat.amount;
-        c_stats.push_back(c);
+        c["name"]   = cs.category.name;
+        c["color"]  = cs.category.color;
+        c["amount"] = cs.amount;
+        cats.push_back(c);
     }
-    j["expenses_by_category"] = c_stats;
+    j["top_categories"] = cats;
     return j;
 }
 
 
+json MonthlyReport::generate() const {
+    Statistics stats;
+    json j;
+    j["type"]   = "monthly";
+    j["period"] = ym_to_string({from.year(), from.month()});
+    j["byn"] = build_currency_section(stats, transactions, accounts, categories, from, to, Currency::BYN, "byn");
+    j["usd"] = build_currency_section(stats, transactions, accounts, categories, from, to, Currency::USD, "usd");
+    j["eur"] = build_currency_section(stats, transactions, accounts, categories, from, to, Currency::EUR, "eur");
+    j["rub"] = build_currency_section(stats, transactions, accounts, categories, from, to, Currency::RUB, "rub");
+    return j;
+}
+
 json CategoryReport::generate() const {
     Statistics stats;
-    double total = stats.total_expense(transactions, from, to);
-    std::vector<CategoryStat> category_stats = stats.expenses_by_category(transactions, categories, from, to);
     json j;
     j["type"] = "category";
     j["from"] = ymd_to_string(from);
-    j["to"] = ymd_to_string(to);
-    json c_stats = json::array();
-    for (auto category_stat : category_stats) {
-        json c;
-        c["category_id"] =category_stat.category.id;
-        c["name"] = category_stat.category.name;
-        c["color"] = category_stat.category.color;
-        c["amount"] = category_stat.amount;
-        if (total != 0.0) {
-            c["percent"] = category_stat.amount/total*100;
+    j["to"]   = ymd_to_string(to);
+
+    for (auto [cur, name] : std::vector<std::pair<Currency, std::string>>{
+        {Currency::BYN, "byn"}, {Currency::USD, "usd"},
+        {Currency::EUR, "eur"}, {Currency::RUB, "rub"}})
+    {
+        double total = stats.expense(transactions, accounts, from, to, cur);
+        auto cats = stats.expenses_by_category(transactions, accounts, categories, from, to, cur);
+        json arr = json::array();
+        for (auto& cs : cats) {
+            if (cs.amount == 0) continue;
+            json c;
+            c["name"]    = cs.category.name;
+            c["color"]   = cs.category.color;
+            c["amount"]  = cs.amount;
+            c["percent"] = total > 0 ? cs.amount / total * 100.0 : 0.0;
+            arr.push_back(c);
         }
-        else c["percent"] = 0.0;
-        c_stats.push_back(c);
+        j[name] = arr;
     }
-    j["expenses_by_category"] = c_stats;
-    j["total"] = total;
     return j;
 }
 
 
 json YearlyReport::generate() const {
     Statistics stats;
-    std::vector<Monthly_sum> monthly_sums;
-    monthly_sums = stats.monthly_summary(transactions, year);
     json j;
     j["type"] = "yearly";
     j["year"] = year;
-    json months = json::array();
-    for (size_t i = 0; i < monthly_sums.size(); i++) {
-        json m;
-        m["month"] = i+1;
-        m["income"] = monthly_sums[i].month_income;
-        m["expense"] = monthly_sums[i].month_expense;
-        months.push_back(m);
+
+    for (auto [cur, name] : std::vector<std::pair<Currency, std::string>>{
+        {Currency::BYN, "byn"}, {Currency::USD, "usd"},
+        {Currency::EUR, "eur"}, {Currency::RUB, "rub"}})
+    {
+        auto sums = stats.monthly_summary(transactions, accounts, year, cur);
+        json months = json::array();
+        for (size_t i = 0; i < sums.size(); i++) {
+            json m;
+            m["month"]   = i + 1;
+            m["income"]  = sums[i].month_income;
+            m["expense"] = sums[i].month_expense;
+            months.push_back(m);
+        }
+        j[name] = months;
     }
-    j["months"] = months;
     return j;
 }

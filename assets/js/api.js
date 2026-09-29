@@ -27,5 +27,5 @@ const windowAPI = {
     removeCategory: (categoryId) => windowAPI.fetch('removeCategory', [categoryId]),
     removeBudget: (categoryId) => windowAPI.fetch('removeBudget', [categoryId]),
     editAccount: (data) => windowAPI.fetch('editAccount', data),
-    editBudget:(data) => windowAPI.fetch("editBudget", data)
+    editBudget: (data) => windowAPI.fetch("editBudget", data)
 };

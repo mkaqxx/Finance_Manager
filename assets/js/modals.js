@@ -1,3 +1,4 @@
+
 // --- ТРАНЗАКЦИИ ---
 function toggleTxFields() {
     const type = document.getElementById('tx-type').value;
@@ -7,6 +8,10 @@ function toggleTxFields() {
     document.getElementById('tx-dest-account').required = type === 'transfer';
     document.getElementById('tx-period').style.display = type === 'regular_expense' ? 'block' : 'none';
     document.getElementById('tx-period').required = type === 'regular_expense';
+    if (type !== 'transfer') {
+        const destSelect = document.getElementById('tx-dest-account');
+        destSelect.innerHTML = '<option value="" disabled selected>Счет зачисления...</option>';
+    }
 }
 
 async function openTxModal() {
@@ -26,6 +31,23 @@ async function openTxModal() {
         accSelect.innerHTML += opt;
         destSelect.innerHTML += opt;
     });
+
+
+    accSelect.onchange = () => {
+        const type = document.getElementById('tx-type').value;
+        if (type !== 'transfer') return;
+
+        const srcId = parseInt(accSelect.value);
+        const src = accounts.find(a => a.id === srcId);
+        if (!src) return;
+
+        destSelect.innerHTML = '<option value="" disabled selected>Счет зачисления...</option>';
+        accounts
+            .filter(a => a.currency === src.currency && a.id !== srcId)
+            .forEach(acc => {
+                destSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.balance} ${acc.currency})</option>`;
+            });
+    };
 
     const catSelect = document.getElementById('tx-category');
     catSelect.innerHTML = '<option value="" disabled selected>Выберите категорию...</option>';
@@ -76,87 +98,6 @@ function openAccountModal() {
 }
 
 function closeAccountModal() { document.getElementById('account-modal').style.display = 'none'; }
-
-
-// --- БЮДЖЕТЫ ---
-function openBudgetModal(editData = null) {
-    const modal = document.getElementById('budget-modal');
-    const form = document.getElementById('budget-form');
-    const title = modal.querySelector('h2');
-    const submitBtn = modal.querySelector('button[type="submit"]');
-    const catSelect = document.getElementById('budget-category');
-
-    modal.style.display = 'flex';
-    form.reset();
-
-    if (editData) {
-        editingBudgetCategId = editData.category_id;
-        title.textContent = 'Редактировать лимит';
-        submitBtn.textContent = 'Сохранить';
-
-        // Предзаполняем поля
-        catSelect.innerHTML = `<option value="${editData.category_id}" selected>${editData.category_name || editData.name}</option>`;
-        catSelect.disabled = true;
-        document.getElementById('budget-limit').value = editData.limit;
-    } else {
-        editingBudgetCategId = null;
-        title.textContent = 'Установить лимит';
-        submitBtn.textContent = 'Сохранить';
-        catSelect.disabled = false;
-    }
-}
-
-
-document.getElementById('budget-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const limitValue = parseFloat(document.getElementById('budget-limit').value);
-    const catId = editingBudgetCategId !== null
-        ? editingBudgetCategId
-        : parseInt(document.getElementById('budget-category').value);
-
-    const data = {
-        category_id: Number(catId),
-        limit: limitValue
-    };
-
-    try {
-        if (editingBudgetCategId) {
-            // Вызовем API редактирования
-            await windowAPI.editBudget(data);
-        } else {
-            // Обычное добавление
-            await windowAPI.addBudget(data);
-        }
-
-        document.getElementById('budget-modal').style.display = 'none';
-        renderBudgets();
-    } catch (error) {
-        alert("Ошибка: " + error.message);
-    }
-};
-
-
-function closeBudgetModal() { document.getElementById('budget-modal').style.display = 'none'; }
-
-
-// --- КАТЕГОРИИ ---
-function openCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; document.getElementById('category-form').reset(); }
-function closeCategoryModal() { document.getElementById('category-modal').style.display = 'none'; }
-
-document.getElementById('category-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    try {
-        await windowAPI.addCategory({
-            name: document.getElementById('cat-name').value,
-            type: document.getElementById('cat-type').value,
-            color: document.getElementById('cat-color').value
-        });
-        closeCategoryModal();
-        await loadCategories();
-        if (document.getElementById('view-budget').style.display === 'block') renderCategories();
-    } catch (error) { alert(error.message); }
-});
-
 
 function openAccountDetailModal(acc) {
     // показываем окно
@@ -236,11 +177,13 @@ async function loadAccountTransactions(accountId) {
         transactions.forEach(tx => {
             const cat = categoriesMap[tx.category_id] || { name: '-', color: '#fff' };
             const sign = tx.type === 'income' ? '+' : '-';
+            const cur = (tx.currency || 'byn').toLowerCase();
+            const sym = CURRENCY_SYMBOLS[cur] || cur.toUpperCase();
             container.innerHTML += `
                 <div style="display:flex; justify-content:space-between; padding:10px; background:#282828; border-radius:6px;">
                     <span style="color:#b3b3b3">${tx.date}</span>
                     <span style="color:${cat.color}">${cat.name}</span>
-                    <span style="font-weight:bold">${sign}${tx.amount.toLocaleString()} Br</span>
+                    <span style="font-weight:bold">${sign}${tx.amount.toLocaleString()}${sym}</span>
                 </div>
             `;
         });
@@ -329,6 +272,118 @@ document.getElementById('account-form').addEventListener('submit', async (e) => 
         console.error("Ошибка сохранения:", error);
     }
 });
+
+
+
+// --- БЮДЖЕТЫ ---
+async function openBudgetModal(editData = null) {
+    const modal = document.getElementById('budget-modal');
+    const form = document.getElementById('budget-form');
+    const title = modal.querySelector('h2');
+    const submitBtn = modal.querySelector('button[type="submit"]');
+    const catSelect = document.getElementById('budget-category');
+
+    form.reset();
+
+    if (editData) {
+        editingBudgetCategId = editData.category_id;
+        title.textContent = 'Редактировать лимит';
+        submitBtn.textContent = 'Сохранить';
+
+        catSelect.innerHTML = `<option value="${editData.category_id}" selected>${editData.category_name || editData.name}</option>`;
+        catSelect.disabled = true;
+        document.getElementById('budget-limit').value = editData.limit;
+    } else {
+        editingBudgetCategId = null;
+        title.textContent = 'Установить лимит';
+        submitBtn.textContent = 'Сохранить';
+        catSelect.disabled = false;
+        catSelect.innerHTML = '<option value="" disabled selected>Загрузка категорий...</option>';
+
+        try {
+            // Запрашиваем категории напрямую через API
+            const categories = await windowAPI.getCategories();
+            console.log("Получены категории для бюджета:", categories);
+
+            catSelect.innerHTML = '<option value="" disabled selected>Выберите категорию...</option>';
+
+            // Фильтруем категории расходов (с защитой от регистра и разных имен полей)
+            const expenseCategories = categories.filter(c => {
+                const type = (c.type || '').toLowerCase();
+                return type === 'expense';
+            });
+
+            // Если по типу ничего не отфильтровалось — выводим все доступные
+            const listToRender = expenseCategories.length > 0 ? expenseCategories : categories;
+
+            listToRender.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.textContent = cat.name;
+                catSelect.appendChild(opt);
+            });
+        } catch (err) {
+            console.error("Ошибка загрузки категорий в бюджет:", err);
+            catSelect.innerHTML = '<option value="" disabled selected>Ошибка загрузки</option>';
+        }
+    }
+
+    modal.style.display = 'flex';
+}
+
+
+document.getElementById('budget-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const limitValue = parseFloat(document.getElementById('budget-limit').value);
+    const catId = editingBudgetCategId !== null
+        ? editingBudgetCategId
+        : parseInt(document.getElementById('budget-category').value);
+
+    const data = {
+        category_id: Number(catId),
+        limit: limitValue
+    };
+
+    try {
+        if (editingBudgetCategId) {
+            // Вызовем API редактирования
+            await windowAPI.editBudget(data);
+        } else {
+            // Обычное добавление
+            await windowAPI.addBudget(data);
+        }
+
+        document.getElementById('budget-modal').style.display = 'none';
+        renderBudgets();
+    } catch (error) {
+        alert("Ошибка: " + error.message);
+    }
+};
+
+
+function closeBudgetModal() { document.getElementById('budget-modal').style.display = 'none'; }
+
+
+// --- КАТЕГОРИИ ---
+function openCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; document.getElementById('category-form').reset(); }
+function closeCategoryModal() { document.getElementById('category-modal').style.display = 'none'; }
+
+document.getElementById('category-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        await windowAPI.addCategory({
+            name: document.getElementById('cat-name').value,
+            type: document.getElementById('cat-type').value,
+            color: document.getElementById('cat-color').value
+        });
+        closeCategoryModal();
+        await loadCategories();
+        if (document.getElementById('view-budget').style.display === 'block') renderCategories();
+    } catch (error) { alert(error.message); }
+});
+
+
+
 
 
 function showConfirm({ title = 'Подтверждение', message = 'Вы уверены?', confirmText = 'Удалить', isDanger = true }) {

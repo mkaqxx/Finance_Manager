@@ -37,7 +37,7 @@ async function renderBudgets() {
             nameEl.textContent = b.name;
             nameEl.style.color = b.color;
             clone.querySelector('.b-current').textContent = b.current_amount.toLocaleString();
-            clone.querySelector('.b-limit').textContent = `${b.limit.toLocaleString()} Br`;
+            clone.querySelector('.b-limit').textContent = `${b.limit.toLocaleString()}${CURRENCY_SYMBOLS['byn']}`;
             clone.querySelector('.b-percent-text').textContent = percent;
 
             const bar = clone.querySelector('.b-progress-bar');

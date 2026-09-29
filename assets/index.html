@@ -221,6 +221,12 @@
         <div id="view-analytics" class="page-view" style="display: none;">
             <div style="display: flex; gap: 16px; margin-bottom: 24px;">
                 <input type="month" id="analytics-month" class="form-input" style="width: auto; margin: 0;">
+                <select id="analytics-currency" class="form-input" style="width: auto; margin: 0; cursor: pointer;">
+                    <option value="byn" selected>BYN (Белорусский рубль)</option>
+                    <option value="usd">USD ($)</option>
+                    <option value="eur">EUR (€)</option>
+                    <option value="rub">RUB (₽)</option>
+                </select>
                 <button onclick="loadAnalytics()" class="btn-primary">Применить</button>
             </div>
             <div class="card-grid" style="margin-bottom: 24px;">
