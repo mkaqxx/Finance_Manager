@@ -104,6 +104,7 @@ std::string ApiHandler::handle_get_transactions(std::string seq) {
         t["category_id"] = transaction->get_category_id();
         t["account_id"] = transaction->get_account_id();
         Account* acc = manager.get_account_by_id(transaction->get_account_id());
+        if (!acc) continue;
         t["currency"] = CurrencyToString(acc->get_currency());
         if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
             t["next_date"] = ymd_to_string(reg_exp->get_next_date());
@@ -272,7 +273,7 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
 
         if (type == "expense" || type == "regular_expense" || type == "transfer") {
             Account* acc = manager.get_account_by_id(account_id);
-            if (acc->get_balance() < amount) {
+            if (if acc && acc->get_balance() < amount) {
                 return "{\"error\":\"Недостаточно средств на счете!\"}";
             }
         }
@@ -288,10 +289,13 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
             unsigned destination_id = data["destination_id"];
             Account* src = manager.get_account_by_id(account_id);
             Account* dest = manager.get_account_by_id(destination_id);
-            if (src->get_currency() != dest->get_currency()) {
-                return "{\"error\":\"Нельзя переводить между счетами с разными валютами\"}";
+            if (src && dest) {
+                if (src->get_currency() != dest->get_currency()) {
+                    return "{\"error\":\"Нельзя переводить между счетами с разными валютами\"}";
+                }
+                res = manager.add_transaction(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
             }
-            res = manager.add_transaction(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
+            else return "{\"error:\" :\" аккаунт не найден или поврежден\"}";
         }
         else if (type == "regular_expense") {
             Period p = String_to_period(data["period"]);

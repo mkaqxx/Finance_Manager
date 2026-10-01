@@ -122,6 +122,7 @@
         for (auto& transaction : transactions) {
             if (auto regular = dynamic_cast<RegularExpense *>(transaction.get())) {
                 while (regular->get_next_date() <= ymd) {
+
                     unsigned new_id = ++max_id;
                     auto new_expense = std::make_unique<Expense>(new_id, regular->get_amount(), regular->get_next_date(),
                         regular->get_category_id(), regular->get_account_id());

@@ -70,7 +70,7 @@ class SavingsAccount : public Account {
         goal_amount(goal_amount), deadline(deadline) {}
     std::string get_type() const override { return "savings_account"; }
     std::string get_info() const override;
-    double get_progress() const { return balance / goal_amount * 100.0; }
+    double get_progress() const { return goal_amount > 0 ? balance / goal_amount * 100.0 : 0.0; }
     double  get_goal_amount() const { return goal_amount; }
     std::chrono::year_month_day get_deadline() const { return deadline; }
     double monthly_required() const;

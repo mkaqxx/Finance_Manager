@@ -37,6 +37,7 @@ Status status_from_string(const std::string &status) {
 
 
 Status Budget::get_status() const {
+    if (limit <=0) return  Status::EXCEEDED;
     if ( current_amount/limit >= 1.0 ) return Status::EXCEEDED;
     if ( current_amount/limit >= 0.8 ) return Status::WARNING;
     else return Status::NORMAL;
