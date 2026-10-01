@@ -17,10 +17,10 @@ async function loadDashboard() {
         function formatMultiCurrency(b, u, e, r) {
             return `
                 <div style="font-size: 16px; line-height: 1.5;">
-                    <div>${b.toLocaleString()} <span style="font-size: 12px; color: #b3b3b3;">BYN</span></div>
-                    <div>${u.toLocaleString()} <span style="font-size: 12px; color: #b3b3b3;">$</span></div>
-                    <div>${e.toLocaleString()} <span style="font-size: 12px; color: #b3b3b3;">€</span></div>
-                    <div>${r.toLocaleString()} <span style="font-size: 12px; color: #b3b3b3;">₽</span></div>
+                    <div>${b.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">BYN</span></div>
+                    <div>${u.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">$</span></div>
+                    <div>${e.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">€</span></div>
+                    <div>${r.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">₽</span></div>
                 </div>
             `;
         }
@@ -61,7 +61,7 @@ async function loadDashboard() {
 
                 // Заголовок валютной группы
                 const groupTitle = document.createElement('div');
-                groupTitle.style.cssText = 'color: #b3b3b3; font-size: 12px; font-weight: bold; margin-top: 8px; text-transform: uppercase;';
+                groupTitle.style.cssText = 'color: var(--text-muted); font-size: 12px; font-weight: bold; margin-top: 8px; text-transform: uppercase;';
                 groupTitle.textContent = `Топ расходов (${curr.label})`;
                 container.appendChild(groupTitle);
 
@@ -69,7 +69,7 @@ async function loadDashboard() {
                     const clone = template.content.cloneNode(true);
                     const nameEl = clone.querySelector('.tc-name');
                     nameEl.textContent = cat.name;
-                    nameEl.style.color = cat.color || '#fff';
+                    nameEl.style.color = cat.color || 'var(--text-title)';
                     clone.querySelector('.tc-amount').textContent = `${cat.amount.toLocaleString()} ${curr.label}`;
                     container.appendChild(clone);
                 });
@@ -77,7 +77,7 @@ async function loadDashboard() {
         });
 
         if (!hasAnyTop) {
-            container.innerHTML = '<span style="color: #b3b3b3;">В этом месяце расходов нет.</span>';
+            container.innerHTML = '<span style="color: var(--text-muted);">В этом месяце расходов нет.</span>';
         }
     } catch (error) {
         console.error("Ошибка загрузки главной:", error);

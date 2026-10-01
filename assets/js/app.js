@@ -31,7 +31,29 @@ function switchPage(page, element) {
     else if (page === 'analytics') loadAnalytics();
 }
 
+function changeAppTheme(themeName) {
+    const validTheme = (themeName === 'light') ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', validTheme);
+    localStorage.setItem('finance-app-theme', validTheme);
+
+    const selector = document.getElementById('theme-selector');
+    if (selector && selector.value !== validTheme) {
+        selector.value = validTheme;
+    }
+
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
+    const savedTheme = localStorage.getItem('finance-app-theme') || 'dark';
+    changeAppTheme(savedTheme);
+
+    const selector = document.getElementById('theme-selector');
+    if (selector) {
+        selector.value = savedTheme;
+        selector.addEventListener('change', (e) => changeAppTheme(e.target.value));
+    }
+
     await loadCategories();
     switchPage('dashboard');
 });

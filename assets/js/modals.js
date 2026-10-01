@@ -109,7 +109,7 @@ function openAccountDetailModal(acc) {
     // заполняем информацию
     const sym = { 'rub': '₽', 'usd': '$', 'eur': '€', 'byn': 'Br' }[acc.currency] || acc.currency;
     let info = `
-        <p>Баланс: <strong style="color:#fff">${acc.balance.toLocaleString()} ${sym}</strong></p>
+        <p>Баланс: <strong style="color: var(--text-title);">${acc.balance.toLocaleString()} ${sym}</strong></p>
         <p>Тип: ${acc.type}</p>
     `;
     if (acc.type === 'savings_account') {
@@ -163,33 +163,33 @@ function closeAccountDetailModal() {
 
 async function loadAccountTransactions(accountId) {
     const container = document.getElementById('modal-acc-transactions');
-    container.innerHTML = '<span style="color:#b3b3b3">Загрузка...</span>';
+    container.innerHTML = '<span style="color: var(--text-muted);">Загрузка...</span>';
 
     try {
         const transactions = await windowAPI.getTransactionsByAccount(accountId);
         container.innerHTML = '';
 
         if (!transactions.length) {
-            container.innerHTML = '<span style="color:#b3b3b3">Транзакций нет</span>';
+            container.innerHTML = '<span style="color: var(--text-muted);">Транзакций нет</span>';
             return;
         }
 
         transactions.forEach(tx => {
-            const cat = categoriesMap[tx.category_id] || { name: '-', color: '#fff' };
+            const cat = categoriesMap[tx.category_id] || { name: '-', color: 'var(--text-title)' };
             const sign = tx.type === 'income' ? '+' : '-';
             const cur = (tx.currency || 'byn').toLowerCase();
             const sym = CURRENCY_SYMBOLS[cur] || cur.toUpperCase();
             container.innerHTML += `
-                <div style="display:flex; justify-content:space-between; padding:10px; background:#282828; border-radius:6px;">
-                    <span style="color:#b3b3b3">${tx.date}</span>
-                    <span style="color:${cat.color}">${cat.name}</span>
-                    <span style="font-weight:bold">${sign}${tx.amount.toLocaleString()}${sym}</span>
+                <div style="display:flex; justify-content:space-between; padding:10px; background:var(--bg-input); border: 1px solid var(--border-color); border-radius:var(--card-radius);">
+                    <span style="color:var(--text-muted);">${tx.date}</span>
+                    <span style="color:${cat.color};">${cat.name}</span>
+                    <span style="font-weight:bold; color:var(--text-title);">${sign}${tx.amount.toLocaleString()}${sym}</span>
                 </div>
             `;
         });
     }  catch (e) {
         console.error("Ошибка загрузки транзакций счёта:", e);
-        container.innerHTML = '<span style="color:#e91429">Ошибка загрузки</span>';
+        container.innerHTML = '<span style="color: var(--color-expense);">Ошибка загрузки</span>';
     }
 }
 
@@ -397,7 +397,7 @@ function showConfirm({ title = 'Подтверждение', message = 'Вы у�
         titleEl.textContent = title;
         msgEl.textContent = message;
         okBtn.textContent = confirmText;
-        okBtn.style.background = isDanger ? '#e91429' : '#1db954';
+        okBtn.style.background = isDanger ? 'var(--color-expense)' : 'var(--accent-color)';
 
         modal.style.display = 'flex';
 

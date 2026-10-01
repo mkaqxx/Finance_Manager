@@ -23,8 +23,8 @@ async function loadAccounts() {
             cardNode.addEventListener('click', () => openAccountDetailModal(acc));
 
             // Эффекты наведения
-            cardNode.addEventListener('mouseenter', () => cardNode.style.background = '#222222');
-            cardNode.addEventListener('mouseleave', () => cardNode.style.background = '#181818');
+            cardNode.addEventListener('mouseenter', () => cardNode.style.background = 'var(--bg-hover)');
+            cardNode.addEventListener('mouseleave', () => cardNode.style.background = 'var(--bg-card)');
 
             container.appendChild(clone);
         });

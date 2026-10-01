@@ -5,110 +5,362 @@
     <title>Finance Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        :root, :root[data-theme="dark"] {
+            --bg-page: #000000;
+            --bg-sidebar: #030805; /* Едва заметный зеленоватый оттенок черного */
+            --bg-card: #050d08;
+            --border-color: rgba(0, 255, 102, 0.35); /* Полупрозрачные неоновые рамки */
+            --card-shadow: 0 0 15px rgba(0, 255, 102, 0.1), inset 0 0 10px rgba(0, 255, 102, 0.02);
+            --text-main: #e5e5e5;
+            --text-muted: #668877; /* Стилизованный серый */
+            --text-title: #ffffff;
+            --accent-color: #00ff66;
+            --accent-text: #000000;
+            --color-income: #00ff66;
+            --color-expense: #ff0055;
+            --font-family: 'Consolas', 'Courier New', monospace;
+            --card-radius: 6px;
+            --bg-input: #001105;
+            --border-input: rgba(0, 255, 102, 0.5);
+            --bg-hover: #001f0a;
+            --modal-overlay: rgba(0, 10, 5, 0.85);
+
+            /* Эффекты неонового свечения */
+            --neon-glow-text: 0 0 10px rgba(0, 255, 102, 0.7);
+            --neon-glow-btn: 0 0 15px rgba(0, 255, 102, 0.5);
+            --neon-glow-amount: 0 0 12px rgba(255, 255, 255, 0.25);
         }
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
+
+        :root[data-theme="light"] {
+            /* Настоящие кремовые и бумажные оттенки */
+            --bg-page: #f2eadc; /* Глубокий кремовый цвет фона */
+            --bg-sidebar: #e6dac3; /* Более плотный беж для панели */
+            --bg-card: #fcf9f2; /* Цвет теплого молока (не чисто белый!) */
+            --border-color: #d4c5ab;
+            --card-shadow: 0 4px 16px rgba(90, 70, 50, 0.08);
+            --text-main: #4a4238;
+            --text-muted: #8c7f6d;
+            --text-title: #2c251d;
+            --accent-color: #72968b;
+            --accent-text: #ffffff;
+            --color-income: #5b8a72;
+            --color-expense: #c86d5e;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --card-radius: 14px;
+            --bg-input: #ece1cd;
+            --border-input: #d4c5ab;
+            --bg-hover: #e3d5bd;
+            --modal-overlay: rgba(60, 50, 40, 0.5);
+
+            /* Отключаем свечение для светлой темы */
+            --neon-glow-text: none;
+            --neon-glow-btn: none;
+            --neon-glow-amount: none;
         }
-        /* Боковая панель */
-        .sidebar {
-            width: 240px;
-            background-color: #000000;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+                font-family: var(--font-family);
+            }
+
+            body {
+                background-color: var(--bg-page);
+                color: var(--text-main);
+                display: flex;
+                height: 100vh;
+                overflow: hidden;
+                font-family: var(--font-family);
+                transition: background-color 0.25s ease, color 0.25s ease;
+            }
+
+            /* Боковая панель */
+
+            .sidebar {
+                width: 240px;
+                background-color: var(--bg-sidebar);
+                display: flex;
+                flex-direction: column;
+                padding: 24px;
+                border-right: 1px solid var(--border-color);
+                transition: background-color 0.25s ease, border-color 0.25s ease;
+            }
+
+            .logo {
+                font-size: 20px;
+                font-weight: bold;
+                color: var(--accent-color);
+                margin-bottom: 32px;
+                text-shadow: var(--neon-glow-text); /* Добавляет неоновое свечение логотипу */
+            }
+
+            .nav-links {
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .nav-links li a {
+                color: var(--text-muted);
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 14px;
+                transition: color 0.2s;
+                cursor: pointer;
+            }
+
+            .nav-links li a:hover, .nav-links li a.active {
+                color: var(--text-title);
+            }
+
+            /* Основная область */
+
+            .main-content {
+                flex: 1;
+                background-color: var(--bg-page);
+                padding: 32px;
+                overflow-y: auto;
+                transition: background-color 0.25s ease;
+            }
+
+            h1, h2, h3 {
+                color: var(--text-title);
+            }
+
+            h1 {
+                font-size: 28px;
+                margin-bottom: 24px;
+            }
+
+            .card-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 20px;
+            }
+
+            .card {
+                background-color: var(--bg-card);
+                padding: 20px;
+                border-radius: var(--card-radius);
+                border: 1px solid var(--border-color);
+                box-shadow: var(--card-shadow);
+                transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease;
+            }
+
+            .card h3 {
+                font-size: 16px;
+                margin-bottom: 8px;
+                color: var(--text-muted);
+            }
+
+            .card .amount {
+                font-size: 24px;
+                font-weight: bold;
+                color: var(--text-title);
+                text-shadow: var(--neon-glow-amount); /* Легкое свечение цифрам баланса */
+            }
+
+            /* Модальные окна */
+
+            .modal-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: var(--modal-overlay);
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .modal-content {
+                background: var(--bg-card);
+                padding: 24px;
+                border-radius: var(--card-radius);
+                width: 400px;
+                border: 1px solid var(--border-color);
+                box-shadow: var(--card-shadow);
+                color: var(--text-main);
+            }
+
+            .form-input {
+                width: 100%;
+                margin-bottom: 12px;
+                padding: 10px;
+                background: var(--bg-input);
+                color: var(--text-main);
+                border: 1px solid var(--border-input);
+                border-radius: var(--card-radius);
+                outline: none;
+                font-family: inherit;
+            }
+
+            .btn-primary {
+                padding: 8px 16px;
+                background: var(--accent-color);
+                color: var(--accent-text);
+                font-weight: bold;
+                border: none;
+                border-radius: var(--card-radius);
+                cursor: pointer;
+                font-family: inherit;
+                transition: opacity 0.2s, box-shadow 0.2s;
+                box-shadow: var(--neon-glow-btn); /* Свечение кнопок */
+            }
+
+            .btn-primary:hover {
+                opacity: 0.9;
+            }
+
+            .btn-secondary {
+                padding: 8px 16px;
+                background: transparent;
+                color: var(--text-muted);
+                border: none;
+                cursor: pointer;
+                font-family: inherit;
+                transition: color 0.2s;
+            }
+
+            .btn-secondary:hover {
+                color: var(--text-title);
+            }
+
+            .theme-selector-container {
+                margin-top: auto;
+                padding-top: 24px;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .theme-selector-container label {
+                display: block;
+                font-size: 12px;
+                color: var(--text-muted);
+                margin-bottom: 8px;
+                font-weight: 600;
+            }
+
+            .theme-selector-container select {
+                width: 100%;
+                padding: 8px 10px;
+                background: var(--bg-input);
+                color: var(--text-main);
+                border: 1px solid var(--border-input);
+                border-radius: var(--card-radius);
+                cursor: pointer;
+                outline: none;
+                font-family: inherit;
+                font-size: 13px;
+            }
+        /* ================= АНИМАЦИИ И ИНТЕРАКТИВ ================= */
+
+        /* 1. Плавное появление страниц (Slide Up & Fade) */
+        @keyframes fadeInSlideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1db954;
-            margin-bottom: 32px;
+        .page-view {
+            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-        .nav-links {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .nav-links li a {
-            color: #b3b3b3;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: color 0.2s;
-            cursor: pointer;
-        }
-        .nav-links li a:hover, .nav-links li a.active {
-            color: #ffffff;
-        }
-        /* Основная область */
-        .main-content {
-            flex: 1;
-            background: linear-gradient(180deg, #202020 0%, #121212 100%);
-            padding: 32px;
-            overflow-y: auto;
-        }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 24px;
-        }
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
-        .card {
-            background-color: #181818;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #282828;
-        }
-        .card h3 {
-            font-size: 16px;
-            margin-bottom: 8px;
-            color: #b3b3b3;
-        }
-        .card .amount {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        /* Модальные окна */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
+
+        /* 2. Появление модальных окон (Pop) */
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
         .modal-content {
-            background: #181818;
-            padding: 24px;
-            border-radius: 8px;
-            width: 400px;
-            border: 1px solid #282828;
+            animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* Эффект легкой пружинки */
         }
-        .form-input {
-            width: 100%; margin-bottom: 12px; padding: 10px;
-            background: #282828; color: #fff; border: none; border-radius: 4px;
+
+        /* 3. Интерактивные карточки (Hover) */
+        .card {
+            transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .card:hover {
+            transform: translateY(-3px); /* Слегка приподнимается */
+        }
+
+        /* Усиливаем тени/свечение карточек при наведении в зависимости от темы */
+        :root[data-theme="dark"] .card:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2), inset 0 0 10px rgba(0, 255, 102, 0.05);
+            border-color: rgba(0, 255, 102, 0.6);
+        }
+        :root[data-theme="light"] .card:hover {
+            box-shadow: 0 8px 24px rgba(90, 70, 50, 0.12);
+            border-color: #c4b498;
+        }
+
+        /* 4. Тактильные кнопки и строки таблиц */
         .btn-primary {
-            padding: 8px 16px; background: #1db954; color: #000;
-            font-weight: bold; border: none; border-radius: 4px; cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
         }
-        .btn-secondary {
-            padding: 8px 16px; background: transparent; color: #b3b3b3;
-            border: none; cursor: pointer;
+        .btn-primary:hover {
+            transform: scale(1.02); /* Чуть увеличивается при наведении */
+            filter: brightness(1.1);
+        }
+        .btn-primary:active {
+            transform: scale(0.97); /* Прожимается при клике */
+        }
+
+        /* Анимация строк транзакций/счетов при наведении */
+        tr, .account-card-item {
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        tr:hover {
+            transform: translateX(4px); /* Слегка сдвигается вправо */
+            background-color: var(--bg-hover) !important;
+        }
+        .b-progress-bar {
+            /* Заменяем стандартную линейную анимацию на плавную с эффектом торможения в конце */
+            transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease !important;
+        }
+
+        /* 6. Плавная навигация в сайдбаре */
+        .nav-links li a {
+            position: relative;
+            transition: color 0.3s ease, padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 0px solid transparent; /* Подготовка к плавному появлению бордера */
+        }
+        .nav-links li a:hover, .nav-links li a.active {
+            padding-left: 12px;
+            border-left: 3px solid var(--accent-color);
+            color: var(--text-title);
+        }
+        /* В тёмной теме добавим лёгкое неоновое свечение тексту активного пункта */
+        :root[data-theme="dark"] .nav-links li a.active {
+            text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
+        }
+
+        /* 7. Анимация кнопок удаления (крестики и текст) */
+        .tx-delete-btn, .cat-delete-btn {
+            transition: transform 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
+            transform-origin: center;
+        }
+        .tx-delete-btn:hover, .cat-delete-btn:hover {
+            transform: scale(1.3) rotate(90deg); /* Крестик крутится и увеличивается */
+            color: var(--color-expense) !important;
+        }
+        :root[data-theme="dark"] .tx-delete-btn:hover,
+        :root[data-theme="dark"] .cat-delete-btn:hover {
+            text-shadow: 0 0 10px var(--color-expense); /* Красный неон при попытке удалить */
+        }
+
+        /* 8. Мягкий фокус для полей ввода */
+        .form-input {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+        .form-input:focus {
+            background-color: var(--bg-card); /* Слегка высветляет поле при вводе */
+        }
+        :root[data-theme="dark"] .form-input:focus {
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); /* Неоновый ореол вокруг инпута */
+        }
+        :root[data-theme="light"] .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 157, 150, 0.2); /* Классическое кольцо фокуса */
         }
     </style>
 </head>
@@ -124,6 +376,13 @@
         <li><a onclick="switchPage('budget', this)">Бюджет</a></li>
         <li><a onclick="switchPage('analytics', this)">Аналитика</a></li>
     </ul>
+    <div class="theme-selector-container">
+        <label for="theme-selector">Тема оформления</label>
+        <select id="theme-selector" onchange="changeAppTheme(this.value)">
+            <option value="dark">Тёмная</option>
+            <option value="light">Светлая</option>
+        </select>
+    </div>
 </div>
 
 <!-- Основной контент -->
@@ -136,19 +395,19 @@
             <div class="card-grid">
                 <div class="card">
                     <h3>Общий баланс</h3>
-                    <div class="amount" id="balance-val" style="color: #fff;"> Загрузка..</div>
+                    <div class="amount" id="balance-val">Загрузка..</div>
                 </div>
                 <div class="card">
-                    <h3 style="color: #ff0000;"> Расходы за месяц</h3>
-                    <div class="amount" id="expenses-val" style="color: #fff;">Загрузка..</div>
+                    <h3 style="color: var(--color-expense);">Расходы за месяц</h3>
+                    <div class="amount" id="expenses-val">Загрузка..</div>
                 </div>
                 <div class="card">
-                    <h3 style ="color: #00ff0c" ;>Доход за месяц</h3>
-                    <div class="amount" id="incomes-val" style="color: #fff;">Загрузка..</div>
+                    <h3 style="color: var(--color-income);">Доход за месяц</h3>
+                    <div class="amount" id="incomes-val">Загрузка..</div>
                 </div>
             </div>
             <div style="margin-top: 32px;">
-                <h3 style="margin-bottom: 16px; color: #fff;">Топ расходов за месяц</h3>
+                <h3 style="margin-bottom: 16px;">Топ расходов за месяц</h3>
                 <div id="top-categories-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
             </div>
         </div>
@@ -168,9 +427,9 @@
             </div>
             <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
                 <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
-                       style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; flex: 1; min-width: 220px; outline: none;">
+                       class="form-input" style="flex: 1; min-width: 220px; margin-bottom: 0;">
 
-                <select id="tx-filter-type" style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: pointer; outline: none;">
+                <select id="tx-filter-type" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                     <option value="all">Все типы</option>
                     <option value="income">Доходы</option>
                     <option value="expense">Расходы</option>
@@ -178,21 +437,21 @@
                     <option value="regular_expense">Регулярные</option>
                 </select>
 
-                <select id="tx-filter-account" style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: pointer; outline: none;">
+                <select id="tx-filter-account" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                     <option value="all">Все счета</option>
                 </select>
 
-                <select id="tx-sort" style="background: #181818; border: 1px solid #282828; color: #fff; padding: 10px 14px; border-radius: 6px; cursor: pointer; outline: none;">
+                <select id="tx-sort" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                     <option value="date-desc">Сначала новые</option>
                     <option value="date-asc">Сначала старые</option>
                     <option value="amount-desc">По сумме (убывание)</option>
                     <option value="amount-asc">По сумме (возрастание)</option>
                 </select>
             </div>
-            <div style="background: #181818; border-radius: 8px; padding: 20px;">
+            <div class="card" style="padding: 20px;">
                 <table style="width: 100%; text-align: left; border-collapse: collapse;">
                     <thead>
-                    <tr style="border-bottom: 1px solid #333; color: #b3b3b3;">
+                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
                         <th style="padding: 12px 8px;">Дата</th>
                         <th style="padding: 12px 8px;">Категория</th>
                         <th style="padding: 12px 8px;">Сумма</th>
@@ -207,13 +466,13 @@
         <!-- ВЬЮХА: БЮДЖЕТ -->
         <div id="view-budget" class="page-view" style="display: none;">
             <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                <button onclick="openCategoryModal()" style="padding: 8px 16px; background: #282828; color: #fff; border: 1px solid #333; border-radius: 4px; cursor: pointer;">+ Новая категория</button>
+                <button onclick="openCategoryModal()" class="btn-secondary" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius); padding: 8px 16px;">+ Новая категория</button>
                 <button onclick="openBudgetModal()" class="btn-primary">+ Установить лимит</button>
             </div>
-            <h3 style="margin-bottom: 16px; color: #fff;">Мои категории</h3>
+            <h3 style="margin-bottom: 16px;">Мои категории</h3>
             <div id="categories-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
 
-            <h3 style="margin-top: 32px; margin-bottom: 16px; color: #fff;">Бюджеты</h3>
+            <h3 style="margin-top: 32px; margin-bottom: 16px;">Бюджеты</h3>
             <div id="budget-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
         </div>
 
@@ -232,15 +491,15 @@
             <div class="card-grid" style="margin-bottom: 24px;">
                 <div class="card">
                     <h3>Доход за месяц</h3>
-                    <div class="amount" id="stat-income" style="color: #1db954;">0 ₽</div>
+                    <div class="amount" id="stat-income" style="color: var(--color-income);">0 ₽</div>
                 </div>
                 <div class="card">
                     <h3>Расходы за месяц</h3>
-                    <div class="amount" id="stat-expense" style="color: #e91429;">0 ₽</div>
+                    <div class="amount" id="stat-expense" style="color: var(--color-expense);">0 ₽</div>
                 </div>
                 <div class="card">
                     <h3>Общий баланс</h3>
-                    <div class="amount" id="stat-balance" style="color: #fff;">0 ₽</div>
+                    <div class="amount" id="stat-balance">0 ₽</div>
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
@@ -265,7 +524,7 @@
 <!-- Модалка: Транзакция -->
 <div id="tx-modal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px; color: #fff;">Новая транзакция</h2>
+        <h2 style="margin-bottom: 20px;">Новая транзакция</h2>
         <form id="tx-form">
             <input type="number" id="tx-amount" placeholder="Сумма" step="0.01" required class="form-input">
             <input type="date" id="tx-date" required class="form-input">
@@ -301,7 +560,7 @@
 <!-- Модалка: Счет -->
 <div id="account-modal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px; color: #fff;">Новый счет</h2>
+        <h2 style="margin-bottom: 20px;">Новый счет</h2>
         <form id="account-form">
             <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required class="form-input">
             <input type="number" id="acc-balance" placeholder="Баланс" step="0.01" required class="form-input">
@@ -330,7 +589,7 @@
 <!-- Модалка: Бюджет -->
 <div id="budget-modal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px; color: #fff;">Установить лимит расходов</h2>
+        <h2 style="margin-bottom: 20px;">Установить лимит расходов</h2>
         <form id="budget-form">
             <select id="budget-category" required class="form-input">
                 <option value="" disabled selected>Выберите категорию...</option>
@@ -347,7 +606,7 @@
 <!-- Модалка: Категория -->
 <div id="category-modal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px; color: #fff;">Новая категория</h2>
+        <h2 style="margin-bottom: 20px;">Новая категория</h2>
         <form id="category-form">
             <input type="text" id="cat-name" placeholder="Название (напр. Продукты)" required class="form-input">
             <select id="cat-type" required class="form-input">
@@ -355,7 +614,7 @@
                 <option value="income">Доход</option>
             </select>
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-                <label style="color: #b3b3b3;">Цвет маркера:</label>
+                <label style="color: var(--text-muted);">Цвет маркера:</label>
                 <input type="color" id="cat-color" value="#1db954" style="background: transparent; border: none; cursor: pointer; height: 32px; width: 32px;">
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
@@ -373,24 +632,24 @@
             <button onclick="closeAccountDetailModal()" class="btn-secondary" style="font-size: 20px;">×</button>
         </div>
 
-        <div id="modal-acc-info" style="color: #b3b3b3; margin-bottom: 20px;"></div>
+        <div id="modal-acc-info" style="color: var(--text-muted); margin-bottom: 20px;"></div>
 
         <h3 style="margin-bottom: 12px;">Последние транзакции</h3>
         <div id="modal-acc-transactions" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        <div style="display: flex; justify-content: space-between; border-top: 1px solid #282828; padding-top: 16px; margin-top: auto;">
-            <button id="btn-edit-account" class="btn-secondary" style="background: #282828; color: #fff;">Редактировать</button>
-            <button id="btn-delete-account" class="btn-secondary" style="color: #e91429;">Удалить счет</button>
+        <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: auto;">
+            <button id="btn-edit-account" class="btn-secondary" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Редактировать</button>
+            <button id="btn-delete-account" class="btn-secondary" style="color: var(--color-expense);">Удалить счет</button>
         </div>
     </div>
 </div>
 
-<div id="confirm-modal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000;">
-    <div style="background: #1e1e1e; border-radius: 8px; padding: 24px; width: 360px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-        <h3 id="confirm-title" style="margin-top: 0; color: #fff;">Подтверждение</h3>
-        <p id="confirm-message" style="color: #b3b3b3; font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
+<div id="confirm-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="width: 360px;">
+        <h3 id="confirm-title" style="margin-top: 0;">Подтверждение</h3>
+        <p id="confirm-message" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
         <div style="display: flex; justify-content: flex-end; gap: 12px;">
-            <button id="confirm-btn-cancel" style="background: transparent; border: 1px solid #444; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Отмена</button>
-            <button id="confirm-btn-ok" style="background: #e91429; border: none; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Удалить</button>
+            <button id="confirm-btn-cancel" class="btn-secondary" style="border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Отмена</button>
+            <button id="confirm-btn-ok" style="background: var(--color-expense); border: none; color: #fff; padding: 8px 16px; border-radius: var(--card-radius); cursor: pointer; font-weight: bold;">Удалить</button>
         </div>
     </div>
 </div>
@@ -398,9 +657,9 @@
 <!-- ================== ШАБЛОНЫ (TEMPLATES) ================== -->
 
 <template id="tpl-top-category">
-    <div style="display: flex; justify-content: space-between; padding: 14px 16px; background: #181818; border: 1px solid #282828; border-radius: 8px;">
+    <div style="display: flex; justify-content: space-between; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); box-shadow: var(--card-shadow);">
         <span class="tc-name" style="font-weight: bold;"></span>
-        <span class="tc-amount" style="font-weight: bold; color: #fff;"></span>
+        <span class="tc-amount" style="font-weight: bold; color: var(--text-main);"></span>
     </div>
 </template>
 
@@ -408,21 +667,21 @@
     <div class="card account-card-item" style="padding: 16px 20px; cursor: pointer; margin-bottom: 12px; transition: background 0.2s;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <div class="acc-name" style="font-weight: bold; font-size: 16px; color: #fff;"></div>
-                <div class="acc-meta" style="color: #b3b3b3; font-size: 12px; margin-top: 4px;"></div>
+                <div class="acc-name" style="font-weight: bold; font-size: 16px; color: var(--text-title);"></div>
+                <div class="acc-meta" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;"></div>
             </div>
-            <div class="acc-balance" style="font-size: 18px; font-weight: bold; color: #1db954;"></div>
+            <div class="acc-balance" style="font-size: 18px; font-weight: bold; color: var(--color-income);"></div>
         </div>
     </div>
 </template>
 
 <template id="tpl-transaction-row">
-    <tr style="border-bottom: 1px solid #282828;">
-        <td class="tx-date" style="padding: 12px 8px;"></td>
+    <tr style="border-bottom: 1px solid var(--border-color);">
+        <td class="tx-date" style="padding: 12px 8px; color: var(--text-muted);"></td>
         <td class="tx-category" style="padding: 12px 8px;"></td>
-        <td class="tx-amount" style="padding: 12px 8px; font-weight: bold;"></td>
+        <td class="tx-amount" style="padding: 12px 8px; font-weight: bold; color: var(--text-title);"></td>
         <td style="padding: 12px 8px; text-align: right; width: 40px;">
-            <button class="tx-delete-btn" style="background: transparent; color: #e91429; border: none; cursor: pointer; font-size: 18px; line-height: 1;">×</button>
+            <button class="tx-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 18px; line-height: 1;">×</button>
         </td>
     </tr>
 </template>
@@ -432,28 +691,28 @@
         <div style="display: flex; align-items: center; gap: 12px;">
             <div class="cat-color-dot" style="width: 16px; height: 16px; border-radius: 50%;"></div>
             <div>
-                <div class="cat-name" style="font-weight: bold; color: #fff; font-size: 15px;"></div>
-                <div class="cat-type" style="font-size: 12px; color: #b3b3b3; margin-top: 4px;"></div>
+                <div class="cat-name" style="font-weight: bold; color: var(--text-title); font-size: 15px;"></div>
+                <div class="cat-type" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"></div>
             </div>
         </div>
-        <button class="cat-delete-btn" style="background: transparent; color: #e91429; border: none; cursor: pointer; font-size: 18px;">×</button>
+        <button class="cat-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 18px;">×</button>
     </div>
 </template>
 
 <template id="tpl-budget-bar">
     <div class="card" style="padding: 16px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span class="b-name" style="font-weight: bold;"></span>
-            <span style="color: #b3b3b3;">
-                <span class="b-current" style="color: #fff;"></span> / <span class="b-limit"></span> (<span class="b-percent-text"></span>%)
+            <span class="b-name" style="font-weight: bold; color: var(--text-title);"></span>
+            <span style="color: var(--text-muted);">
+                <span class="b-current" style="color: var(--text-title);"></span> / <span class="b-limit"></span> (<span class="b-percent-text"></span>%)
             </span>
         </div>
-        <div style="width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
+        <div style="width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden;">
             <div class="b-progress-bar" style="height: 100%; transition: width 0.3s;"></div>
         </div>
-        <div style="display: flex; justify-content: flex-end; gap: 12px;">
-            <button class="bud-edit-btn" style="background: transparent; color: #b3b3b3; border: none; cursor: pointer; font-size: 13px;">Редактировать</button>
-            <button class="bud-delete-btn" style="background: transparent; color: #e91429; border: none; cursor: pointer; font-size: 13px;">Удалить</button>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+            <button class="bud-edit-btn" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 13px;">Редактировать</button>
+            <button class="bud-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 13px;">Удалить</button>
         </div>
     </div>
 </template>

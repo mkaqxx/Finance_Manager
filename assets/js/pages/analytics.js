@@ -2,6 +2,63 @@ let categoryChartInstance = null;
 let yearlyChartInstance = null;
 
 
+function getChartThemeColors() {
+    const isDark = (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark';
+    const computed = getComputedStyle(document.documentElement);
+
+    const legendColor = computed.getPropertyValue('--text-title').trim() || (isDark ? '#ffffff' : '#2c2824');
+    const tickColor = computed.getPropertyValue('--text-muted').trim() || (isDark ? '#737373' : '#8c8273');
+    const gridColor = computed.getPropertyValue('--border-color').trim() || (isDark ? '#222222' : '#e2dbce');
+    const incomeColor = computed.getPropertyValue('--color-income').trim() || (isDark ? '#00ff66' : '#5b8a72');
+    const expenseColor = computed.getPropertyValue('--color-expense').trim() || (isDark ? '#ff0055' : '#c86d5e');
+    const emptyColor = computed.getPropertyValue('--border-color').trim() || (isDark ? '#222222' : '#e2dbce');
+
+    return {
+        legendColor,
+        tickColor,
+        gridColor,
+        incomeColor,
+        expenseColor,
+        emptyColor
+    };
+}
+
+function applyChartTheme() {
+    const colors = getChartThemeColors();
+    if (categoryChartInstance) {
+        if (categoryChartInstance.options?.plugins?.legend?.labels) {
+            categoryChartInstance.options.plugins.legend.labels.color = colors.legendColor;
+        }
+        if (categoryChartInstance.data?.datasets?.[0]?.data?.length === 1 && categoryChartInstance.data.labels?.[0] === 'Нет расходов') {
+            categoryChartInstance.data.datasets[0].backgroundColor = [colors.emptyColor];
+        }
+        categoryChartInstance.update();
+    }
+    if (yearlyChartInstance) {
+        if (yearlyChartInstance.options?.plugins?.legend?.labels) {
+            yearlyChartInstance.options.plugins.legend.labels.color = colors.legendColor;
+        }
+        if (yearlyChartInstance.options?.scales?.x?.ticks) {
+            yearlyChartInstance.options.scales.x.ticks.color = colors.tickColor;
+        }
+        if (yearlyChartInstance.options?.scales?.y?.ticks) {
+            yearlyChartInstance.options.scales.y.ticks.color = colors.tickColor;
+        }
+        if (yearlyChartInstance.options?.scales?.y?.grid) {
+            yearlyChartInstance.options.scales.y.grid.color = colors.gridColor;
+        }
+        if (yearlyChartInstance.data?.datasets?.[0]) {
+            yearlyChartInstance.data.datasets[0].backgroundColor = colors.incomeColor;
+        }
+        if (yearlyChartInstance.data?.datasets?.[1]) {
+            yearlyChartInstance.data.datasets[1].backgroundColor = colors.expenseColor;
+        }
+        yearlyChartInstance.update();
+    }
+}
+
+window.addEventListener('themeChanged', applyChartTheme);
+
 async function loadAnalytics() {
     const monthInput = document.getElementById('analytics-month');
     const currencySelect = document.getElementById('analytics-currency');
@@ -44,6 +101,8 @@ async function loadAnalytics() {
 
         document.getElementById('stat-balance').innerText = `${totalBalance.toLocaleString()} ${curSymbol}`;
 
+        const themeColors = getChartThemeColors();
+
         // 1. Диаграмма структуры расходов
         const catCtx = document.getElementById('categoryChart').getContext('2d');
         if (categoryChartInstance) categoryChartInstance.destroy();
@@ -56,13 +115,13 @@ async function loadAnalytics() {
                 labels: hasCategoryData ? categoriesList.map(c => c.name) : ['Нет расходов'],
                 datasets: [{
                     data: hasCategoryData ? categoriesList.map(c => c.amount) : [1],
-                    backgroundColor: hasCategoryData ? categoriesList.map(c => c.color || '#1db954') : ['#333333'],
+                    backgroundColor: hasCategoryData ? categoriesList.map(c => c.color || themeColors.incomeColor) : [themeColors.emptyColor],
                     borderWidth: 0
                 }]
             },
             options: {
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: '#fff' } }
+                    legend: { position: 'bottom', labels: { color: themeColors.legendColor } }
                 },
                 cutout: '70%'
             }
@@ -80,13 +139,13 @@ async function loadAnalytics() {
                     {
                         label: `Доход (${curSymbol})`,
                         data: monthsList.map(m => m.income),
-                        backgroundColor: '#1db954',
+                        backgroundColor: themeColors.incomeColor,
                         borderRadius: 4
                     },
                     {
                         label: `Расход (${curSymbol})`,
                         data: monthsList.map(m => m.expense),
-                        backgroundColor: '#e91429',
+                        backgroundColor: themeColors.expenseColor,
                         borderRadius: 4
                     }
                 ]
@@ -94,11 +153,17 @@ async function loadAnalytics() {
             options: {
                 responsive: true,
                 scales: {
-                    y: { ticks: { color: '#b3b3b3' }, grid: { color: '#333' } },
-                    x: { ticks: { color: '#b3b3b3' }, grid: { display: false } }
+                    y: {
+                        ticks: { color: themeColors.tickColor },
+                        grid: { color: themeColors.gridColor }
+                    },
+                    x: {
+                        ticks: { color: themeColors.tickColor },
+                        grid: { display: false }
+                    }
                 },
                 plugins: {
-                    legend: { labels: { color: '#fff' } }
+                    legend: { labels: { color: themeColors.legendColor } }
                 }
             }
         });

@@ -5,7 +5,7 @@ async function renderCategories() {
         const categories = await windowAPI.getCategories();
         const container = document.getElementById('categories-list');
         const template = document.getElementById('tpl-category-card');
-        container.innerHTML = categories.length ? '' : '<span style="color: #b3b3b3;">Нет категорий.</span>';
+        container.innerHTML = categories.length ? '' : '<span style="color: var(--text-muted);">Нет категорий.</span>';
 
         categories.forEach(cat => {
             const clone = template.content.cloneNode(true);
@@ -26,12 +26,12 @@ async function renderBudgets() {
         const budgets = await windowAPI.getBudgets();
         const container = document.getElementById('budget-list');
         const template = document.getElementById('tpl-budget-bar');
-        container.innerHTML = budgets.length ? '' : '<span style="color: #b3b3b3;">Лимиты не установлены.</span>';
+        container.innerHTML = budgets.length ? '' : '<span style="color: var(--text-muted);">Лимиты не установлены.</span>';
 
         budgets.forEach(b => {
             const clone = template.content.cloneNode(true);
             const percent = Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1);
-            let barColor = b.status === 'exceeded' ? '#e91429' : b.status === 'warning' ? '#f39c12' : '#1db954';
+            let barColor = b.status === 'exceeded' ? 'var(--color-expense)' : b.status === 'warning' ? '#f39c12' : 'var(--color-income)';
 
             const nameEl = clone.querySelector('.b-name');
             nameEl.textContent = b.name;

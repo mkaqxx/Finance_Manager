@@ -93,13 +93,13 @@ function renderTransactionsTable(transactions) {
 
     transactions.forEach(tx => {
         const clone = template.content.cloneNode(true);
-        const category = categoriesMap[tx.category_id] || { name: "-", color: "#ffffff" };
+        const category = categoriesMap[tx.category_id] || { name: "-", color: "var(--text-title)" };
         const sign = tx.type === "income" ? '+' : '-';
 
         clone.querySelector('.tx-date').textContent = tx.date;
         const catCell = clone.querySelector('.tx-category');
         catCell.textContent = category.name;
-        catCell.style.color = category.color;
+        catCell.style.color = category.color || 'var(--text-title)';
         const cur = tx.currency;
         const sym = CURRENCY_SYMBOLS[cur];
         clone.querySelector('.tx-amount').textContent = `${sign}${tx.amount.toLocaleString()}${sym}`;
