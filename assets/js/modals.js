@@ -74,9 +74,13 @@ document.getElementById('tx-form').addEventListener('submit', async (e) => {
     try {
         await windowAPI.addTransaction(data);
         closeTxModal();
+        if (typeof showToast === 'function') showToast('Транзакция успешно сохранена', 'success');
         if (document.getElementById('view-transactions').style.display === 'block') loadTransactions();
         if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
-    } catch (error) { alert(error.message); }
+    } catch (error) {
+        if (typeof showToast === 'function') showToast(error.message, 'error');
+        else alert(error.message);
+    }
 });
 
 // --- СЧЕТА ---
@@ -139,11 +143,13 @@ function openAccountDetailModal(acc) {
             if (!ok) return;
             try {
                 await windowAPI.removeAccount(acc.id); // Исправлено на acc.id
+                if (typeof showToast === 'function') showToast(`Счёт "${acc.name}" удалён`, 'info');
                 closeAccountDetailModal(); // Закрываем окно
                 loadAccounts(); // Перерисовываем список
                 if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
             } catch (e) {
                 console.error("Ошибка удаления: " + e.message);
+                if (typeof showToast === 'function') showToast(e.message, 'error');
             }
         };
     }
@@ -261,8 +267,10 @@ document.getElementById('account-form').addEventListener('submit', async (e) => 
         if (editingAccountId) {
             data.id = editingAccountId; // Добавляем ID для редактирования
             await windowAPI.editAccount(data);
+            if (typeof showToast === 'function') showToast('Счёт успешно обновлён', 'success');
         } else {
             await windowAPI.addAccount(data);
+            if (typeof showToast === 'function') showToast('Счёт успешно добавлен', 'success');
         }
 
         closeAccountModal();
@@ -270,6 +278,7 @@ document.getElementById('account-form').addEventListener('submit', async (e) => 
         if (document.getElementById('account-detail-modal').style.display === 'flex') closeAccountDetailModal();
     } catch (error) {
         console.error("Ошибка сохранения:", error);
+        if (typeof showToast === 'function') showToast(error.message, 'error');
     }
 });
 
@@ -348,15 +357,18 @@ document.getElementById('budget-form').onsubmit = async (e) => {
         if (editingBudgetCategId) {
             // Вызовем API редактирования
             await windowAPI.editBudget(data);
+            if (typeof showToast === 'function') showToast('Лимит бюджета обновлён', 'success');
         } else {
             // Обычное добавление
             await windowAPI.addBudget(data);
+            if (typeof showToast === 'function') showToast('Лимит бюджета установлен', 'success');
         }
 
         document.getElementById('budget-modal').style.display = 'none';
         renderBudgets();
     } catch (error) {
-        alert("Ошибка: " + error.message);
+        if (typeof showToast === 'function') showToast(error.message, 'error');
+        else alert("Ошибка: " + error.message);
     }
 };
 
@@ -378,8 +390,12 @@ document.getElementById('category-form').addEventListener('submit', async (e) =>
         });
         closeCategoryModal();
         await loadCategories();
+        if (typeof showToast === 'function') showToast('Категория успешно создана', 'success');
         if (document.getElementById('view-budget').style.display === 'block') renderCategories();
-    } catch (error) { alert(error.message); }
+    } catch (error) {
+        if (typeof showToast === 'function') showToast(error.message, 'error');
+        else alert(error.message);
+    }
 });
 
 

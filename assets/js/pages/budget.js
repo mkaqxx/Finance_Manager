@@ -64,12 +64,13 @@ async function handleRemoveCategory(cat) {
         });
         if (!ok) return;
         await windowAPI.removeCategory(cat.id);
+        if (typeof showToast === 'function') showToast(`Категория "${cat.name}" удалена`, 'info');
         await loadCategories();
         renderCategories();
         renderBudgets();
     } catch (e) {
-        // ТЕПЕРЬ ОШИБКА БУДЕТ ВИДНА
         console.error("Ошибка удаления: " + e.message);
+        if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }
 
@@ -83,10 +84,11 @@ async function handleRemoveBudget(b) {
         if (!ok) return;
 
         await windowAPI.removeBudget(b.category_id);
+        if (typeof showToast === 'function') showToast(`Лимит для "${b.name}" сброшен`, 'info');
         renderBudgets();
     } catch (e) {
-        // ТЕПЕРЬ ОШИБКА БУДЕТ ВИДНА
         console.error("Ошибка удаления: " + e.message);
+        if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }
 

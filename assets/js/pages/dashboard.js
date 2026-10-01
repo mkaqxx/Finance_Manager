@@ -70,6 +70,12 @@ async function loadDashboard() {
                     const nameEl = clone.querySelector('.tc-name');
                     nameEl.textContent = cat.name;
                     nameEl.style.color = cat.color || 'var(--text-title)';
+
+                    const dotEl = clone.querySelector('.tc-dot');
+                    if (dotEl) {
+                        dotEl.style.backgroundColor = cat.color || 'var(--accent-color)';
+                    }
+
                     clone.querySelector('.tc-amount').textContent = `${cat.amount.toLocaleString()} ${curr.label}`;
                     container.appendChild(clone);
                 });

@@ -96,13 +96,29 @@ function renderTransactionsTable(transactions) {
         const category = categoriesMap[tx.category_id] || { name: "-", color: "var(--text-title)" };
         const sign = tx.type === "income" ? '+' : '-';
 
+        const badge = clone.querySelector('.tx-badge');
+        if (badge) {
+            if (tx.type === 'income') {
+                badge.className = 'tx-badge income';
+                badge.textContent = '↑';
+            } else if (tx.type === 'expense' || tx.type === 'regular_expense') {
+                badge.className = 'tx-badge expense';
+                badge.textContent = '↓';
+            } else {
+                badge.className = 'tx-badge transfer';
+                badge.textContent = '⇄';
+            }
+        }
+
         clone.querySelector('.tx-date').textContent = tx.date;
         const catCell = clone.querySelector('.tx-category');
         catCell.textContent = category.name;
         catCell.style.color = category.color || 'var(--text-title)';
         const cur = tx.currency;
-        const sym = CURRENCY_SYMBOLS[cur];
-        clone.querySelector('.tx-amount').textContent = `${sign}${tx.amount.toLocaleString()}${sym}`;
+        const sym = CURRENCY_SYMBOLS[cur] || cur;
+        const amountEl = clone.querySelector('.tx-amount');
+        amountEl.textContent = `${sign}${tx.amount.toLocaleString()} ${sym}`;
+        amountEl.style.color = tx.type === 'income' ? 'var(--color-income)' : 'var(--text-title)';
         clone.querySelector('.tx-delete-btn').onclick = () => handleRemoveTransaction(tx);
 
         tbody.appendChild(clone);
@@ -124,8 +140,10 @@ async function handleRemoveTransaction(tx){
     if (!ok) return;
     try {
         await windowAPI.removeTransaction(tx.id);
+        if (typeof showToast === 'function') showToast('Операция удалена', 'info');
         loadTransactions();
     } catch (e) {
         console.error("Ошибка удаления: " + e.message);
+        if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }
