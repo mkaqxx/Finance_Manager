@@ -96,6 +96,9 @@ std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account
     outfile.flush();
     outfile.close();
     std::error_code ec;
+    if (std::filesystem::exists(filename)) {
+        std::filesystem::remove(filename, ec);
+    }
     std::filesystem::rename(temp_name, filename, ec);
     if (ec) {
         return std::unexpected(ec.value());

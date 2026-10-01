@@ -167,6 +167,7 @@ std::string ApiHandler::handle_get_transactions_by_account(std::string seq) {
             t["category_id"] = transaction->get_category_id();
             t["account_id"] = transaction->get_account_id();
             Account* acc = manager.get_account_by_id(transaction->get_account_id());
+            if (!acc) continue;
             t["currency"] = CurrencyToString(acc->get_currency());
             if (auto* reg_exp = dynamic_cast<RegularExpense*>(transaction)) {
                 t["next_date"] = ymd_to_string(reg_exp->get_next_date());
@@ -273,7 +274,10 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
 
         if (type == "expense" || type == "regular_expense" || type == "transfer") {
             Account* acc = manager.get_account_by_id(account_id);
-            if (if acc && acc->get_balance() < amount) {
+            if (!acc) {
+                return "{\"error\":\"Счёт списания не найден!\"}";
+            }
+            if (acc->get_balance() < amount) {
                 return "{\"error\":\"Недостаточно средств на счете!\"}";
             }
         }
@@ -291,7 +295,7 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
             Account* dest = manager.get_account_by_id(destination_id);
             if (src && dest) {
                 if (src->get_currency() != dest->get_currency()) {
-                    return "{\"error\":\"Нельзя переводить между счетами с разными валютами\"}";
+                    return "{\"error:\"\"Нельзя переводить между счетами с разными валютами\"}";
                 }
                 res = manager.add_transaction(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
             }
@@ -375,14 +379,18 @@ std::string ApiHandler::handle_add_budget(std::string seq) {
 
 
 std::string ApiHandler::handle_remove_account(std::string seq) {
-    json args = json::parse(seq);
-    json data = args[0];
-    unsigned id = data[0];
-    auto res = manager.remove_account(id);
-    if (!res) {
-        return "{\"error\":\"Ошибка удаления счёта (код: " + std::to_string(res.error()) + ")\"}";
+    try {
+        json args = json::parse(seq);
+        json data = args[0];
+        unsigned id = data[0];
+        auto res = manager.remove_account(id);
+        if (!res) {
+            return "{\"error\":\"Счёт не найден или ошибка сохранения (код: " + std::to_string(res.error()) + ")\"}";
+        }
+        return "{\"status\":\"success\"}";
+    } catch (const std::exception& e) {
+        return "{\"error\":\"" + std::string(e.what()) + "\"}";
     }
-    return "{\"status\":\"success\"}";
 }
 
 

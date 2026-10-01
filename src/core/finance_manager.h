@@ -2,6 +2,7 @@
 #include "storage.h"
 #include "report.h"
 #include <vector>
+#include <unordered_map>
 #include "../json.hpp"
 #include <memory>
 using json = nlohmann::json;
@@ -13,6 +14,10 @@ class Finance_manager {
     std::vector<Category> categories;
     std::vector<Budget> budgets;
     Storage storage;
+    std::unordered_map<unsigned, Account*> account_lookup;
+    std::unordered_map<unsigned, size_t> category_lookup;
+    bool is_dirty = false;
+    void rebuild_lookups();
     public:
     //сохранение
     std::expected<void, int> save_data() noexcept;
