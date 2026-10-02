@@ -4,14 +4,14 @@
 [![Emscripten](https://img.shields.io/badge/Emscripten-SDK-orange?style=flat)](https://emscripten.org/)
 [![PWA Ready](https://img.shields.io/badge/PWA-Ready-blueviolet?style=flat&logo=pwa)](https://web.dev/progressive-web-apps/)
 [![iOS Optimized](https://img.shields.io/badge/iOS-Native%20Feel-black?style=flat&logo=apple)](https://www.apple.com/ios/)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-222222?style=flat&logo=github)](https://mkaqxx.github.io/webFinanceManager/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-222222?style=flat&logo=github)](https://mkaqxx.github.io/Finance_Manager/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > [!IMPORTANT]
 > 🚀 **Онлайн-приложение доступно по ссылке:**  
-> ### 👉 [mkaqxx.github.io/webFinanceManager](https://mkaqxx.github.io/webFinanceManager/) 👈
+> ### 👉 [mkaqxx.github.io/Finance_Manager](https://mkaqxx.github.io/Finance_Manager/) 👈
 >
-> 💻 **Десктопная версия приложения (Windows/WebView2):** находится в ветке [`main`](https://github.com/mkaqxx/webFinanceManager/tree/main).
+> 💻 **Десктопная версия приложения (Windows/WebView2):** находится в ветке [`main`](https://github.com/mkaqxx/Finance_Manager/tree/main).
 
 ---
 
@@ -43,7 +43,7 @@
 ## 📲 Как установить на смартфон как приложение
 
 ### На iPhone / iPad (Safari)
-1. Откройте в браузере Safari сайт: **[mkaqxx.github.io/webFinanceManager](https://mkaqxx.github.io/webFinanceManager/)**
+1. Откройте в браузере Safari сайт: **[mkaqxx.github.io/Finance_Manager](https://mkaqxx.github.io/Finance_Manager/)**
 2. В нижнем меню Safari нажмите кнопку **«Поделиться»** (иконка квадрата со стрелкой вверх $\uparrow$).
 3. Прокрутите список действий вниз и выберите **«На экран "Домой"»** (Add to Home Screen).
 4. Нажмите **«Добавить»** в правом верхнем углу.
@@ -101,7 +101,7 @@ flowchart TD
 Для корректной работы **GitHub Pages** и Service Worker корень репозитория оптимизирован для прямой раздачи:
 
 ```text
-webFinanceManager (ветка web)/
+Finance_Manager (ветка web)/
 ├── index.html                  # Главная страница приложения (точка входа GitHub Pages)
 ├── manifest.json               # Манифест PWA (название, иконки, цвета, standalone режим)
 ├── sw.js                       # Service Worker для кэширования и работы без интернета
@@ -168,4 +168,5 @@ cmake --build build-wasm
 ## 💻 Десктопная версия
 
 Нативная версия приложения для Windows (с использованием Microsoft Edge WebView2, системными окнами и сохранением в локальный файл `data.json`) доступна в ветке:
-👉 **[`main`](https://github.com/mkaqxx/webFinanceManager/tree/main)**
+👉 **[`main`](https://github.com/mkaqxx/Finance_Manager/tree/main)**
+
