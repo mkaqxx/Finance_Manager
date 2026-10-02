@@ -8,8 +8,8 @@
 
 > [!NOTE]
 > **Это ветка `main`** — нативная десктопная версия приложения для Windows.  
-> 🌐 **Веб-версия (WebAssembly + PWA для смартфонов и браузеров)** находится в ветке [`web`](https://github.com/mkaqxx/webFinanceManager/tree/web).  
-> 🚀 **Онлайн демо веб-версии:** [mkaqxx.github.io/webFinanceManager](https://mkaqxx.github.io/webFinanceManager/)
+> 🌐 **Веб-версия (WebAssembly + PWA для смартфонов и браузеров)** находится в ветке [`web`](https://github.com/mkaqxx/Finance_Manager/tree/web).  
+> 🚀 **Онлайн демо веб-версии:** [mkaqxx.github.io/Finance_Manager](https://mkaqxx.github.io/Finance_Manager/)
 
 ---
 
@@ -166,8 +166,8 @@ Finance_manager/
 
 1. Клонируйте репозиторий и перейдите в ветку `main`:
    ```bash
-   git clone https://github.com/mkaqxx/webFinanceManager.git -b main
-   cd webFinanceManager
+   git clone https://github.com/mkaqxx/Finance_Manager.git -b main
+   cd Finance_Manager
    ```
 
 2. Сгенерируйте файлы сборки:
@@ -189,4 +189,5 @@ Finance_manager/
 
 ## 🔄 Связанные ветки
 
-* **[`web`](https://github.com/mkaqxx/webFinanceManager/tree/web)** — Порт приложения под WebAssembly (Emscripten) и адаптированное мобильное PWA (Progressive Web App) для iPhone и Android с хостингом на GitHub Pages.
+* **[`web`](https://github.com/mkaqxx/Finance_Manager/tree/web)** — Порт приложения под WebAssembly (Emscripten) и адаптированное мобильное PWA (Progressive Web App) для iPhone и Android с хостингом на GitHub Pages.
+
