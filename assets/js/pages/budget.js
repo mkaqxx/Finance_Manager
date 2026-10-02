@@ -21,14 +21,22 @@ async function renderCategories() {
             return;
         }
 
-        categories.forEach(cat => {
+        categories.forEach((cat, idx) => {
             const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.card');
+            if (card) {
+                card.classList.add('animate-cascade');
+                card.style.setProperty('--item-idx', idx);
+            }
             clone.querySelector('.cat-color-dot').style.backgroundColor = cat.color;
             clone.querySelector('.cat-name').textContent = cat.name;
             clone.querySelector('.cat-type').textContent = cat.type === 'expense' ? 'Расход' : 'Доход';
 
-            // Вызов функции удаления категории
-            clone.querySelector('.cat-delete-btn').onclick = () => handleRemoveCategory(cat);
+            // Вызов функции удаления категории с анимацией
+            clone.querySelector('.cat-delete-btn').onclick = (e) => {
+                const cardEl = e.target.closest('.card');
+                handleRemoveCategory(cat, cardEl);
+            };
 
             container.appendChild(clone);
         });
@@ -56,8 +64,16 @@ async function renderBudgets() {
             return;
         }
 
-        budgets.forEach(b => {
+        budgets.forEach((b, idx) => {
             const clone = template.content.cloneNode(true);
+            const card = clone.querySelector('.card');
+            if (card) {
+                card.classList.add('animate-cascade');
+                card.style.setProperty('--item-idx', idx);
+                if (b.status === 'exceeded') {
+                    card.classList.add('budget-exceeded-pulse');
+                }
+            }
             const percent = Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1);
             let barColor = b.status === 'exceeded' ? 'var(--color-expense)' : b.status === 'warning' ? '#f39c12' : 'var(--color-income)';
 
@@ -72,8 +88,11 @@ async function renderBudgets() {
             bar.style.width = `${percent}%`;
             bar.style.backgroundColor = barColor;
 
-            // ИСПРАВЛЕНО: передаем b.category_id вместо b.id
-            clone.querySelector('.bud-delete-btn').onclick = () => handleRemoveBudget(b);
+            // Вызов функции удаления бюджета с анимацией
+            clone.querySelector('.bud-delete-btn').onclick = (e) => {
+                const cardEl = e.target.closest('.card');
+                handleRemoveBudget(b, cardEl);
+            };
             clone.querySelector('.bud-edit-btn').onclick = () => openBudgetModal(b);
 
             container.appendChild(clone);
@@ -81,9 +100,9 @@ async function renderBudgets() {
     } catch (e) { console.error(e); }
 }
 
-// === ФУНКЦИИ УДАЛЕНИЯ (обязательно должны быть здесь) ===
+// === ФУНКЦИИ УДАЛЕНИЯ (с плавным схлопыванием) ===
 
-async function handleRemoveCategory(cat) {
+async function handleRemoveCategory(cat, cardEl) {
     try {
         const ok = await showConfirm({
             title: 'Удаление категории',
@@ -91,18 +110,25 @@ async function handleRemoveCategory(cat) {
             confirmText: 'Да, удалить'
         });
         if (!ok) return;
+
+        if (cardEl) {
+            cardEl.classList.add('row-deleting');
+            await new Promise(r => setTimeout(r, 260));
+        }
+
         await windowAPI.removeCategory(cat.id);
         if (typeof showToast === 'function') showToast(`Категория "${cat.name}" удалена`, 'info');
         await loadCategories();
         renderCategories();
         renderBudgets();
     } catch (e) {
+        if (cardEl) cardEl.classList.remove('row-deleting');
         console.error("Ошибка удаления: " + e.message);
         if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }
 
-async function handleRemoveBudget(b) {
+async function handleRemoveBudget(b, cardEl) {
     try {
         const ok = await showConfirm({
             title: 'Удаление лимита',
@@ -111,10 +137,16 @@ async function handleRemoveBudget(b) {
         });
         if (!ok) return;
 
+        if (cardEl) {
+            cardEl.classList.add('row-deleting');
+            await new Promise(r => setTimeout(r, 260));
+        }
+
         await windowAPI.removeBudget(b.category_id);
         if (typeof showToast === 'function') showToast(`Лимит для "${b.name}" сброшен`, 'info');
         renderBudgets();
     } catch (e) {
+        if (cardEl) cardEl.classList.remove('row-deleting');
         console.error("Ошибка удаления: " + e.message);
         if (typeof showToast === 'function') showToast(e.message, 'error');
     }

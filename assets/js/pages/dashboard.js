@@ -81,31 +81,38 @@ async function loadDashboard() {
         const eur = report.eur || { balance: 0, expense: 0, income: 0, top_categories: [] };
         const rub = report.rub || { balance: 0, expense: 0, income: 0, top_categories: [] };
 
-        function formatMultiCurrency(b, u, e, r) {
-            return `
+        function renderAnimatedMultiCurrency(containerId, b, u, e, r) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = `
                 <div style="font-size: 16px; line-height: 1.5;">
-                    <div>${b.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">BYN</span></div>
-                    <div>${u.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">$</span></div>
-                    <div>${e.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">€</span></div>
-                    <div>${r.toLocaleString()} <span style="font-size: 12px; color: var(--text-muted);">₽</span></div>
+                    <div><span class="anim-num-b">0</span> <span style="font-size: 12px; color: var(--text-muted);">BYN</span></div>
+                    <div><span class="anim-num-u">0</span> <span style="font-size: 12px; color: var(--text-muted);">$</span></div>
+                    <div><span class="anim-num-e">0</span> <span style="font-size: 12px; color: var(--text-muted);">€</span></div>
+                    <div><span class="anim-num-r">0</span> <span style="font-size: 12px; color: var(--text-muted);">₽</span></div>
                 </div>
             `;
+            if (typeof animateValue === 'function') {
+                animateValue(container.querySelector('.anim-num-b'), 0, b, 700);
+                animateValue(container.querySelector('.anim-num-u'), 0, u, 700);
+                animateValue(container.querySelector('.anim-num-e'), 0, e, 700);
+                animateValue(container.querySelector('.anim-num-r'), 0, r, 700);
+            } else {
+                container.querySelector('.anim-num-b').textContent = Number(b).toLocaleString();
+                container.querySelector('.anim-num-u').textContent = Number(u).toLocaleString();
+                container.querySelector('.anim-num-e').textContent = Number(e).toLocaleString();
+                container.querySelector('.anim-num-r').textContent = Number(r).toLocaleString();
+            }
         }
 
         // Общий баланс
-        document.getElementById('balance-val').innerHTML = formatMultiCurrency(
-            byn.balance, usd.balance, eur.balance, rub.balance
-        );
+        renderAnimatedMultiCurrency('balance-val', byn.balance, usd.balance, eur.balance, rub.balance);
 
         // Расходы за месяц
-        document.getElementById('expenses-val').innerHTML = formatMultiCurrency(
-            byn.expense, usd.expense, eur.expense, rub.expense
-        );
+        renderAnimatedMultiCurrency('expenses-val', byn.expense, usd.expense, eur.expense, rub.expense);
 
         // Доходы за месяц
-        document.getElementById('incomes-val').innerHTML = formatMultiCurrency(
-            byn.income, usd.income, eur.income, rub.income
-        );
+        renderAnimatedMultiCurrency('incomes-val', byn.income, usd.income, eur.income, rub.income);
 
         // Топ категорий по всем валютам
         const container = document.getElementById('top-categories-list');
@@ -113,6 +120,7 @@ async function loadDashboard() {
         container.innerHTML = '';
 
         let hasAnyTop = false;
+        let globalCatIdx = 0;
         const currencies = [
             { key: 'byn', label: 'BYN' },
             { key: 'usd', label: '$' },
@@ -132,6 +140,11 @@ async function loadDashboard() {
 
                 topList.forEach(cat => {
                     const clone = template.content.cloneNode(true);
+                    const item = clone.querySelector('div');
+                    if (item) {
+                        item.classList.add('animate-cascade');
+                        item.style.setProperty('--item-idx', globalCatIdx++);
+                    }
                     const nameEl = clone.querySelector('.tc-name');
                     nameEl.textContent = cat.name;
                     nameEl.style.color = cat.color || 'var(--text-title)';

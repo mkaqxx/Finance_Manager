@@ -41,7 +41,7 @@ async function loadAccounts() {
             return;
         }
 
-        accounts.forEach(acc => {
+        accounts.forEach((acc, idx) => {
             const clone = template.content.cloneNode(true);
             const sym = CURRENCY_SYMBOLS[acc.currency.toLowerCase()] || acc.currency.toUpperCase();
 
@@ -62,13 +62,15 @@ async function loadAccounts() {
             clone.querySelector('.acc-meta').textContent = typeName;
             clone.querySelector('.acc-balance').textContent = `${acc.balance.toLocaleString()} ${sym}`;
 
+            const isGoalDone = acc.type === 'savings_account' && acc.goal && (acc.progress >= 100);
+
             const numEl = clone.querySelector('.acc-number');
             if (numEl) {
                 if (acc.type === 'bank_account' && acc.number) {
                     numEl.textContent = `•••• ${acc.number}`;
                     numEl.style.display = 'block';
                 } else if (acc.type === 'savings_account' && acc.goal) {
-                    numEl.textContent = `Цель: ${acc.goal.toLocaleString()} ${sym} (${(acc.progress || 0).toFixed(0)}%)`;
+                    numEl.innerHTML = `Цель: ${acc.goal.toLocaleString()} ${sym} (${(acc.progress || 0).toFixed(0)}%) ${isGoalDone ? '<span class="goal-achieved-badge">🎉 Достигнуто!</span>' : ''}`;
                     numEl.style.display = 'block';
                 } else {
                     numEl.style.display = 'none';
@@ -81,17 +83,25 @@ async function loadAccounts() {
                 if (goalWrap && goalBar) {
                     goalWrap.style.display = 'block';
                     goalBar.style.width = `${Math.min(Math.max(acc.progress || 0, 0), 100)}%`;
+                    if (isGoalDone) {
+                        goalBar.style.backgroundColor = 'var(--color-income)';
+                        goalBar.style.boxShadow = '0 0 10px var(--color-income)';
+                    }
                 }
             }
 
             const cardNode = clone.querySelector('.account-card-item');
+            if (cardNode) {
+                cardNode.classList.add('animate-cascade');
+                cardNode.style.setProperty('--item-idx', idx);
 
-            // При клике открываем модалку и передаем туда ID счета
-            cardNode.addEventListener('click', () => openAccountDetailModal(acc));
+                // При клике открываем модалку и передаем туда ID счета
+                cardNode.addEventListener('click', () => openAccountDetailModal(acc));
 
-            // Эффекты наведения
-            cardNode.addEventListener('mouseenter', () => cardNode.style.background = 'var(--bg-hover)');
-            cardNode.addEventListener('mouseleave', () => cardNode.style.background = 'var(--bg-card)');
+                // Эффекты наведения
+                cardNode.addEventListener('mouseenter', () => cardNode.style.background = 'var(--bg-hover)');
+                cardNode.addEventListener('mouseleave', () => cardNode.style.background = 'var(--bg-card)');
+            }
 
             container.appendChild(clone);
         });

@@ -807,6 +807,196 @@
             opacity: 0.55;
             font-size: 11px;
         }
+
+        /* 17. Неоновый следящий блик на карточках (Glow Follower) */
+        .card, .account-card-item {
+            position: relative;
+        }
+        .card::before, .account-card-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: radial-gradient(300px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(0, 255, 102, 0.4), transparent 70%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        :root[data-theme="light"] .card::before,
+        :root[data-theme="light"] .account-card-item::before {
+            background: radial-gradient(300px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(114, 150, 139, 0.45), transparent 70%);
+        }
+        .card:hover::before, .account-card-item:hover::before {
+            opacity: 1;
+        }
+
+        /* 18. Бегущий неоновый луч по рамке (Border Beam) */
+        .card-featured {
+            position: relative;
+            overflow: hidden;
+            padding: 2px !important;
+            border: 1px solid transparent !important;
+        }
+        .card-featured-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent 0deg, var(--accent-color) 40deg, transparent 90deg);
+            animation: rotateGlow 4.5s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .card-featured-inner {
+            position: relative;
+            z-index: 2;
+            background: var(--bg-card);
+            border-radius: calc(var(--card-radius) - 1px);
+            padding: 18px;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        @keyframes rotateGlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 19. Каскадное появление списков и таблиц (Cascade Animation) */
+        @keyframes cascadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-cascade {
+            animation: cascadeSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation-delay: calc(var(--item-idx, 0) * 35ms);
+        }
+
+        /* 20. Мягкое схлопывание при удалении (Row & Card Collapse) */
+        .row-deleting {
+            animation: rowCollapse 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+            pointer-events: none !important;
+            overflow: hidden !important;
+        }
+        @keyframes rowCollapse {
+            0% {
+                opacity: 1;
+                transform: translateX(0);
+                max-height: 90px;
+            }
+            40% {
+                opacity: 0;
+                transform: translateX(35px);
+                max-height: 90px;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(50px);
+                max-height: 0;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                border-width: 0 !important;
+            }
+        }
+
+        /* 21. Неоновый Ripple-эффект при клике на кнопки */
+        .btn-primary, .btn-secondary {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(0);
+            animation: rippleAnim 0.55s ease-out;
+            pointer-events: none;
+        }
+        :root[data-theme="dark"] .btn-primary .btn-ripple {
+            background: rgba(0, 0, 0, 0.25);
+        }
+        @keyframes rippleAnim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* 22. Плавное закрытие модальных окон (Modal Exit Animation) */
+        @keyframes modalOverlayFadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        @keyframes modalContentPopOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.93); }
+        }
+        .modal-overlay.modal-closing {
+            animation: modalOverlayFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .modal-overlay.modal-closing .modal-content {
+            animation: modalContentPopOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* 23. Пульсирующее «дыхание» предупреждений о бюджете */
+        @keyframes pulseAlertGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(255, 0, 85, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 22px rgba(255, 0, 85, 0.45);
+                border-color: rgba(255, 0, 85, 0.9);
+            }
+        }
+        @keyframes pulseWarningGlow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(243, 156, 18, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 22px rgba(243, 156, 18, 0.45);
+                border-color: rgba(243, 156, 18, 0.9);
+            }
+        }
+        .budget-alert-banner {
+            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulseAlertGlow 2.5s infinite ease-in-out !important;
+        }
+        .budget-alert-banner.warning {
+            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulseWarningGlow 2.5s infinite ease-in-out !important;
+        }
+        .budget-exceeded-pulse {
+            animation: pulseAlertGlow 2.2s infinite ease-in-out !important;
+        }
+
+        /* 24. Значок закрытой цели накоплений */
+        .goal-achieved-badge {
+            background: rgba(0, 255, 102, 0.15);
+            color: var(--color-income);
+            border: 1px solid var(--color-income);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulseAlertGlow 3s infinite ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -877,9 +1067,12 @@
         <div id="view-dashboard" class="page-view">
             <div id="dashboard-budget-alerts"></div>
             <div class="card-grid">
-                <div class="card">
-                    <h3>Общий баланс</h3>
-                    <div class="amount" id="balance-val">Загрузка..</div>
+                <div class="card card-featured">
+                    <div class="card-featured-glow"></div>
+                    <div class="card-featured-inner">
+                        <h3>Общий баланс</h3>
+                        <div class="amount" id="balance-val">Загрузка..</div>
+                    </div>
                 </div>
                 <div class="card">
                     <h3 style="color: var(--color-expense);">Расходы за месяц</h3>
@@ -1260,6 +1453,8 @@
 <script src="js/pages/budget.js"></script>
 <script src="js/pages/analytics.js"></script>
 <script src="js/modals.js"></script>
+
+<canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999; display: none;"></canvas>
 
 </body>
 </html>

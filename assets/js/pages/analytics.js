@@ -91,15 +91,25 @@ async function loadAnalytics() {
 
         // Данные текущего выбранного месяца
         const currentMonthData = monthsList[month - 1] || { income: 0, expense: 0 };
-        document.getElementById('stat-income').innerText = `${currentMonthData.income.toLocaleString()} ${curSymbol}`;
-        document.getElementById('stat-expense').innerText = `${currentMonthData.expense.toLocaleString()} ${curSymbol}`;
 
         // Баланс счетов только выбранной валюты
-        const totalBalance = accounts
+        const totalBalance = (accounts || [])
             .filter(acc => (acc.currency || '').toLowerCase() === selectedCurrency.toLowerCase())
             .reduce((sum, acc) => sum + acc.balance, 0);
 
-        document.getElementById('stat-balance').innerText = `${totalBalance.toLocaleString()} ${curSymbol}`;
+        const incEl = document.getElementById('stat-income');
+        const expEl = document.getElementById('stat-expense');
+        const balEl = document.getElementById('stat-balance');
+
+        if (typeof animateValue === 'function') {
+            animateValue(incEl, 0, currentMonthData.income, 700, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
+            animateValue(expEl, 0, currentMonthData.expense, 700, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
+            animateValue(balEl, 0, totalBalance, 700, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
+        } else {
+            incEl.innerText = `${currentMonthData.income.toLocaleString()} ${curSymbol}`;
+            expEl.innerText = `${currentMonthData.expense.toLocaleString()} ${curSymbol}`;
+            balEl.innerText = `${totalBalance.toLocaleString()} ${curSymbol}`;
+        }
 
         const themeColors = getChartThemeColors();
 
@@ -120,6 +130,10 @@ async function loadAnalytics() {
                 }]
             },
             options: {
+                animation: {
+                    duration: 750,
+                    easing: 'easeOutQuart'
+                },
                 plugins: {
                     legend: { position: 'bottom', labels: { color: themeColors.legendColor } }
                 },
@@ -152,6 +166,10 @@ async function loadAnalytics() {
             },
             options: {
                 responsive: true,
+                animation: {
+                    duration: 750,
+                    easing: 'easeOutQuart'
+                },
                 scales: {
                     y: {
                         ticks: { color: themeColors.tickColor },

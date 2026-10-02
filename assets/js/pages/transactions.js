@@ -147,8 +147,13 @@ function renderTransactionsTable(transactions) {
         return;
     }
 
-    transactions.forEach(tx => {
+    transactions.forEach((tx, idx) => {
         const clone = template.content.cloneNode(true);
+        const row = clone.querySelector('tr');
+        if (row) {
+            row.classList.add('animate-cascade');
+            row.style.setProperty('--item-idx', Math.min(idx, 25));
+        }
         const category = categoriesMap[tx.category_id] || { name: "-", color: "var(--text-title)" };
         const sign = tx.type === "income" ? '+' : '-';
 
@@ -175,7 +180,10 @@ function renderTransactionsTable(transactions) {
         const amountEl = clone.querySelector('.tx-amount');
         amountEl.textContent = `${sign}${tx.amount.toLocaleString()} ${sym}`;
         amountEl.style.color = tx.type === 'income' ? 'var(--color-income)' : 'var(--text-title)';
-        clone.querySelector('.tx-delete-btn').onclick = () => handleRemoveTransaction(tx);
+        clone.querySelector('.tx-delete-btn').onclick = (e) => {
+            const tr = e.target.closest('tr');
+            handleRemoveTransaction(tx, tr);
+        };
 
         tbody.appendChild(clone);
     });
@@ -213,7 +221,7 @@ document.getElementById('tx-filter-type')?.addEventListener('change', applyFilte
 document.getElementById('tx-filter-account')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('tx-sort')?.addEventListener('change', applyFiltersAndRender);
 
-async function handleRemoveTransaction(tx){
+async function handleRemoveTransaction(tx, row) {
     const ok = await showConfirm({
         title: 'Удаление транзакции',
         message: 'Удалить эту операцию? Баланс счёта будет пересчитан.',
@@ -221,10 +229,15 @@ async function handleRemoveTransaction(tx){
     });
     if (!ok) return;
     try {
+        if (row) {
+            row.classList.add('row-deleting');
+            await new Promise(r => setTimeout(r, 260));
+        }
         await windowAPI.removeTransaction(tx.id);
         if (typeof showToast === 'function') showToast('Операция удалена', 'info');
         loadTransactions();
     } catch (e) {
+        if (row) row.classList.remove('row-deleting');
         console.error("Ошибка удаления: " + e.message);
         if (typeof showToast === 'function') showToast(e.message, 'error');
     }

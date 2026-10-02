@@ -35,12 +35,22 @@ function switchPage(page, element) {
     else if (page === 'analytics') loadAnalytics();
 }
 
+function closeModalAnimated(modalOrId) {
+    const modal = typeof modalOrId === 'string' ? document.getElementById(modalOrId) : modalOrId;
+    if (!modal || modal.style.display === 'none') return;
+    modal.classList.add('modal-closing');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('modal-closing');
+    }, 180);
+}
+
 function closeAllModals() {
     const modalOverlays = document.querySelectorAll('.modal-overlay');
     let closedAny = false;
     modalOverlays.forEach(m => {
         if (m.style.display === 'flex' || m.style.display === 'block') {
-            m.style.display = 'none';
+            closeModalAnimated(m);
             closedAny = true;
         }
     });
@@ -153,3 +163,132 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// Анимация плавного накручивания чисел (Rolling Numbers / Odometer)
+function animateValue(elem, start, end, duration = 750, formatter = null) {
+    if (!elem) return;
+    const startVal = Number(start) || 0;
+    const endVal = Number(end) || 0;
+    if (startVal === endVal) {
+        elem.textContent = formatter ? formatter(endVal) : Math.round(endVal).toLocaleString();
+        return;
+    }
+    const startTime = performance.now();
+    const diff = endVal - startVal;
+
+    function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        // Easing: easeOutCubic
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = startVal + diff * ease;
+
+        elem.textContent = formatter ? formatter(current) : Math.round(current).toLocaleString();
+
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        } else {
+            elem.textContent = formatter ? formatter(endVal) : Math.round(endVal).toLocaleString();
+        }
+    }
+
+    requestAnimationFrame(step);
+}
+
+// Эффект микро-конфетти / салюта на Canvas
+let confettiAnimId = null;
+function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerHeight * 0.4) {
+    const canvas = document.getElementById('confetti-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.style.display = 'block';
+
+    if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+
+    const colors = ['#00ff66', '#00e5ff', '#ff0055', '#ffd700', '#ffffff', '#72968b'];
+    const particles = [];
+    const count = 65;
+
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 4 + Math.random() * 8;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 3,
+            size: 4 + Math.random() * 6,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 12,
+            opacity: 1,
+            gravity: 0.18,
+            decay: 0.012 + Math.random() * 0.012
+        });
+    }
+
+    function renderConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let active = false;
+
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= 0.98;
+            p.rotation += p.rotationSpeed;
+            p.opacity -= p.decay;
+
+            if (p.opacity > 0) {
+                active = true;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.rotation * Math.PI) / 180);
+                ctx.globalAlpha = Math.max(0, p.opacity);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+                ctx.restore();
+            }
+        });
+
+        if (active) {
+            confettiAnimId = requestAnimationFrame(renderConfetti);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.style.display = 'none';
+            confettiAnimId = null;
+        }
+    }
+
+    renderConfetti();
+}
+
+// Интерактивный неоновый следящий блик на карточках
+document.addEventListener('mousemove', (e) => {
+    const card = e.target.closest('.card, .account-card-item');
+    if (card) {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+    }
+});
+
+// Неоновый Ripple-эффект при нажатии на кнопки
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-primary, .btn-secondary');
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const circle = document.createElement('span');
+    const diameter = Math.max(rect.width, rect.height);
+    const radius = diameter / 2;
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${e.clientX - rect.left - radius}px`;
+    circle.style.top = `${e.clientY - rect.top - radius}px`;
+    circle.classList.add('btn-ripple');
+    const oldRipple = btn.querySelector('.btn-ripple');
+    if (oldRipple) oldRipple.remove();
+    btn.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+});

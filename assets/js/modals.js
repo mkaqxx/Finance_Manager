@@ -56,7 +56,7 @@ async function openTxModal() {
     }
 }
 
-function closeTxModal() { document.getElementById('tx-modal').style.display = 'none'; }
+function closeTxModal() { closeModalAnimated('tx-modal'); }
 
 document.getElementById('tx-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -75,6 +75,9 @@ document.getElementById('tx-form').addEventListener('submit', async (e) => {
         await windowAPI.addTransaction(data);
         closeTxModal();
         if (typeof showToast === 'function') showToast('Транзакция успешно сохранена', 'success');
+        if (type === 'income' && typeof triggerCelebrationConfetti === 'function') {
+            triggerCelebrationConfetti();
+        }
         if (document.getElementById('view-transactions').style.display === 'block') loadTransactions();
         if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
     } catch (error) {
@@ -101,7 +104,7 @@ function openAccountModal() {
     toggleAccountFields();
 }
 
-function closeAccountModal() { document.getElementById('account-modal').style.display = 'none'; }
+function closeAccountModal() { closeModalAnimated('account-modal'); }
 
 function openAccountDetailModal(acc) {
     // показываем окно
@@ -117,12 +120,16 @@ function openAccountDetailModal(acc) {
         <p>Тип: ${acc.type}</p>
     `;
     if (acc.type === 'savings_account') {
+        const isReached = acc.progress >= 100;
         info += `
             <p>Цель: ${acc.goal.toLocaleString()} ${sym}</p>
-            <p>Прогресс: ${acc.progress.toFixed(1)}%</p>
+            <p>Прогресс: ${acc.progress.toFixed(1)}% ${isReached ? '<span class="goal-achieved-badge">🎉 Цель достигнута!</span>' : ''}</p>
             <p>Нужно откладывать: ${acc.monthly_required.toLocaleString()} ${sym}/мес</p>
             <p>Дедлайн: ${acc.deadline}</p>
         `;
+        if (isReached && typeof triggerCelebrationConfetti === 'function') {
+            setTimeout(() => triggerCelebrationConfetti(), 200);
+        }
     }
     if (acc.type === 'bank_account') {
         info += `<p>Карта: •••• ${acc.number}</p>`;
@@ -164,7 +171,7 @@ function openAccountDetailModal(acc) {
 }
 
 function closeAccountDetailModal() {
-    document.getElementById('account-detail-modal').style.display = 'none';
+    closeModalAnimated('account-detail-modal');
 }
 
 async function loadAccountTransactions(accountId) {
@@ -364,7 +371,7 @@ document.getElementById('budget-form').onsubmit = async (e) => {
             if (typeof showToast === 'function') showToast('Лимит бюджета установлен', 'success');
         }
 
-        document.getElementById('budget-modal').style.display = 'none';
+        closeBudgetModal();
         renderBudgets();
     } catch (error) {
         if (typeof showToast === 'function') showToast(error.message, 'error');
@@ -373,12 +380,12 @@ document.getElementById('budget-form').onsubmit = async (e) => {
 };
 
 
-function closeBudgetModal() { document.getElementById('budget-modal').style.display = 'none'; }
+function closeBudgetModal() { closeModalAnimated('budget-modal'); }
 
 
 // --- КАТЕГОРИИ ---
 function openCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; document.getElementById('category-form').reset(); }
-function closeCategoryModal() { document.getElementById('category-modal').style.display = 'none'; }
+function closeCategoryModal() { closeModalAnimated('category-modal'); }
 
 document.getElementById('category-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -418,7 +425,7 @@ function showConfirm({ title = 'Подтверждение', message = 'Вы у�
         modal.style.display = 'flex';
 
         function cleanup(result) {
-            modal.style.display = 'none';
+            closeModalAnimated(modal);
             okBtn.onclick = null;
             cancelBtn.onclick = null;
             resolve(result);
