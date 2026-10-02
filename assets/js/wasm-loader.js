@@ -1,8 +1,10 @@
 let wasmApi = null;
 
 async function initFinanceWasm() {
-    // 1. Инициализируем модуль Emscripten
-    const Module = await createFinanceManagerModule();
+    // 1. Инициализируем модуль Emscripten с указанием пути к .wasm файлу
+    const Module = await createFinanceManagerModule({
+        locateFile: (path) => 'assets/wasm/' + path
+    });
     const FS = Module.FS;
     const IDBFS = Module.IDBFS;
 

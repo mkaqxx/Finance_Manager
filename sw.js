@@ -1,24 +1,25 @@
-const CACHE_NAME = 'finance-manager-v2';
+const CACHE_NAME = 'finance-manager-v3';
 
 const STATIC_ASSETS = [
     './',
     './index.html',
     './manifest.json',
-    './icons/icon-192.png',
-    './icons/icon-256.png',
-    './icons/icon-512.png',
-    './wasm/finance_manager.js',
-    './wasm/finance_manager.wasm',
-    './js/chart.js',
-    './js/api.js',
-    './js/app.js',
-    './js/modals.js',
-    './js/wasm-loader.js',
-    './js/pages/accounts.js',
-    './js/pages/analytics.js',
-    './js/pages/budget.js',
-    './js/pages/dashboard.js',
-    './js/pages/transactions.js'
+    './sw.js',
+    './assets/icons/icon-192.png',
+    './assets/icons/icon-256.png',
+    './assets/icons/icon-512.png',
+    './assets/wasm/finance_manager.js',
+    './assets/wasm/finance_manager.wasm',
+    './assets/js/chart.js',
+    './assets/js/api.js',
+    './assets/js/app.js',
+    './assets/js/modals.js',
+    './assets/js/wasm-loader.js',
+    './assets/js/pages/accounts.js',
+    './assets/js/pages/analytics.js',
+    './assets/js/pages/budget.js',
+    './assets/js/pages/dashboard.js',
+    './assets/js/pages/transactions.js'
 ];
 
 self.addEventListener('install', (event) => {
