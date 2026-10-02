@@ -4,6 +4,9 @@ project(FinanceManager LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Вшиваем стандартную библиотеку C++ внутрь .exe для портативности на чужих ПК
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 # 1. Автоматически скачиваем WebView2 SDK напрямую от Microsoft
 include(FetchContent)
 FetchContent_Declare(
@@ -28,6 +31,7 @@ add_executable(FinanceManager WIN32
         src/core/api_handler.cpp
         src/utils/safe_open_file.h
         src/utils/safe_open_file.cpp
+        src/resources.rc
 )
 
 # 3. Пути к заголовочным файлам (включая скачанный SDK)

@@ -19,6 +19,10 @@ const pageTitles = {
 function switchPage(page, element) {
     document.getElementById('page-title').innerText = pageTitles[page];
     document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
+    
+    if (!element) {
+        element = document.querySelector(`.nav-links a[onclick*="'${page}'"]`);
+    }
     if (element) element.classList.add('active');
 
     document.querySelectorAll('.page-view').forEach(el => el.style.display = 'none');
@@ -29,6 +33,18 @@ function switchPage(page, element) {
     else if (page === 'transactions') loadTransactions();
     else if (page === 'budget') { renderCategories(); renderBudgets(); }
     else if (page === 'analytics') loadAnalytics();
+}
+
+function closeAllModals() {
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    let closedAny = false;
+    modalOverlays.forEach(m => {
+        if (m.style.display === 'flex' || m.style.display === 'block') {
+            m.style.display = 'none';
+            closedAny = true;
+        }
+    });
+    return closedAny;
 }
 
 function toggleTheme() {
@@ -74,11 +90,6 @@ function changeAppTheme(themeName) {
     document.documentElement.setAttribute('data-theme', validTheme);
     localStorage.setItem('finance-app-theme', validTheme);
 
-    const selector = document.getElementById('theme-selector');
-    if (selector && selector.value !== validTheme) {
-        selector.value = validTheme;
-    }
-
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
 }
 
@@ -86,12 +97,59 @@ window.addEventListener('DOMContentLoaded', async () => {
     const savedTheme = localStorage.getItem('finance-app-theme') || 'dark';
     changeAppTheme(savedTheme);
 
-    const selector = document.getElementById('theme-selector');
-    if (selector) {
-        selector.value = savedTheme;
-        selector.addEventListener('change', (e) => changeAppTheme(e.target.value));
-    }
-
     await loadCategories();
     switchPage('dashboard');
+});
+
+// Глобальные горячие клавиши (Hotkeys)
+window.addEventListener('keydown', (e) => {
+    const activeEl = document.activeElement;
+    const isInput = activeEl && (
+        activeEl.tagName === 'INPUT' ||
+        activeEl.tagName === 'TEXTAREA' ||
+        activeEl.tagName === 'SELECT' ||
+        activeEl.isContentEditable
+    );
+
+    // Escape: всегда закрывает открытые модальные окна
+    if (e.key === 'Escape') {
+        if (isInput) activeEl.blur();
+        const closed = closeAllModals();
+        if (closed) {
+            e.preventDefault();
+            return;
+        }
+    }
+
+    // Если фокус в поле ввода — не перехватываем другие горячие клавиши
+    if (isInput) return;
+
+    // N или Ctrl+N: создание новой транзакции
+    if ((e.ctrlKey && e.code === 'KeyN') || (!e.ctrlKey && !e.metaKey && !e.altKey && e.code === 'KeyN')) {
+        e.preventDefault();
+        if (typeof openTxModal === 'function') {
+            openTxModal();
+        }
+        return;
+    }
+
+    // Цифры 1..5: Быстрая навигация по вкладкам
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        const pageMap = {
+            'Digit1': 'dashboard',
+            'Digit2': 'accounts',
+            'Digit3': 'transactions',
+            'Digit4': 'budget',
+            'Digit5': 'analytics',
+            'Numpad1': 'dashboard',
+            'Numpad2': 'accounts',
+            'Numpad3': 'transactions',
+            'Numpad4': 'budget',
+            'Numpad5': 'analytics'
+        };
+        if (pageMap[e.code]) {
+            e.preventDefault();
+            switchPage(pageMap[e.code]);
+        }
+    }
 });

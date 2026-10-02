@@ -1,9 +1,45 @@
+function renderAccountsSkeleton() {
+    const container = document.getElementById('accounts-list');
+    if (!container) return;
+    let html = '';
+    for (let i = 0; i < 3; i++) {
+        html += `
+            <div class="card" style="margin-bottom: 12px; padding: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <div class="skeleton skeleton-text" style="width: 140px; height: 16px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 45px; height: 20px; border-radius: 10px;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div class="skeleton skeleton-text" style="width: 80px; height: 14px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 100px; height: 22px;"></div>
+                </div>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+}
+
 async function loadAccounts() {
     try {
+        renderAccountsSkeleton();
         const accounts = await windowAPI.getAccounts();
         const container = document.getElementById('accounts-list');
         const template = document.getElementById('tpl-account-card');
         container.innerHTML = '';
+
+        if (!accounts || !accounts.length) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+                    </div>
+                    <h4>У вас пока нет счетов</h4>
+                    <p>Создайте наличный, банковский счёт или копилку для учета и контроля баланса.</p>
+                    <button onclick="openAccountModal()" class="btn-primary" style="font-size: 13px;">+ Создать первый счёт</button>
+                </div>
+            `;
+            return;
+        }
 
         accounts.forEach(acc => {
             const clone = template.content.cloneNode(true);

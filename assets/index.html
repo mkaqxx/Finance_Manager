@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Finance Manager</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/chart.js"></script>
     <style>
         :root, :root[data-theme="dark"] {
             --bg-page: #000000;
@@ -254,29 +254,8 @@
 
             .theme-selector-container {
                 margin-top: auto;
-                padding-top: 24px;
+                padding-top: 18px;
                 border-top: 1px solid var(--border-color);
-            }
-
-            .theme-selector-container label {
-                display: block;
-                font-size: 12px;
-                color: var(--text-muted);
-                margin-bottom: 8px;
-                font-weight: 600;
-            }
-
-            .theme-selector-container select {
-                width: 100%;
-                padding: 8px 10px;
-                background: var(--bg-input);
-                color: var(--text-main);
-                border: 1px solid var(--border-input);
-                border-radius: var(--card-radius);
-                cursor: pointer;
-                outline: none;
-                font-family: inherit;
-                font-size: 13px;
             }
         /* ================= АНИМАЦИИ И ИНТЕРАКТИВ ================= */
 
@@ -329,12 +308,21 @@
         }
 
         /* Анимация строк транзакций/счетов при наведении */
-        tr, .account-card-item {
+        tbody tr:not(.empty-row):not(.skeleton-row), .account-card-item {
             transition: transform 0.2s ease, background-color 0.2s ease;
         }
-        tr:hover {
+        tbody tr:not(.empty-row):not(.skeleton-row):hover {
             transform: translateX(4px); /* Слегка сдвигается вправо */
             background-color: var(--bg-hover) !important;
+        }
+        tr.empty-row, tr.skeleton-row, thead tr {
+            background-color: transparent !important;
+            transform: none !important;
+            cursor: default !important;
+        }
+        tr.empty-row:hover, tr.skeleton-row:hover, thead tr:hover {
+            background-color: transparent !important;
+            transform: none !important;
         }
         .b-progress-bar {
             /* Заменяем стандартную линейную анимацию на плавную с эффектом торможения в конце */
@@ -380,6 +368,8 @@
         }
         :root[data-theme="dark"] .form-input:focus {
             box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); /* Неоновый ореол вокруг инпута */
+        }
+
         /* 9. Бейджи и статусы */
         .badge-pill {
             display: inline-flex;
@@ -424,10 +414,11 @@
             display: inline-flex;
             cursor: pointer;
             user-select: none;
+            padding: 2px;
         }
         .theme-toggle-track {
-            width: 44px;
-            height: 22px;
+            width: 48px;
+            height: 24px;
             background: var(--bg-input);
             border: 1px solid var(--border-input);
             border-radius: 12px;
@@ -438,23 +429,43 @@
             position: relative;
             transition: all 0.3s ease;
         }
+        .theme-toggle-switch:hover .theme-toggle-track {
+            border-color: var(--accent-color);
+        }
         .theme-toggle-thumb {
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             background: var(--accent-color);
             border-radius: 50%;
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            z-index: 1;
         }
         :root[data-theme="light"] .theme-toggle-thumb {
-            transform: translateX(22px);
+            transform: translateX(24px);
         }
         .theme-icon-sun, .theme-icon-moon {
             color: var(--text-muted);
-            transition: color 0.2s ease;
+            transition: color 0.2s ease, opacity 0.2s ease;
+            z-index: 2;
+            cursor: pointer;
+        }
+        :root[data-theme="dark"] .theme-icon-moon {
+            color: #000000;
+        }
+        :root[data-theme="dark"] .theme-icon-sun {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+        :root[data-theme="light"] .theme-icon-sun {
+            color: #ffffff;
+        }
+        :root[data-theme="light"] .theme-icon-moon {
+            color: var(--text-muted);
+            opacity: 0.5;
         }
 
         /* 11. Всплывающие уведомления (Toasts) */
@@ -514,6 +525,288 @@
             from { width: 100%; }
             to { width: 0%; }
         }
+
+        /* 12. Скелетоны и эффект мерцания (Skeleton Loaders) */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-card) 20%, var(--bg-hover) 50%, var(--bg-card) 80%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: var(--card-radius);
+        }
+        .skeleton-text {
+            height: 14px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        /* 13. Быстрые фильтры-плашки (Filter Chips) */
+        .chips-container, .chip-group-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .chips-row, .segmented-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .chips-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            min-width: 60px;
+            user-select: none;
+            opacity: 0.8;
+        }
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .filter-chip, .segmented-btn {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            border-radius: 9999px !important; /* Идеальная плашка-капсула */
+            padding: 6px 14px !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            white-space: nowrap !important;
+            transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            user-select: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            font-family: inherit !important;
+            outline: none !important;
+            line-height: 1.2 !important;
+        }
+
+        /* Тёмная тема: глубокие неоновые плашки */
+        :root[data-theme="dark"] .filter-chip,
+        :root[data-theme="dark"] .segmented-btn {
+            background: #0d1410 !important;
+            border: 1px solid rgba(0, 255, 102, 0.25) !important;
+            color: #9ab4a5 !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+        }
+        :root[data-theme="dark"] .filter-chip:hover,
+        :root[data-theme="dark"] .segmented-btn:hover {
+            border-color: #00ff66 !important;
+            color: #ffffff !important;
+            background: #132418 !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2) !important;
+        }
+        :root[data-theme="dark"] .filter-chip.active,
+        :root[data-theme="dark"] .segmented-btn.active {
+            background: rgba(0, 255, 102, 0.15) !important;
+            color: #00ff66 !important;
+            border: 1.5px solid #00ff66 !important;
+            box-shadow: 0 0 14px rgba(0, 255, 102, 0.25), inset 0 0 8px rgba(0, 255, 102, 0.08) !important;
+            font-weight: 700 !important;
+        }
+
+        /* Светлая тема: пастельные бумажные плашки */
+        :root[data-theme="light"] .filter-chip,
+        :root[data-theme="light"] .segmented-btn {
+            background: #ede6d8 !important;
+            border: 1px solid #d4c8b4 !important;
+            color: #554b3e !important;
+            box-shadow: 0 1px 3px rgba(90, 70, 50, 0.08) !important;
+        }
+        :root[data-theme="light"] .filter-chip:hover,
+        :root[data-theme="light"] .segmented-btn:hover {
+            background: #e4dccb !important;
+            border-color: #72968b !important;
+            color: #2c251d !important;
+            transform: translateY(-1px) !important;
+        }
+        :root[data-theme="light"] .filter-chip.active,
+        :root[data-theme="light"] .segmented-btn.active {
+            background: #72968b !important;
+            color: #ffffff !important;
+            border: 1.5px solid #5b7c72 !important;
+            box-shadow: 0 3px 10px rgba(114, 150, 139, 0.35) !important;
+            font-weight: 600 !important;
+        }
+
+        /* Микро-бейдж для стрелочек внутри плашек */
+        .chip-badge, .chip-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 18px !important;
+            height: 18px !important;
+            border-radius: 50% !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+        }
+        .chip-badge.expense, .chip-icon.icon-expense {
+            background: rgba(255, 0, 85, 0.18) !important;
+            color: var(--color-expense) !important;
+        }
+        .chip-badge.income, .chip-icon.icon-income {
+            background: rgba(0, 255, 102, 0.18) !important;
+            color: var(--color-income) !important;
+        }
+        .chip-badge.transfer, .chip-icon.icon-transfer {
+            background: rgba(80, 160, 255, 0.2) !important;
+            color: #50a0ff !important;
+        }
+        .chip-badge.regular, .chip-icon.icon-regular {
+            background: rgba(140, 140, 140, 0.2) !important;
+            color: var(--text-muted) !important;
+        }
+        :root[data-theme="light"] .filter-chip.active .chip-badge,
+        :root[data-theme="light"] .segmented-btn.active .chip-icon {
+            background: rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+        }
+
+        /* 14. Красивые пустые состояния (Empty State) */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 36px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            border: none;
+            background: transparent !important;
+            box-shadow: none !important;
+            user-select: none;
+        }
+        .empty-state-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: var(--bg-input) !important;
+            border: 1px solid var(--border-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+            color: var(--text-muted);
+            pointer-events: none !important;
+            transition: none !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .empty-state-icon svg {
+            stroke: var(--text-muted);
+            opacity: 0.65;
+            pointer-events: none !important;
+            transition: none !important;
+            transform: none !important;
+        }
+        .empty-state-icon:hover, .empty-state:hover {
+            background-color: transparent !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .empty-state h4 {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--text-title);
+            margin-bottom: 6px;
+        }
+        .empty-state p {
+            font-size: 13px;
+            max-width: 360px;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        /* 15. Умные алерты лимитов бюджета (Dashboard Budget Alerts) */
+        .budget-alert-banner {
+            background: rgba(255, 0, 85, 0.08);
+            border: 1px solid var(--color-expense);
+            border-radius: var(--card-radius);
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            box-shadow: 0 4px 14px rgba(255, 0, 85, 0.1);
+        }
+        .budget-alert-banner.warning {
+            background: rgba(243, 156, 18, 0.09);
+            border-color: #f39c12;
+            box-shadow: 0 4px 14px rgba(243, 156, 18, 0.1);
+        }
+        .budget-alert-content {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .budget-alert-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .budget-alert-text strong {
+            display: block;
+            font-size: 14px;
+            color: var(--text-title);
+            margin-bottom: 3px;
+        }
+        .budget-alert-text span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* 16. Подсказки горячих клавиш (Keyboard Hints) */
+        .kbd-hint {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: inherit;
+            color: var(--text-muted);
+            margin-left: 6px;
+            opacity: 0.75;
+            vertical-align: middle;
+            line-height: 1;
+            user-select: none;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary .kbd-hint {
+            color: var(--accent-text);
+            opacity: 0.85;
+            font-weight: 600;
+        }
+        .nav-links li a .kbd-hint {
+            margin-left: auto;
+            opacity: 0.5;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .nav-links li a:hover .kbd-hint,
+        .nav-links li a.active .kbd-hint {
+            color: var(--accent-color);
+            opacity: 0.9;
+        }
+        .btn-secondary .kbd-hint {
+            opacity: 0.55;
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
@@ -522,55 +815,56 @@
 <div class="sidebar">
     <div class="logo" style="display: flex; align-items: center; gap: 8px;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-        <span>FinanceManager</span>
+        <span>Менеджер финансов</span>
     </div>
     <ul class="nav-links">
         <li>
             <a class="active" onclick="switchPage('dashboard', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                 <span>Главная</span>
+                <span class="kbd-hint">[1]</span>
             </a>
         </li>
         <li>
             <a onclick="switchPage('accounts', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
                 <span>Счета</span>
+                <span class="kbd-hint">[2]</span>
             </a>
         </li>
         <li>
             <a onclick="switchPage('transactions', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
                 <span>Транзакции</span>
+                <span class="kbd-hint">[3]</span>
             </a>
         </li>
         <li>
             <a onclick="switchPage('budget', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
                 <span>Бюджет</span>
+                <span class="kbd-hint">[4]</span>
             </a>
         </li>
         <li>
             <a onclick="switchPage('analytics', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 <span>Аналитика</span>
+                <span class="kbd-hint">[5]</span>
             </a>
         </li>
     </ul>
     <div class="theme-selector-container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <label for="theme-selector" style="margin-bottom: 0;">Тема оформления</label>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;" onclick="toggleTheme()" title="Переключить тему">Тема оформления</span>
             <div class="theme-toggle-switch" onclick="toggleTheme()" title="Переключить тему">
                 <span class="theme-toggle-track">
-                    <svg class="theme-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                    <svg class="theme-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    <svg class="theme-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="event.stopPropagation(); changeAppTheme('dark');" title="Тёмная тема"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    <svg class="theme-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="event.stopPropagation(); changeAppTheme('light');" title="Светлая тема"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
                     <span class="theme-toggle-thumb"></span>
                 </span>
             </div>
         </div>
-        <select id="theme-selector" onchange="changeAppTheme(this.value)">
-            <option value="dark">Тёмная</option>
-            <option value="light">Светлая</option>
-        </select>
     </div>
 </div>
 
@@ -581,6 +875,7 @@
 
         <!-- ВЬЮХА: ГЛАВНАЯ -->
         <div id="view-dashboard" class="page-view">
+            <div id="dashboard-budget-alerts"></div>
             <div class="card-grid">
                 <div class="card">
                     <h3>Общий баланс</h3>
@@ -611,14 +906,41 @@
 
         <!-- ВЬЮХА: ТРАНЗАКЦИИ -->
         <div id="view-transactions" class="page-view" style="display: none;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                <button onclick="openTxModal()" class="btn-primary">+ Добавить</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <button onclick="openTxModal()" class="btn-primary">+ Добавить операцию <span class="kbd-hint">[N]</span></button>
             </div>
-            <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
-                       class="form-input" style="flex: 1; min-width: 220px; margin-bottom: 0;">
 
-                <select id="tx-filter-type" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
+            <!-- Быстрые фильтры-плашки (по типу и по периоду) -->
+            <div class="chips-container">
+                <div class="chips-row">
+                    <span class="chips-label">Тип:</span>
+                    <div class="filter-chips" id="tx-type-chips">
+                        <button type="button" class="filter-chip active" data-type="all">Все операции</button>
+                        <button type="button" class="filter-chip" data-type="expense"><span class="chip-badge expense">↓</span> Расходы</button>
+                        <button type="button" class="filter-chip" data-type="income"><span class="chip-badge income">↑</span> Доходы</button>
+                        <button type="button" class="filter-chip" data-type="transfer"><span class="chip-badge transfer">⇄</span> Переводы</button>
+                        <button type="button" class="filter-chip" data-type="regular_expense"><span class="chip-badge regular">↻</span> Регулярные</button>
+                    </div>
+                </div>
+                <div class="chips-row">
+                    <span class="chips-label">Период:</span>
+                    <div class="filter-chips" id="tx-period-chips">
+                        <button type="button" class="filter-chip active" data-period="all">Все время</button>
+                        <button type="button" class="filter-chip" data-period="this_month">Этот месяц</button>
+                        <button type="button" class="filter-chip" data-period="prev_month">Прошлый месяц</button>
+                        <button type="button" class="filter-chip" data-period="last_30">30 дней</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 220px; position: relative; display: flex; align-items: center;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; color: var(--text-muted); opacity: 0.6; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
+                           class="form-input" style="width: 100%; margin-bottom: 0; padding-left: 36px;">
+                </div>
+
+                <select id="tx-filter-type" class="form-input" style="display: none;">
                     <option value="all">Все типы</option>
                     <option value="income">Доходы</option>
                     <option value="expense">Расходы</option>
@@ -739,7 +1061,7 @@
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeTxModal()" class="btn-secondary">Отмена</button>
+                <button type="button" onclick="closeTxModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
                 <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
@@ -768,7 +1090,7 @@
             <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none;" class="form-input">
             <input type="date" id="acc-deadline" style="display: none; margin-bottom: 24px;" class="form-input">
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeAccountModal()" class="btn-secondary">Отмена</button>
+                <button type="button" onclick="closeAccountModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
                 <button type="submit" class="btn-primary">Добавить</button>
             </div>
         </form>
@@ -785,7 +1107,7 @@
             </select>
             <input type="number" id="budget-limit" placeholder="Лимит" step="0.01" required class="form-input" style="margin-bottom: 24px;">
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeBudgetModal()" class="btn-secondary">Отмена</button>
+                <button type="button" onclick="closeBudgetModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
                 <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
@@ -807,7 +1129,7 @@
                 <input type="color" id="cat-color" value="#1db954" style="background: transparent; border: none; cursor: pointer; height: 32px; width: 32px;">
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeCategoryModal()" class="btn-secondary">Отмена</button>
+                <button type="button" onclick="closeCategoryModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
                 <button type="submit" class="btn-primary">Добавить</button>
             </div>
         </form>
@@ -837,7 +1159,7 @@
         <h3 id="confirm-title" style="margin-top: 0;">Подтверждение</h3>
         <p id="confirm-message" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
         <div style="display: flex; justify-content: flex-end; gap: 12px;">
-            <button id="confirm-btn-cancel" class="btn-secondary" style="border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Отмена</button>
+            <button id="confirm-btn-cancel" class="btn-secondary" style="border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Отмена <span class="kbd-hint">[Esc]</span></button>
             <button id="confirm-btn-ok" style="background: var(--color-expense); border: none; color: #fff; padding: 8px 16px; border-radius: var(--card-radius); cursor: pointer; font-weight: bold;">Удалить</button>
         </div>
     </div>
