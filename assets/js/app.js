@@ -103,12 +103,20 @@ function changeAppTheme(themeName) {
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
+async function bootstrapApp() {
+    await loadCategories();
+    switchPage('dashboard');
+}
+
+window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('finance-app-theme') || 'dark';
     changeAppTheme(savedTheme);
 
-    await loadCategories();
-    switchPage('dashboard');
+    if (window.wasmApiReady) {
+        bootstrapApp();
+    } else {
+        window.addEventListener('finance-wasm-ready', bootstrapApp, { once: true });
+    }
 });
 
 // Глобальные горячие клавиши (Hotkeys)

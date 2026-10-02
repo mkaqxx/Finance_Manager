@@ -2,6 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FinanceApp">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="manifest" href="manifest.json">
     <title>Finance Manager</title>
     <script src="js/chart.js"></script>
     <style>
@@ -1445,6 +1450,10 @@
 <div id="toast-container" class="toast-container"></div>
 
 <!-- ================== СКРИПТЫ ================== -->
+<!-- WebAssembly Core & IDBFS Bridge -->
+<script src="wasm/finance_manager.js"></script>
+<script src="js/wasm-loader.js"></script>
+
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script src="js/pages/dashboard.js"></script>
@@ -1455,6 +1464,17 @@
 <script src="js/modals.js"></script>
 
 <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999; display: none;"></canvas>
+
+<!-- Регистрация Service Worker для PWA (оффлайн работа и установка на домашний экран) -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('[PWA] Service Worker зарегистрирован:', reg.scope))
+            .catch(err => console.error('[PWA] Ошибка регистрации Service Worker:', err));
+    });
+}
+</script>
 
 </body>
 </html>

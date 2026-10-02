@@ -75,6 +75,22 @@ void Storage::save_budgets(json& j, const std::vector<Budget> &budgets) {
     j["budgets"] = buds;
 }
 
+void Storage::sync_to_database() noexcept {
+#ifdef __EMSCRIPTEN__
+    EM_ASM({
+        if (typeof FS !== 'undefined' && FS.syncfs) {
+            FS.syncfs(false, function (err) {
+                if (err) {
+                    console.error('[IDBFS] syncfs error:', err);
+                } else {
+                    console.log('[IDBFS] Data persisted to IndexedDB.');
+                }
+            });
+        }
+    });
+#endif
+}
+
 std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account>>& accounts,
                    const std::vector<std::unique_ptr<Transaction>>& transactions,
                    const std::vector<Category>& categories,
@@ -85,14 +101,21 @@ std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account
     save_categories(j, categories);
     save_budgets(j, budgets);
 
-    std::string temp_name = filename+".tmp";
+    // Гарантируем существование директории (например, /data в MEMFS)
+    std::filesystem::path dir = std::filesystem::path(filename).parent_path();
+    if (!dir.empty() && !std::filesystem::exists(dir)) {
+        std::error_code dir_ec;
+        std::filesystem::create_directories(dir, dir_ec);
+    }
+
+    std::string temp_name = filename + ".tmp";
     auto res = open_out_file(temp_name);
     if (!res) {
        return std::unexpected(res.error());
     }
     std::ofstream outfile = std::move(res.value());
 
-    outfile<<j.dump(4);
+    outfile << j.dump(4);
     outfile.flush();
     outfile.close();
     std::error_code ec;
@@ -103,6 +126,10 @@ std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account
     if (ec) {
         return std::unexpected(ec.value());
     }
+
+    // Синхронизация виртуальной ФС Emscripten с IndexedDB браузера
+    sync_to_database();
+
     return {};
 }
 
