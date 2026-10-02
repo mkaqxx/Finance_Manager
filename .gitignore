@@ -1,0 +1,17 @@
+# Build and temporary artifacts
+build/
+build-wasm/
+cmake-build-*/
+emsdk/
+bin/
+out/
+
+# IDE files
+.idea/shelf/
+.idea/workspace.xml
+.idea/dataSources/
+.idea/dataSources.local.xml
+
+# OS generated files
+.DS_Store
+Thumbs.db

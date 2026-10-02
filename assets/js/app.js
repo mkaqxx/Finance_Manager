@@ -17,7 +17,10 @@ const pageTitles = {
 };
 
 function switchPage(page, element) {
-    document.getElementById('page-title').innerText = pageTitles[page];
+    const pageTitle = pageTitles[page] || 'Менеджер финансов';
+    const titleEl = document.getElementById('page-title');
+    if (titleEl) titleEl.innerText = pageTitle;
+
     document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
     
     if (!element) {
@@ -26,7 +29,11 @@ function switchPage(page, element) {
     if (element) element.classList.add('active');
 
     document.querySelectorAll('.page-view').forEach(el => el.style.display = 'none');
-    document.getElementById(`view-${page}`).style.display = 'block';
+    const viewEl = document.getElementById(`view-${page}`);
+    if (viewEl) viewEl.style.display = 'block';
+
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTop = 0;
 
     if (page === 'dashboard') loadDashboard();
     else if (page === 'accounts') loadAccounts();
@@ -99,6 +106,11 @@ function changeAppTheme(themeName) {
     const validTheme = (themeName === 'light') ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', validTheme);
     localStorage.setItem('finance-app-theme', validTheme);
+
+    const metaThemeColor = document.getElementById('meta-theme-color');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', validTheme === 'light' ? '#f2eadc' : '#000000');
+    }
 
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
 }

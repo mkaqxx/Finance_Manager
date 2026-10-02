@@ -2,9 +2,13 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FinanceApp">
+    <meta name="theme-color" content="#000000" id="meta-theme-color">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="manifest" href="manifest.json">
     <title>Finance Manager</title>
@@ -13,6 +17,7 @@
         :root, :root[data-theme="dark"] {
             --bg-page: #000000;
             --bg-sidebar: #030805; /* Едва заметный зеленоватый оттенок черного */
+            --bg-sidebar-glass: rgba(3, 8, 5, 0.90);
             --bg-card: #050d08;
             --border-color: rgba(0, 255, 102, 0.35); /* Полупрозрачные неоновые рамки */
             --card-shadow: 0 0 15px rgba(0, 255, 102, 0.1), inset 0 0 10px rgba(0, 255, 102, 0.02);
@@ -30,6 +35,13 @@
             --bg-hover: #001f0a;
             --modal-overlay: rgba(0, 10, 5, 0.85);
 
+            /* Safe Area переменные для вырезов и домашнего индикатора iOS */
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+            --bottom-nav-height: calc(56px + var(--sab));
+
             /* Эффекты неонового свечения */
             --neon-glow-text: 0 0 10px rgba(0, 255, 102, 0.7);
             --neon-glow-btn: 0 0 15px rgba(0, 255, 102, 0.5);
@@ -40,6 +52,7 @@
             /* Настоящие кремовые и бумажные оттенки */
             --bg-page: #f2eadc; /* Глубокий кремовый цвет фона */
             --bg-sidebar: #e6dac3; /* Более плотный беж для панели */
+            --bg-sidebar-glass: rgba(242, 234, 220, 0.92);
             --bg-card: #fcf9f2; /* Цвет теплого молока (не чисто белый!) */
             --border-color: #d4c5ab;
             --card-shadow: 0 4px 16px rgba(90, 70, 50, 0.08);
@@ -57,87 +70,138 @@
             --bg-hover: #e3d5bd;
             --modal-overlay: rgba(60, 50, 40, 0.5);
 
+            /* Safe Area переменные для светлой темы */
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+            --bottom-nav-height: calc(56px + var(--sab));
+
             /* Отключаем свечение для светлой темы */
             --neon-glow-text: none;
             --neon-glow-btn: none;
             --neon-glow-amount: none;
         }
 
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-                font-family: var(--font-family);
-            }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
 
-            body {
-                background-color: var(--bg-page);
-                color: var(--text-main);
-                display: flex;
-                height: 100vh;
-                overflow: hidden;
-                font-family: var(--font-family);
-                transition: background-color 0.25s ease, color 0.25s ease;
-            }
+        html {
+            height: 100%;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-            /* Боковая панель */
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            display: flex;
+            height: 100%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            font-family: var(--font-family);
+            transition: background-color 0.25s ease, color 0.25s ease;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-            .sidebar {
-                width: 240px;
-                background-color: var(--bg-sidebar);
-                display: flex;
-                flex-direction: column;
-                padding: 24px;
-                border-right: 1px solid var(--border-color);
-                transition: background-color 0.25s ease, border-color 0.25s ease;
-            }
+        /* Боковая панель */
 
-            .logo {
-                font-size: 20px;
-                font-weight: bold;
-                color: var(--accent-color);
-                margin-bottom: 32px;
-                text-shadow: var(--neon-glow-text); /* Добавляет неоновое свечение логотипу */
-            }
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+            flex-shrink: 0;
+        }
 
-            .nav-links {
-                list-style: none;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-            }
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 32px;
+            text-shadow: var(--neon-glow-text); /* Добавляет неоновое свечение логотипу */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-            .nav-links li a {
-                color: var(--text-muted);
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 14px;
-                transition: color 0.2s;
-                cursor: pointer;
-            }
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-            .nav-links li a:hover, .nav-links li a.active {
-                color: var(--text-title);
-            }
+        .nav-links li {
+            list-style: none;
+        }
 
-            /* Основная область */
+        .nav-links li a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.2s, padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 0px solid transparent;
+        }
 
-            .main-content {
-                flex: 1;
-                background-color: var(--bg-page);
-                padding: 32px;
-                overflow-y: auto;
-                transition: background-color 0.25s ease;
-            }
+        .nav-links li a:hover, .nav-links li a.active {
+            padding-left: 12px;
+            border-left: 3px solid var(--accent-color);
+            color: var(--text-title);
+        }
 
-            h1, h2, h3 {
-                color: var(--text-title);
-            }
+        /* Основная область */
 
-            h1 {
-                font-size: 28px;
-                margin-bottom: 24px;
-            }
+        .main-content {
+            flex: 1;
+            background-color: var(--bg-page);
+            padding: 32px;
+            overflow-y: auto;
+            min-width: 0;
+            transition: background-color 0.25s ease;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            margin-bottom: 0;
+        }
+
+        .mobile-header-branding {
+            display: none;
+        }
+
+        .mobile-header-theme-toggle {
+            display: none;
+        }
+
+        h1, h2, h3 {
+            color: var(--text-title);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
 
             .card-grid {
                 display: grid;
@@ -209,9 +273,21 @@
                 padding: 24px;
                 border-radius: var(--card-radius);
                 width: 400px;
+                max-width: calc(100vw - 32px);
+                box-sizing: border-box;
                 border: 1px solid var(--border-color);
                 box-shadow: var(--card-shadow);
                 color: var(--text-main);
+            }
+
+            .modal-account-detail {
+                width: 500px;
+                max-width: calc(100vw - 32px);
+            }
+
+            .modal-confirm {
+                width: 360px;
+                max-width: calc(100vw - 32px);
             }
 
             .form-input {
@@ -1002,48 +1078,551 @@
             gap: 4px;
             animation: pulseAlertGlow 3s infinite ease-in-out;
         }
+
+        /* Общие вспомогательные классы для адаптивной верстки */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tx-controls-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .tx-search-container {
+            flex: 1;
+            min-width: 220px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .tx-dropdowns-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .budget-actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .analytics-controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .analytics-charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+
+        /* ==========================================================================
+           МОБИЛЬНАЯ ВЕРСТКА: НАСТОЯЩЕЕ iOS ПРИЛОЖЕНИЕ (@media max-width: 768px)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            html, body {
+                height: 100%;
+                overflow: hidden;
+                width: 100vw;
+                max-width: 100%;
+                position: fixed;
+                inset: 0;
+            }
+
+            body {
+                flex-direction: column;
+                height: 100dvh;
+                min-height: 100vh;
+                width: 100%;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            /* --- 1. ПЕРЕСТРОЕНИЕ СЕТКИ: САЙДБАР -> BOTTOM NAVIGATION (iOS TAB BAR) --- */
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                min-width: 0;
+                max-width: 100%;
+                height: var(--bottom-nav-height);
+                min-height: calc(56px + var(--sab));
+                padding: 4px calc(6px + var(--sal)) var(--sab) calc(6px + var(--sar));
+                margin: 0;
+                background-color: var(--bg-sidebar-glass);
+                backdrop-filter: blur(24px) saturate(180%);
+                -webkit-backdrop-filter: blur(24px) saturate(180%);
+                border-top: 1px solid var(--border-color);
+                border-right: none;
+                border-bottom: none;
+                border-left: none;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-around !important;
+                z-index: 1000;
+                box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+                box-sizing: border-box;
+            }
+
+            /* Скрываем десктопный логотип и нижний переключатель темы из нижнего бара */
+            .sidebar .logo {
+                display: none !important;
+            }
+
+            .sidebar .theme-selector-container {
+                display: none !important;
+            }
+
+            /* Горизонтальный список иконок таб-бара */
+            .sidebar .nav-links {
+                display: flex !important;
+                flex-direction: row !important;
+                width: 100% !important;
+                height: 100% !important;
+                justify-content: space-around !important;
+                align-items: center !important;
+                gap: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                list-style: none !important;
+            }
+
+            .sidebar .nav-links li {
+                flex: 1 1 0;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 0;
+            }
+
+            .sidebar .nav-links li a {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 3px !important;
+                width: 100% !important;
+                height: 100% !important;
+                min-height: 48px !important;
+                min-width: 44px !important;
+                padding: 4px 1px !important;
+                border-left: none !important;
+                border-top: none !important;
+                text-align: center;
+                background: transparent !important;
+                color: var(--text-muted);
+                text-decoration: none;
+                transition: color 0.15s ease, transform 0.1s ease;
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+                -webkit-user-select: none;
+            }
+
+            .sidebar .nav-links li a svg {
+                width: 22px !important;
+                height: 22px !important;
+                stroke-width: 2;
+                transition: transform 0.15s ease, stroke 0.15s ease;
+                flex-shrink: 0;
+            }
+
+            .sidebar .nav-links li a span:not(.kbd-hint) {
+                font-size: 10px !important;
+                font-weight: 600 !important;
+                line-height: 1.1 !important;
+                letter-spacing: -0.2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+
+            /* Скрываем подсказки горячих клавиш [1]..[5] на сенсорных экранах */
+            .sidebar .nav-links li a .kbd-hint {
+                display: none !important;
+            }
+
+            /* Тактильный отклик при нажатии на таб (iOS haptic feel) */
+            .sidebar .nav-links li a:active {
+                transform: scale(0.90);
+            }
+
+            /* Активный таб в нижней панели */
+            .sidebar .nav-links li a.active {
+                color: var(--accent-color) !important;
+                padding-left: 1px !important;
+                border-left: none !important;
+            }
+
+            :root[data-theme="dark"] .sidebar .nav-links li a.active svg {
+                filter: drop-shadow(0 0 6px var(--accent-color));
+            }
+
+            :root[data-theme="light"] .sidebar .nav-links li a.active svg {
+                stroke: var(--accent-color);
+            }
+
+            /* --- 2. ОСНОВНАЯ ОБЛАСТЬ С УЧЕТОМ SAFE AREA И СКРОЛЛОМ --- */
+            .main-content {
+                flex: 1;
+                width: 100%;
+                min-width: 0;
+                max-width: 100%;
+                overflow-y: auto;
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+                overscroll-behavior-y: contain;
+                padding-top: calc(14px + var(--sat)) !important;
+                padding-bottom: calc(var(--bottom-nav-height) + 24px) !important;
+                padding-left: calc(16px + var(--sal)) !important;
+                padding-right: calc(16px + var(--sar)) !important;
+                box-sizing: border-box;
+            }
+
+            /* --- 3. ШАПКА ПРИЛОЖЕНИЯ (HEADER) НА МОБИЛЬНЫХ --- */
+            .page-header {
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                min-width: 0;
+            }
+
+            .mobile-header-branding {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--accent-color);
+                margin-bottom: 2px;
+                text-shadow: var(--neon-glow-text);
+                letter-spacing: 0.6px;
+                text-transform: uppercase;
+            }
+
+            .page-header h1 {
+                font-size: 22px;
+                line-height: 1.2;
+                margin-bottom: 0;
+            }
+
+            /* Кнопка переключения темы в шапке для мобилок */
+            .mobile-header-theme-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 44px;
+                min-height: 44px;
+                width: 44px;
+                height: 44px;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: var(--card-shadow);
+                color: var(--text-main);
+                -webkit-tap-highlight-color: transparent;
+                transition: transform 0.15s ease, background-color 0.2s ease;
+                flex-shrink: 0;
+            }
+
+            .mobile-header-theme-toggle:active {
+                transform: scale(0.92);
+            }
+
+            :root[data-theme="dark"] .mobile-header-theme-toggle .theme-icon-sun {
+                display: block;
+                color: var(--accent-color);
+            }
+            :root[data-theme="dark"] .mobile-header-theme-toggle .theme-icon-moon {
+                display: none;
+            }
+            :root[data-theme="light"] .mobile-header-theme-toggle .theme-icon-sun {
+                display: none;
+            }
+            :root[data-theme="light"] .mobile-header-theme-toggle .theme-icon-moon {
+                display: block;
+                color: var(--accent-color);
+            }
+
+            /* --- 4. КАРТОЧКИ И СЕТКИ (СБРОС ЖЕСТКИХ РАЗМЕРОВ) --- */
+            .card-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+                min-width: 0;
+            }
+
+            .card {
+                padding: 16px !important;
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            .card h3 {
+                font-size: 15px;
+            }
+
+            .card .amount {
+                font-size: 22px;
+            }
+
+            /* --- 5. ТАЧ-ЗОНЫ: КНОПКИ И ПОЛЯ ВВОДА (>= 44x44px) --- */
+            .btn-primary, .btn-secondary {
+                min-height: 44px !important;
+                min-width: 44px !important;
+                padding: 10px 18px !important;
+                font-size: 15px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .btn-primary:active, .btn-secondary:active {
+                transform: scale(0.96) !important;
+            }
+
+            /* Размер шрифта 16px обязателен для iOS Safari, чтобы не приближался экран */
+            .form-input {
+                font-size: 16px !important;
+                min-height: 46px !important;
+                padding: 10px 12px !important;
+            }
+
+            /* --- 6. МОДАЛЬНЫЕ ОКНА (iOS BOTTOM SHEET) --- */
+            .modal-overlay {
+                padding: calc(16px + var(--sat)) calc(12px + var(--sar)) calc(var(--bottom-nav-height) + 12px) calc(12px + var(--sal)) !important;
+                align-items: flex-end !important;
+                z-index: 1100 !important;
+            }
+
+            .modal-content,
+            .modal-account-detail,
+            .modal-confirm,
+            #confirm-modal .modal-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                max-height: calc(100dvh - var(--sat) - var(--sab) - 50px) !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+                border-radius: 18px 18px 14px 14px !important;
+                padding: 22px 18px !important;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4) !important;
+            }
+
+            /* --- 7. ПЛАШКИ-ФИЛЬТРЫ И ТАБЛИЦА ТРАНЗАКЦИЙ --- */
+            .tx-controls-bar {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            .tx-search-container {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+
+            .tx-dropdowns-container {
+                display: flex !important;
+                gap: 8px !important;
+                width: 100% !important;
+            }
+
+            .tx-dropdowns-container .form-input {
+                flex: 1 1 50% !important;
+                width: 50% !important;
+                min-width: 0 !important;
+                margin-bottom: 0 !important;
+            }
+
+            .chips-container {
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+
+            .chips-row {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+
+            .chips-label {
+                font-size: 11px !important;
+            }
+
+            .filter-chips {
+                width: 100% !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                flex-wrap: nowrap !important;
+                padding-bottom: 6px !important;
+                scrollbar-width: none;
+            }
+
+            .filter-chips::-webkit-scrollbar {
+                display: none;
+            }
+
+            .filter-chip {
+                flex-shrink: 0 !important;
+                min-height: 38px !important;
+                padding: 6px 14px !important;
+                font-size: 13px !important;
+            }
+
+            .table-container {
+                padding: 12px 6px !important;
+            }
+
+            .table-responsive {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            table th, table td {
+                padding: 10px 6px !important;
+                font-size: 13px !important;
+            }
+
+            .tx-delete-btn, .cat-delete-btn {
+                min-width: 44px !important;
+                min-height: 44px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 22px !important;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            /* --- 8. СТРАНИЦА БЮДЖЕТА --- */
+            .budget-actions-bar {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            .budget-actions-bar button {
+                width: 100% !important;
+            }
+
+            #categories-list {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            .bud-edit-btn, .bud-delete-btn {
+                min-height: 44px !important;
+                padding: 8px 12px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            /* --- 9. СТРАНИЦА АНАЛИТИКИ --- */
+            .analytics-controls {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            .analytics-controls .form-input,
+            .analytics-controls button {
+                width: 100% !important;
+            }
+
+            .analytics-charts-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+
+            /* --- 10. АЛЕРТЫ БЮДЖЕТА НА ГЛАВНОЙ --- */
+            .budget-alert-banner {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px !important;
+            }
+
+            .budget-alert-banner button {
+                width: 100% !important;
+                text-align: center !important;
+            }
+
+            /* --- 11. УВЕДОМЛЕНИЯ (TOASTS) --- */
+            .toast-container {
+                left: calc(14px + var(--sal)) !important;
+                right: calc(14px + var(--sar)) !important;
+                bottom: calc(var(--bottom-nav-height) + 12px) !important;
+                align-items: stretch !important;
+            }
+
+            .toast {
+                min-width: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-<!-- Боковая панель -->
-<div class="sidebar">
-    <div class="logo" style="display: flex; align-items: center; gap: 8px;">
+<!-- Боковая панель (на мобильных экранах трансформируется в фиксированный Bottom Tab Bar) -->
+<nav class="sidebar" aria-label="Основная навигация">
+    <div class="logo">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
         <span>Менеджер финансов</span>
     </div>
     <ul class="nav-links">
         <li>
-            <a class="active" onclick="switchPage('dashboard', this)" style="display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <a class="active" onclick="switchPage('dashboard', this)" title="Главная">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                 <span>Главная</span>
                 <span class="kbd-hint">[1]</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('accounts', this)" style="display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+            <a onclick="switchPage('accounts', this)" title="Счета">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
                 <span>Счета</span>
                 <span class="kbd-hint">[2]</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('transactions', this)" style="display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
-                <span>Транзакции</span>
+            <a onclick="switchPage('transactions', this)" title="Операции">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+                <span>Операции</span>
                 <span class="kbd-hint">[3]</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('budget', this)" style="display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+            <a onclick="switchPage('budget', this)" title="Бюджет">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
                 <span>Бюджет</span>
                 <span class="kbd-hint">[4]</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('analytics', this)" style="display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <a onclick="switchPage('analytics', this)" title="Аналитика">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 <span>Аналитика</span>
                 <span class="kbd-hint">[5]</span>
             </a>
@@ -1061,11 +1640,23 @@
             </div>
         </div>
     </div>
-</div>
+</nav>
 
 <!-- Основной контент -->
-<div class="main-content">
-    <h1 id="page-title">Главная</h1>
+<main class="main-content">
+    <header class="page-header">
+        <div>
+            <div class="mobile-header-branding">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                <span>Finance Manager</span>
+            </div>
+            <h1 id="page-title">Главная</h1>
+        </div>
+        <button type="button" class="mobile-header-theme-toggle" onclick="toggleTheme()" aria-label="Сменить тему" title="Сменить тему">
+            <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+    </header>
     <div id="page-content">
 
         <!-- ВЬЮХА: ГЛАВНАЯ -->
@@ -1131,8 +1722,8 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 220px; position: relative; display: flex; align-items: center;">
+            <div class="tx-controls-bar">
+                <div class="tx-search-container">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; color: var(--text-muted); opacity: 0.6; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
                            class="form-input" style="width: 100%; margin-bottom: 0; padding-left: 36px;">
@@ -1146,35 +1737,39 @@
                     <option value="regular_expense">Регулярные</option>
                 </select>
 
-                <select id="tx-filter-account" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
-                    <option value="all">Все счета</option>
-                </select>
+                <div class="tx-dropdowns-container">
+                    <select id="tx-filter-account" class="form-input" style="cursor: pointer; margin-bottom: 0;">
+                        <option value="all">Все счета</option>
+                    </select>
 
-                <select id="tx-sort" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
-                    <option value="date-desc">Сначала новые</option>
-                    <option value="date-asc">Сначала старые</option>
-                    <option value="amount-desc">По сумме (убывание)</option>
-                    <option value="amount-asc">По сумме (возрастание)</option>
-                </select>
+                    <select id="tx-sort" class="form-input" style="cursor: pointer; margin-bottom: 0;">
+                        <option value="date-desc">Сначала новые</option>
+                        <option value="date-asc">Сначала старые</option>
+                        <option value="amount-desc">По сумме (убывание)</option>
+                        <option value="amount-asc">По сумме (возрастание)</option>
+                    </select>
+                </div>
             </div>
-            <div class="card" style="padding: 20px;">
-                <table style="width: 100%; text-align: left; border-collapse: collapse;">
-                    <thead>
-                    <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                        <th style="padding: 12px 8px;">Дата</th>
-                        <th style="padding: 12px 8px;">Категория</th>
-                        <th style="padding: 12px 8px;">Сумма</th>
-                        <th style="padding: 12px 8px; width: 40px;"></th>
-                    </tr>
-                    </thead>
-                    <tbody id="transactions-table"></tbody>
-                </table>
+            <div class="card table-container" style="padding: 20px;">
+                <div class="table-responsive">
+                    <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                        <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                            <th style="padding: 12px 8px;">Дата</th>
+                            <th style="padding: 12px 8px;">Категория</th>
+                            <th style="padding: 12px 8px;">Сумма</th>
+                            <th style="padding: 12px 8px; width: 44px;"></th>
+                        </tr>
+                        </thead>
+                        <tbody id="transactions-table"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- ВЬЮХА: БЮДЖЕТ -->
         <div id="view-budget" class="page-view" style="display: none;">
-            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <div class="budget-actions-bar">
                 <button onclick="openCategoryModal()" class="btn-secondary" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius); padding: 8px 16px;">+ Новая категория</button>
                 <button onclick="openBudgetModal()" class="btn-primary">+ Установить лимит</button>
             </div>
@@ -1187,7 +1782,7 @@
 
         <!-- ВЬЮХА: АНАЛИТИКА -->
         <div id="view-analytics" class="page-view" style="display: none;">
-            <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+            <div class="analytics-controls">
                 <input type="month" id="analytics-month" class="form-input" style="width: auto; margin: 0;">
                 <select id="analytics-currency" class="form-input" style="width: auto; margin: 0; cursor: pointer;">
                     <option value="byn" selected>BYN (Белорусский рубль)</option>
@@ -1211,7 +1806,7 @@
                     <div class="amount" id="stat-balance">0 ₽</div>
                 </div>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+            <div class="analytics-charts-grid">
                 <div class="card" style="display: flex; flex-direction: column; align-items: center;">
                     <h3 style="align-self: flex-start;">Структура расходов</h3>
                     <div style="width: 100%; max-width: 250px;">
@@ -1226,7 +1821,7 @@
         </div>
 
     </div>
-</div>
+</main>
 
 <!-- ================== МОДАЛЬНЫЕ ОКНА ================== -->
 
@@ -1335,7 +1930,7 @@
 </div>
 
 <div id="account-detail-modal" class="modal-overlay">
-    <div class="modal-content" style="width: 500px; max-height: 80vh; overflow-y: auto;">
+    <div class="modal-content modal-account-detail" style="max-height: 80vh; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 id="modal-acc-name">Название счёта</h2>
             <button onclick="closeAccountDetailModal()" class="btn-secondary" style="font-size: 20px;">×</button>
@@ -1353,7 +1948,7 @@
 </div>
 
 <div id="confirm-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="width: 360px;">
+    <div class="modal-content modal-confirm">
         <h3 id="confirm-title" style="margin-top: 0;">Подтверждение</h3>
         <p id="confirm-message" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
         <div style="display: flex; justify-content: flex-end; gap: 12px;">
