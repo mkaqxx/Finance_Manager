@@ -73,6 +73,7 @@ async function renderBudgets() {
                 if (b.status === 'exceeded') {
                     card.classList.add('budget-exceeded-pulse');
                 }
+            }
             const percent = b.limit > 0 ? Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1) : (b.current_amount > 0 ? '100.0' : '0.0');
             let barColor = b.status === 'exceeded' ? 'var(--color-expense)' : b.status === 'warning' ? '#f39c12' : 'var(--color-income)';
 
