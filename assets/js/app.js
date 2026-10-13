@@ -83,9 +83,10 @@ function showToast(message, type = 'info') {
 
     toast.innerHTML = `
         <span style="font-weight: bold; font-size: 16px;">${icon}</span>
-        <span style="flex: 1; line-height: 1.4;">${message}</span>
+        <span class="toast-text" style="flex: 1; line-height: 1.4;"></span>
         <div class="toast-progress"></div>
     `;
+    toast.querySelector('.toast-text').textContent = message;
 
     toast.addEventListener('click', () => {
         toast.classList.add('toast-hiding');

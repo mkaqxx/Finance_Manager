@@ -34,6 +34,7 @@
                 -sMODULARIZE=1
                 -sEXPORT_NAME="createFinanceManagerModule"
                 -sEXPORTED_RUNTIME_METHODS=['FS','IDBFS']
+                -sSINGLE_FILE=1
         )
 
         # Генерация .js и .wasm в директорию assets/wasm/
@@ -53,7 +54,7 @@
         )
         FetchContent_MakeAvailable(webview2_sdk)
 
-        add_executable(FinanceManager WIN32 ${COMMON_SOURCES} src/resources.rc)
+        add_executable(FinanceManager ${COMMON_SOURCES} src/resources.rc)
         target_include_directories(FinanceManager PRIVATE
                 ${CMAKE_CURRENT_SOURCE_DIR}/src
                 ${CMAKE_CURRENT_SOURCE_DIR}/webview/core/include

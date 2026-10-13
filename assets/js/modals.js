@@ -192,13 +192,26 @@ async function loadAccountTransactions(accountId) {
             const sign = tx.type === 'income' ? '+' : '-';
             const cur = (tx.currency || 'byn').toLowerCase();
             const sym = CURRENCY_SYMBOLS[cur] || cur.toUpperCase();
-            container.innerHTML += `
-                <div style="display:flex; justify-content:space-between; padding:10px; background:var(--bg-input); border: 1px solid var(--border-color); border-radius:var(--card-radius);">
-                    <span style="color:var(--text-muted);">${tx.date}</span>
-                    <span style="color:${cat.color};">${cat.name}</span>
-                    <span style="font-weight:bold; color:var(--text-title);">${sign}${tx.amount.toLocaleString()}${sym}</span>
-                </div>
-            `;
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; justify-content:space-between; padding:10px; background:var(--bg-input); border: 1px solid var(--border-color); border-radius:var(--card-radius);';
+
+            const dateSpan = document.createElement('span');
+            dateSpan.style.color = 'var(--text-muted)';
+            dateSpan.textContent = tx.date;
+
+            const catSpan = document.createElement('span');
+            catSpan.style.color = cat.color || 'var(--text-title)';
+            catSpan.textContent = cat.name;
+
+            const amountSpan = document.createElement('span');
+            amountSpan.style.fontWeight = 'bold';
+            amountSpan.style.color = 'var(--text-title)';
+            amountSpan.textContent = `${sign}${tx.amount.toLocaleString()}${sym}`;
+
+            row.appendChild(dateSpan);
+            row.appendChild(catSpan);
+            row.appendChild(amountSpan);
+            container.appendChild(row);
         });
     }  catch (e) {
         console.error("Ошибка загрузки транзакций счёта:", e);

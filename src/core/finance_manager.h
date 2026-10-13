@@ -20,7 +20,7 @@ class Finance_manager {
     void rebuild_lookups();
     public:
     //сохранение
-    std::expected<void, int> save_data() noexcept;
+    std::expected<void, AppError> save_data() noexcept;
 
     //конструктор и деструктор
     Finance_manager();
@@ -35,10 +35,10 @@ class Finance_manager {
     Finance_manager& operator=(Finance_manager&&) noexcept = default;
 
     //добавление
-    std::expected<void, int> add_transaction(std::unique_ptr<Transaction> transaction);
-    std::expected<void, int> add_account(std::unique_ptr<Account> account);
-    std::expected<void, int> add_category(const Category& category);
-    std::expected<void, int> add_budget(const Budget& budget);
+    std::expected<void, AppError> add_transaction(std::unique_ptr<Transaction> transaction);
+    std::expected<void, AppError> add_account(std::unique_ptr<Account> account);
+    std::expected<void, AppError> add_category(const Category& category);
+    std::expected<void, AppError> add_budget(const Budget& budget);
 
 
     //геттеры сырых указателей
@@ -50,15 +50,18 @@ class Finance_manager {
     const Category &get_category_by_id( unsigned id) const;
     Account *get_account_by_id( unsigned id) const;
 
-    std::expected<void, int> check_the_regular_expense_date();
+    std::expected<void, AppError> check_the_regular_expense_date();
     json get_monthly_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
     json get_category_report(std::chrono::year_month_day from, std::chrono::year_month_day to) const;
     json get_yearly_report(int year) const;
 
 
-    std::expected<void, int> remove_account(unsigned id);
-    std::expected<void, int> remove_transaction(unsigned id);
-    std::expected<void, int> remove_category(unsigned id);
-    std::expected<void, int> remove_budget(unsigned id);
-    std::expected<void, int> edit_budget(unsigned id, double new_limit);
+    std::expected<void, AppError> remove_account(unsigned id);
+    std::expected<void, AppError> remove_transaction(unsigned id);
+    std::expected<void, AppError> remove_category(unsigned id);
+    std::expected<void, AppError> remove_budget(unsigned id);
+    std::expected<void, AppError> edit_budget(unsigned id, double new_limit);
+    std::expected<void, AppError> edit_account(unsigned id, const std::string& name, double balance, Currency currency,
+                                              const std::string& last_four_digits, double goal_amount,
+                                              std::chrono::year_month_day deadline);
 };

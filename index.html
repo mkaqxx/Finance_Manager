@@ -2062,7 +2062,7 @@
 
 <!-- Регистрация Service Worker для PWA (оффлайн работа и установка на домашний экран) -->
 <script>
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('[PWA] Service Worker зарегистрирован:', reg.scope))

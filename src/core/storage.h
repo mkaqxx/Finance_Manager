@@ -9,6 +9,7 @@
 #include "../models/budget.h"
 #include "../utils/chrono_to_string.h"
 #include "../utils/safe_open_file.h"
+#include "../utils/error.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -18,15 +19,15 @@ using json = nlohmann::json;
 
 class Storage {
 public:
-    std::expected<void, int> load(std::vector<std::unique_ptr<Account>>& accounts,
-                                  std::vector<std::unique_ptr<Transaction>>& transactions,
-                                  std::vector<Category>& categories,
-                                  std::vector<Budget>& budgets);
+    std::expected<void, AppError> load(std::vector<std::unique_ptr<Account>>& accounts,
+                                       std::vector<std::unique_ptr<Transaction>>& transactions,
+                                       std::vector<Category>& categories,
+                                       std::vector<Budget>& budgets);
 
-    std::expected<void, int> save(const std::vector<std::unique_ptr<Account>>& accounts,
-                                  const std::vector<std::unique_ptr<Transaction>>& transactions,
-                                  const std::vector<Category>& categories,
-                                  const std::vector<Budget>& budgets);
+    std::expected<void, AppError> save(const std::vector<std::unique_ptr<Account>>& accounts,
+                                       const std::vector<std::unique_ptr<Transaction>>& transactions,
+                                       const std::vector<Category>& categories,
+                                       const std::vector<Budget>& budgets);
 
     // Синхронизация виртуальной ФС Emscripten с IndexedDB браузера
     void sync_to_database() noexcept;
@@ -37,6 +38,9 @@ private:
     void save_categories(json& j, const std::vector<Category>& categories);
     void save_budgets(json& j, const std::vector<Budget>& budgets);
 
+#ifdef __EMSCRIPTEN__
     std::string filename = "/data/data.json";
+#else
+    std::string filename = "data.json";
+#endif
 };
-
