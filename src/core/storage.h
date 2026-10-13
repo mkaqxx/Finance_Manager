@@ -16,12 +16,12 @@ using json = nlohmann::json;
 
 class Storage {
     public:
-     std::expected<void, int> load(std::vector<std::unique_ptr<Account>>& accounts,
+     std::expected<void, AppError> load(std::vector<std::unique_ptr<Account>>& accounts,
                std::vector<std::unique_ptr<Transaction>>& transactions,
                std::vector<Category>& categories,
                std::vector<Budget>& budgets);
 
-    std::expected<void, int> save(const std::vector<std::unique_ptr<Account>>& accounts,
+    std::expected<void, AppError> save(const std::vector<std::unique_ptr<Account>>& accounts,
               const std::vector<std::unique_ptr<Transaction>>& transactions,
               const std::vector<Category>& categories,
               const std::vector<Budget>& budgets);

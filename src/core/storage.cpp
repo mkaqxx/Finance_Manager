@@ -75,7 +75,11 @@ void Storage::save_budgets(json& j, const std::vector<Budget> &budgets) {
     j["budgets"] = buds;
 }
 
-std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account>>& accounts,
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+std::expected<void, AppError> Storage::save(const std::vector<std::unique_ptr<Account>>& accounts,
                    const std::vector<std::unique_ptr<Transaction>>& transactions,
                    const std::vector<Category>& categories,
                    const std::vector<Budget>& budgets) {
@@ -85,35 +89,56 @@ std::expected<void, int> Storage::save(const std::vector<std::unique_ptr<Account
     save_categories(j, categories);
     save_budgets(j, budgets);
 
-    std::string temp_name = filename+".tmp";
+    std::string temp_name = filename + ".tmp";
     auto res = open_out_file(temp_name);
     if (!res) {
        return std::unexpected(res.error());
     }
     std::ofstream outfile = std::move(res.value());
 
-    outfile<<j.dump(4);
+    outfile << j.dump(4);
     outfile.flush();
     outfile.close();
-    std::error_code ec;
-    if (std::filesystem::exists(filename)) {
-        std::filesystem::remove(filename, ec);
+
+#ifdef _WIN32
+    std::wstring wtemp(temp_name.begin(), temp_name.end());
+    std::wstring wfinal(filename.begin(), filename.end());
+    if (!MoveFileExW(wtemp.c_str(), wfinal.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        // Fallback to std::filesystem in case of failure
+        std::error_code ec;
+        if (std::filesystem::exists(filename)) {
+            std::filesystem::remove(filename, ec);
+        }
+        std::filesystem::rename(temp_name, filename, ec);
+        if (ec) {
+            return std::unexpected(AppError{ErrorCode::IoError, "Не удалось заменить файл базы данных: " + ec.message()});
+        }
     }
+#else
+    std::error_code ec;
     std::filesystem::rename(temp_name, filename, ec);
     if (ec) {
-        return std::unexpected(ec.value());
+        return std::unexpected(AppError{ErrorCode::IoError, "Не удалось заменить файл базы данных: " + ec.message()});
     }
+#endif
     return {};
 }
 
-
-std::expected<void, int> Storage::load(std::vector<std::unique_ptr<Account>>& accounts,
+std::expected<void, AppError> Storage::load(std::vector<std::unique_ptr<Account>>& accounts,
                    std::vector<std::unique_ptr<Transaction>>& transactions,
                    std::vector<Category>& categories,
                    std::vector<Budget>& budgets) {
 
+    // Восстановление, если питание отключилось во время предыдущего сохранения
     if (!std::filesystem::exists(filename)) {
-        return {};
+        std::string temp_name = filename + ".tmp";
+        if (std::filesystem::exists(temp_name)) {
+            std::error_code ec;
+            std::filesystem::rename(temp_name, filename, ec);
+        }
+        if (!std::filesystem::exists(filename)) {
+            return {};
+        }
     }
     
     auto res = open_in_file(filename);
@@ -121,72 +146,90 @@ std::expected<void, int> Storage::load(std::vector<std::unique_ptr<Account>>& ac
         return std::unexpected(res.error());
     }
     std::ifstream file = std::move(res.value());
-    json j = json::parse((file));
+    
+    json j;
+    try {
+        j = json::parse(file);
+    } catch (const json::parse_error& e) {
+        file.close();
+        return std::unexpected(AppError{ErrorCode::ParseError, "Ошибка чтения data.json: неверный JSON синтаксис (" + std::string(e.what()) + ")"});
+    } catch (const std::exception& e) {
+        file.close();
+        return std::unexpected(AppError{ErrorCode::ParseError, "Ошибка парсинга data.json: " + std::string(e.what())});
+    }
     file.close();
 
-    for (auto& acc : j["accounts"]) {
-        unsigned id  = acc["id"];
-        std::string name = acc["name"];
-        double balance = acc["balance"];
-        std::string type = acc["type"];
-        Currency currency = StringToCurrency(acc["currency"]);
-        if (type == "cash_account") {
-            accounts.push_back(std::make_unique<CashAccount>(id, name, balance, currency));
-        }
-        else if (type == "bank_account") {
-            std::string last_four_digits = acc["last_four_digits"];
-            accounts.push_back(std::make_unique<BankAccount>(id, name, balance, currency, last_four_digits));
-        }
-        else if (type == "savings_account") {
-            double goal_amount = acc["goal_amount"];
-            std::chrono::year_month_day deadline = ymd_from_string(acc["deadline"]);
-            accounts.push_back(std::make_unique<SavingsAccount>(id, name, balance, currency, goal_amount, deadline));
-        }
-    }
-    for (auto& t: j["transactions"]) {
-        unsigned id = t["id"];
-        double amount = t["amount"];
-        std::chrono::year_month_day date = ymd_from_string(t["date"]);
-        std::string type = t["type"];
-        unsigned category_id = t["category_id"];
-        unsigned account_id = t["account_id"];
-        if (type == "income") {
-            transactions.push_back(std::make_unique<Income>(id, amount, date, category_id, account_id ));
-        }
-        else if (type == "expense") {
-            transactions.push_back(std::make_unique<Expense>(id, amount, date, category_id, account_id ));
-        }
-        else if (type== "regular_expense") {
-            std::chrono::year_month_day next_date = ymd_from_string(t["next_date"]);
-            Period period = String_to_period(t["period"]);
-            transactions.push_back(std::make_unique<RegularExpense>(id, amount, date, category_id, account_id, next_date, period));
-        }
-        else if (type == "transfer") {
-            unsigned destination_id = t["destination_id"];
-            transactions.push_back(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
-        }
-    }
-    for (auto& c : j["categories"]) {
-        unsigned id = c["id"];
-        TransactionType type = t_type_from_string(c["transaction_type"]);
-        std::string name = c["name"];
-        std::string color = c["color"];
-        categories.emplace_back(id, type, name, color);
-    }
-    for (auto& b: j["budgets"]) {
-        unsigned category_id = b["category_id"];
-        double limit = b["limit"];
-        double current_amount = b["current_amount"];
-        Category cat{};
-        bool found = false;
-        for (Category& c : categories) {
-            if (c.id == category_id) {
-                budgets.emplace_back(c, limit, current_amount);
-                found = true;
-                break;
+    try {
+        if (j.contains("accounts") && j["accounts"].is_array()) {
+            for (auto& acc : j["accounts"]) {
+                unsigned id  = acc.value("id", 0u);
+                std::string name = acc.value("name", "");
+                double balance = acc.value("balance", 0.0);
+                std::string type = acc.value("type", "cash_account");
+                Currency currency = StringToCurrency(acc.value("currency", "byn"));
+                if (type == "cash_account") {
+                    accounts.push_back(std::make_unique<CashAccount>(id, name, balance, currency));
+                }
+                else if (type == "bank_account") {
+                    std::string last_four_digits = acc.value("last_four_digits", "");
+                    accounts.push_back(std::make_unique<BankAccount>(id, name, balance, currency, last_four_digits));
+                }
+                else if (type == "savings_account") {
+                    double goal_amount = acc.value("goal_amount", 0.0);
+                    std::chrono::year_month_day deadline = ymd_from_string(acc.value("deadline", "2030-01-01"));
+                    accounts.push_back(std::make_unique<SavingsAccount>(id, name, balance, currency, goal_amount, deadline));
+                }
             }
         }
-        if (!found) throw std::runtime_error("No categories found");
+        if (j.contains("transactions") && j["transactions"].is_array()) {
+            for (auto& t: j["transactions"]) {
+                unsigned id = t.value("id", 0u);
+                double amount = t.value("amount", 0.0);
+                std::chrono::year_month_day date = ymd_from_string(t.value("date", "2026-01-01"));
+                std::string type = t.value("type", "expense");
+                unsigned category_id = t.value("category_id", 0u);
+                unsigned account_id = t.value("account_id", 0u);
+                if (type == "income") {
+                    transactions.push_back(std::make_unique<Income>(id, amount, date, category_id, account_id ));
+                }
+                else if (type == "expense") {
+                    transactions.push_back(std::make_unique<Expense>(id, amount, date, category_id, account_id ));
+                }
+                else if (type == "regular_expense") {
+                    std::chrono::year_month_day next_date = ymd_from_string(t.value("next_date", "2024-01-01"));
+                    Period period = String_to_period(t.value("period", "monthly"));
+                    transactions.push_back(std::make_unique<RegularExpense>(id, amount, date, category_id, account_id, next_date, period));
+                }
+                else if (type == "transfer") {
+                    unsigned destination_id = t.value("destination_id", 0u);
+                    transactions.push_back(std::make_unique<Transfer>(id, amount, date, account_id, destination_id));
+                }
+            }
+        }
+        if (j.contains("categories") && j["categories"].is_array()) {
+            for (auto& c : j["categories"]) {
+                unsigned id = c.value("id", 0u);
+                TransactionType type = t_type_from_string(c.value("transaction_type", "expense"));
+                std::string name = c.value("name", "");
+                std::string color = c.value("color", "#00ff66");
+                categories.emplace_back(id, type, name, color);
+            }
+        }
+        if (j.contains("budgets") && j["budgets"].is_array()) {
+            for (auto& b: j["budgets"]) {
+                unsigned category_id = b.value("category_id", 0u);
+                double limit = b.value("limit", 0.0);
+                double current_amount = b.value("current_amount", 0.0);
+                for (Category& c : categories) {
+                    if (c.id == category_id) {
+                        budgets.emplace_back(c, limit, current_amount);
+                        break;
+                    }
+                }
+            }
+        }
+    } catch (const std::exception& e) {
+        return std::unexpected(AppError{ErrorCode::ParseError, "Ошибка обработки данных JSON: " + std::string(e.what())});
     }
     return {};
 }   

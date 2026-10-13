@@ -1,4 +1,5 @@
 #include "statistics.h"
+#include <algorithm>
 
 
 Currency Statistics::get_account_currency( const std::vector<Account*>& accounts, unsigned account_id) const{
@@ -90,18 +91,14 @@ std::vector<CategoryStat> Statistics::top_categories(
     Currency cur,
     int n) const
 {
+    if (n <= 0) return {};
     auto result = expenses_by_category(transactions, accounts, categories, from, to, cur);
-    int size = result.size();
-    for (int i = 0; i < size; i++) {
-        int max = i;
-        for (int j = i + 1; j < size; j++)
-            if (result[j].amount > result[max].amount)
-                max = j;
-        auto temp = result[i];
-        result[i] = result[max];
-        result[max] = temp;
+    std::sort(result.begin(), result.end(), [](const auto& a, const auto& b) {
+        return a.amount > b.amount;
+    });
+    if (static_cast<size_t>(n) < result.size()) {
+        result.resize(static_cast<size_t>(n));
     }
-    if (n < size) result.resize(n);
     return result;
 }
 

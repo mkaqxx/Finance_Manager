@@ -1,9 +1,12 @@
 #include "chrono_to_string.h"
+#include <iomanip>
 
 
 std::string ymd_to_string(std::chrono::year_month_day ymd) {
-    std::stringstream ss;
-    ss<<ymd;
+    std::ostringstream ss;
+    ss << std::setw(4) << std::setfill('0') << static_cast<int>(ymd.year()) << '-'
+       << std::setw(2) << std::setfill('0') << static_cast<unsigned>(ymd.month()) << '-'
+       << std::setw(2) << std::setfill('0') << static_cast<unsigned>(ymd.day());
     return ss.str();
 }
 
@@ -14,7 +17,7 @@ std::chrono::year_month_day ymd_from_string(const std::string &str) {
     char dash1, dash2;
     if (ss >> y >> dash1 >> m >> dash2 >> d && dash1 == '-' && dash2 == '-') {
         std::chrono::year_month_day ymd{
-            std::chrono::year(y),
+            std::chrono::year(static_cast<int>(y)),
             std::chrono::month(m),
             std::chrono::day(d)
         };
@@ -27,7 +30,8 @@ std::chrono::year_month_day ymd_from_string(const std::string &str) {
 
 
 std::string ym_to_string(std::chrono::year_month ym) {
-    std::stringstream ss;
-    ss<<ym;
+    std::ostringstream ss;
+    ss << std::setw(4) << std::setfill('0') << static_cast<int>(ym.year()) << '-'
+       << std::setw(2) << std::setfill('0') << static_cast<unsigned>(ym.month());
     return ss.str();
 }

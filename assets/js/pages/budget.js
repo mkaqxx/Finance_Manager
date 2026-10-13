@@ -73,15 +73,15 @@ async function renderBudgets() {
                 if (b.status === 'exceeded') {
                     card.classList.add('budget-exceeded-pulse');
                 }
-            }
-            const percent = Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1);
+            const percent = b.limit > 0 ? Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1) : (b.current_amount > 0 ? '100.0' : '0.0');
             let barColor = b.status === 'exceeded' ? 'var(--color-expense)' : b.status === 'warning' ? '#f39c12' : 'var(--color-income)';
 
             const nameEl = clone.querySelector('.b-name');
             nameEl.textContent = b.name;
             nameEl.style.color = b.color;
             clone.querySelector('.b-current').textContent = b.current_amount.toLocaleString();
-            clone.querySelector('.b-limit').textContent = `${b.limit.toLocaleString()}${CURRENCY_SYMBOLS['byn']}`;
+            const curSym = (typeof CURRENCY_SYMBOLS !== 'undefined' && CURRENCY_SYMBOLS['byn']) ? CURRENCY_SYMBOLS['byn'] : 'BYN';
+            clone.querySelector('.b-limit').textContent = `${b.limit.toLocaleString()} ${curSym}`;
             clone.querySelector('.b-percent-text').textContent = percent;
 
             const bar = clone.querySelector('.b-progress-bar');
