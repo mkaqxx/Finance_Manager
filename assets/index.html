@@ -3,48 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <title>Finance Manager</title>
+    <!-- библиотека chart.js для рисования графиков на canvas -->
     <script src="js/chart.js"></script>
     <style>
+        /* переменные темной темы оформления */
         :root, :root[data-theme="dark"] {
+            /* основные цвета фона */
             --bg-page: #000000;
-            --bg-sidebar: #030805; /* Едва заметный зеленоватый оттенок черного */
+            --bg-sidebar: #030805;
             --bg-card: #050d08;
-            --border-color: rgba(0, 255, 102, 0.35); /* Полупрозрачные неоновые рамки */
+            /* рамки и тени с неоновым зеленым оттенком */
+            --border-color: rgba(0, 255, 102, 0.35);
             --card-shadow: 0 0 15px rgba(0, 255, 102, 0.1), inset 0 0 10px rgba(0, 255, 102, 0.02);
+            /* цвета текста */
             --text-main: #e5e5e5;
-            --text-muted: #668877; /* Стилизованный серый */
+            --text-muted: #668877;
             --text-title: #ffffff;
+            /* акцентный цвет и цвет текста на нем */
             --accent-color: #00ff66;
             --accent-text: #000000;
+            /* цвета доходов и расходов */
             --color-income: #00ff66;
             --color-expense: #ff0055;
+            /* моноширинный шрифт в стиле терминала */
             --font-family: 'Consolas', 'Courier New', monospace;
             --card-radius: 6px;
+            /* поля ввода и фон при наведении */
             --bg-input: #001105;
             --border-input: rgba(0, 255, 102, 0.5);
             --bg-hover: #001f0a;
             --modal-overlay: rgba(0, 10, 5, 0.85);
 
-            /* Эффекты неонового свечения */
+            /* эффекты неонового свечения */
             --neon-glow-text: 0 0 10px rgba(0, 255, 102, 0.7);
             --neon-glow-btn: 0 0 15px rgba(0, 255, 102, 0.5);
             --neon-glow-amount: 0 0 12px rgba(255, 255, 255, 0.25);
         }
 
+        /* переменные светлой темы (кремово-бумажные тона) */
         :root[data-theme="light"] {
-            /* Настоящие кремовые и бумажные оттенки */
-            --bg-page: #f2eadc; /* Глубокий кремовый цвет фона */
-            --bg-sidebar: #e6dac3; /* Более плотный беж для панели */
-            --bg-card: #fcf9f2; /* Цвет теплого молока (не чисто белый!) */
+            /* теплые оттенки фона */
+            --bg-page: #f2eadc;
+            --bg-sidebar: #e6dac3;
+            --bg-card: #fcf9f2;
             --border-color: #d4c5ab;
             --card-shadow: 0 4px 16px rgba(90, 70, 50, 0.08);
+            /* мягкие темные оттенки текста */
             --text-main: #4a4238;
             --text-muted: #8c7f6d;
             --text-title: #2c251d;
+            /* приглушенный акцентный цвет */
             --accent-color: #72968b;
             --accent-text: #ffffff;
             --color-income: #5b8a72;
             --color-expense: #c86d5e;
+            /* системный сглаженный шрифт */
             --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --card-radius: 14px;
             --bg-input: #ece1cd;
@@ -52,214 +65,226 @@
             --bg-hover: #e3d5bd;
             --modal-overlay: rgba(60, 50, 40, 0.5);
 
-            /* Отключаем свечение для светлой темы */
+            /* отключение неонового свечения в светлой теме */
             --neon-glow-text: none;
             --neon-glow-btn: none;
             --neon-glow-amount: none;
         }
 
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-                font-family: var(--font-family);
-            }
+        /* сброс стандартных отступов браузера и установка box-sizing */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
 
-            body {
-                background-color: var(--bg-page);
-                color: var(--text-main);
-                display: flex;
-                height: 100vh;
-                overflow: hidden;
-                font-family: var(--font-family);
-                transition: background-color 0.25s ease, color 0.25s ease;
-            }
+        /* базовый контейнер всего приложения на весь экран */
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            font-family: var(--font-family);
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
 
-            /* Боковая панель */
+        /* боковая панель навигации (сайдбар слева) */
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            border-right: 1px solid var(--border-color);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
 
-            .sidebar {
-                width: 240px;
-                background-color: var(--bg-sidebar);
-                display: flex;
-                flex-direction: column;
-                padding: 24px;
-                border-right: 1px solid var(--border-color);
-                transition: background-color 0.25s ease, border-color 0.25s ease;
-            }
+        /* логотип и название в шапке сайдбара */
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 32px;
+            text-shadow: var(--neon-glow-text);
+        }
 
-            .logo {
-                font-size: 20px;
-                font-weight: bold;
-                color: var(--accent-color);
-                margin-bottom: 32px;
-                text-shadow: var(--neon-glow-text); /* Добавляет неоновое свечение логотипу */
-            }
+        /* список навигационных ссылок */
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-            .nav-links {
-                list-style: none;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-            }
+        /* пункты меню навигации */
+        .nav-links li a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
 
-            .nav-links li a {
-                color: var(--text-muted);
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 14px;
-                transition: color 0.2s;
-                cursor: pointer;
-            }
+        /* активный пункт или при наведении */
+        .nav-links li a:hover, .nav-links li a.active {
+            color: var(--text-title);
+        }
 
-            .nav-links li a:hover, .nav-links li a.active {
-                color: var(--text-title);
-            }
+        /* основная область для содержимого страниц справа */
+        .main-content {
+            flex: 1;
+            background-color: var(--bg-page);
+            padding: 32px;
+            overflow-y: auto;
+            transition: background-color 0.25s ease;
+        }
 
-            /* Основная область */
+        /* заголовки страниц и секций */
+        h1, h2, h3 {
+            color: var(--text-title);
+        }
 
-            .main-content {
-                flex: 1;
-                background-color: var(--bg-page);
-                padding: 32px;
-                overflow-y: auto;
-                transition: background-color 0.25s ease;
-            }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 24px;
+        }
 
-            h1, h2, h3 {
-                color: var(--text-title);
-            }
+        /* адаптивная сетка карточек через css grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
 
-            h1 {
-                font-size: 28px;
-                margin-bottom: 24px;
-            }
+        /* базовый стиль карточки */
+        .card {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--card-radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+            transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease;
+        }
 
-            .card-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 20px;
-            }
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
 
-            .card {
-                background-color: var(--bg-card);
-                padding: 20px;
-                border-radius: var(--card-radius);
-                border: 1px solid var(--border-color);
-                box-shadow: var(--card-shadow);
-                transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease;
-            }
+        /* крупный текст суммы на карточке */
+        .card .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-title);
+            text-shadow: var(--neon-glow-amount);
+        }
 
-            .card h3 {
-                font-size: 16px;
-                margin-bottom: 8px;
-                color: var(--text-muted);
-            }
+        /* стилизация полосы прокрутки вебкит */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
 
-            .card .amount {
-                font-size: 24px;
-                font-weight: bold;
-                color: var(--text-title);
-                text-shadow: var(--neon-glow-amount); /* Легкое свечение цифрам баланса */
-            }
+        /* фиксированная ширина цифр чтобы не прыгали при анимации */
+        .amount, .acc-balance, .tx-amount, .tc-amount, .b-current, .b-limit {
+            font-variant-numeric: tabular-nums;
+        }
 
-            /* Кастомный минималистичный скроллбар */
-            ::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
-            }
-            ::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            ::-webkit-scrollbar-thumb {
-                background: var(--border-color);
-                border-radius: 4px;
-            }
-            ::-webkit-scrollbar-thumb:hover {
-                background: var(--text-muted);
-            }
+        /* полноэкранная подложка модального окна с размытием фона */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
 
-            .amount, .acc-balance, .tx-amount, .tc-amount, .b-current, .b-limit {
-                font-variant-numeric: tabular-nums;
-            }
+        /* карточка содержимого модального окна */
+        .modal-content {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: var(--card-radius);
+            width: 400px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--card-shadow);
+            color: var(--text-main);
+        }
 
-            /* Модальные окна с эффектом матового стекла */
+        /* поля ввода форм */
+        .form-input {
+            width: 100%;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-input);
+            border-radius: var(--card-radius);
+            outline: none;
+            font-family: inherit;
+        }
 
-            .modal-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: var(--modal-overlay);
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
+        /* главная акцентная кнопка действия */
+        .btn-primary {
+            padding: 8px 16px;
+            background: var(--accent-color);
+            color: var(--accent-text);
+            font-weight: bold;
+            border: none;
+            border-radius: var(--card-radius);
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            box-shadow: var(--neon-glow-btn);
+        }
 
-            .modal-content {
-                background: var(--bg-card);
-                padding: 24px;
-                border-radius: var(--card-radius);
-                width: 400px;
-                border: 1px solid var(--border-color);
-                box-shadow: var(--card-shadow);
-                color: var(--text-main);
-            }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
 
-            .form-input {
-                width: 100%;
-                margin-bottom: 12px;
-                padding: 10px;
-                background: var(--bg-input);
-                color: var(--text-main);
-                border: 1px solid var(--border-input);
-                border-radius: var(--card-radius);
-                outline: none;
-                font-family: inherit;
-            }
+        /* второстепенная прозрачная кнопка */
+        .btn-secondary {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.2s;
+        }
 
-            .btn-primary {
-                padding: 8px 16px;
-                background: var(--accent-color);
-                color: var(--accent-text);
-                font-weight: bold;
-                border: none;
-                border-radius: var(--card-radius);
-                cursor: pointer;
-                font-family: inherit;
-                transition: opacity 0.2s, box-shadow 0.2s;
-                box-shadow: var(--neon-glow-btn); /* Свечение кнопок */
-            }
+        .btn-secondary:hover {
+            color: var(--text-title);
+        }
 
-            .btn-primary:hover {
-                opacity: 0.9;
-            }
+        /* контейнер переключателя темы внизу сайдбара */
+        .theme-selector-container {
+            margin-top: auto;
+            padding-top: 18px;
+            border-top: 1px solid var(--border-color);
+        }
 
-            .btn-secondary {
-                padding: 8px 16px;
-                background: transparent;
-                color: var(--text-muted);
-                border: none;
-                cursor: pointer;
-                font-family: inherit;
-                transition: color 0.2s;
-            }
-
-            .btn-secondary:hover {
-                color: var(--text-title);
-            }
-
-            .theme-selector-container {
-                margin-top: auto;
-                padding-top: 18px;
-                border-top: 1px solid var(--border-color);
-            }
-        /* ================= АНИМАЦИИ И ИНТЕРАКТИВ ================= */
-
-        /* 1. Плавное появление страниц (Slide Up & Fade) */
+        /* анимация плавного появления страницы со сдвигом снизу */
         @keyframes fadeInSlideUp {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
@@ -268,51 +293,52 @@
             animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        /* 2. Появление модальных окон (Pop) */
+        /* анимация пружинистого открытия модального окна */
         @keyframes modalPop {
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
         .modal-content {
-            animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* Эффект легкой пружинки */
+            animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
-        /* 3. Интерактивные карточки (Hover) */
+        /* приподнимание карточки при наведении мыши */
         .card {
             transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
         }
         .card:hover {
-            transform: translateY(-3px); /* Слегка приподнимается */
+            transform: translateY(-3px);
         }
 
-        /* Усиливаем тени/свечение карточек при наведении в зависимости от темы */
+        /* усиление свечения карточки при наведении в темной теме */
         :root[data-theme="dark"] .card:hover {
             box-shadow: 0 0 20px rgba(0, 255, 102, 0.2), inset 0 0 10px rgba(0, 255, 102, 0.05);
             border-color: rgba(0, 255, 102, 0.6);
         }
+        /* тень карточки в светлой теме */
         :root[data-theme="light"] .card:hover {
             box-shadow: 0 8px 24px rgba(90, 70, 50, 0.12);
             border-color: #c4b498;
         }
 
-        /* 4. Тактильные кнопки и строки таблиц */
+        /* анимация увеличения кнопки при наведении и нажатии */
         .btn-primary {
             transition: transform 0.1s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
         }
         .btn-primary:hover {
-            transform: scale(1.02); /* Чуть увеличивается при наведении */
+            transform: scale(1.02);
             filter: brightness(1.1);
         }
         .btn-primary:active {
-            transform: scale(0.97); /* Прожимается при клике */
+            transform: scale(0.97);
         }
 
-        /* Анимация строк транзакций/счетов при наведении */
+        /* анимация сдвига строк таблицы транзакций при наведении */
         tbody tr:not(.empty-row):not(.skeleton-row), .account-card-item {
             transition: transform 0.2s ease, background-color 0.2s ease;
         }
         tbody tr:not(.empty-row):not(.skeleton-row):hover {
-            transform: translateX(4px); /* Слегка сдвигается вправо */
+            transform: translateX(4px);
             background-color: var(--bg-hover) !important;
         }
         tr.empty-row, tr.skeleton-row, thead tr {
@@ -324,53 +350,53 @@
             background-color: transparent !important;
             transform: none !important;
         }
+
+        /* плавная анимация шкалы прогресс-бара бюджета */
         .b-progress-bar {
-            /* Заменяем стандартную линейную анимацию на плавную с эффектом торможения в конце */
             transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease !important;
         }
 
-        /* 6. Плавная навигация в сайдбаре */
+        /* анимация сдвига и полоски у активного пункта меню */
         .nav-links li a {
             position: relative;
             transition: color 0.3s ease, padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 0px solid transparent; /* Подготовка к плавному появлению бордера */
+            border-left: 0px solid transparent;
         }
         .nav-links li a:hover, .nav-links li a.active {
             padding-left: 12px;
             border-left: 3px solid var(--accent-color);
             color: var(--text-title);
         }
-        /* В тёмной теме добавим лёгкое неоновое свечение тексту активного пункта */
         :root[data-theme="dark"] .nav-links li a.active {
             text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
         }
 
-        /* 7. Анимация кнопок удаления (крестики и текст) */
+        /* анимация вращения кнопки удаления (крестика) */
         .tx-delete-btn, .cat-delete-btn {
             transition: transform 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
             transform-origin: center;
         }
         .tx-delete-btn:hover, .cat-delete-btn:hover {
-            transform: scale(1.3) rotate(90deg); /* Крестик крутится и увеличивается */
+            transform: scale(1.3) rotate(90deg);
             color: var(--color-expense) !important;
         }
         :root[data-theme="dark"] .tx-delete-btn:hover,
         :root[data-theme="dark"] .cat-delete-btn:hover {
-            text-shadow: 0 0 10px var(--color-expense); /* Красный неон при попытке удалить */
+            text-shadow: 0 0 10px var(--color-expense);
         }
 
-        /* 8. Мягкий фокус для полей ввода */
+        /* подсветка поля ввода при фокусе */
         .form-input {
             transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
         }
         .form-input:focus {
-            background-color: var(--bg-card); /* Слегка высветляет поле при вводе */
+            background-color: var(--bg-card);
         }
         :root[data-theme="dark"] .form-input:focus {
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); /* Неоновый ореол вокруг инпута */
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.15);
         }
 
-        /* 9. Бейджи и статусы */
+        /* бейджи статусов и валют */
         .badge-pill {
             display: inline-flex;
             align-items: center;
@@ -385,6 +411,8 @@
             color: var(--text-muted);
             border: 1px solid var(--border-input);
         }
+
+        /* круглый значок стрелки типа транзакции */
         .tx-badge {
             width: 26px;
             height: 26px;
@@ -409,7 +437,7 @@
             color: #50a0ff;
         }
 
-        /* 10. Переключатель темы (Sun / Moon Switcher) */
+        /* переключатель темы (солнце и луна) */
         .theme-toggle-switch {
             display: inline-flex;
             cursor: pointer;
@@ -432,6 +460,7 @@
         .theme-toggle-switch:hover .theme-toggle-track {
             border-color: var(--accent-color);
         }
+        /* круглый ползунок внутри переключателя */
         .theme-toggle-thumb {
             position: absolute;
             top: 2px;
@@ -468,7 +497,7 @@
             opacity: 0.5;
         }
 
-        /* 11. Всплывающие уведомления (Toasts) */
+        /* всплывающие тост-уведомления справа снизу */
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -502,6 +531,7 @@
             opacity: 0;
             transform: translateX(30px);
         }
+        /* полоса таймера жизни уведомления */
         .toast-progress {
             position: absolute;
             bottom: 0;
@@ -526,7 +556,7 @@
             to { width: 0%; }
         }
 
-        /* 12. Скелетоны и эффект мерцания (Skeleton Loaders) */
+        /* эффект мерцания скелетона (shimmer) */
         @keyframes shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
@@ -543,7 +573,7 @@
             border-radius: 4px;
         }
 
-        /* 13. Быстрые фильтры-плашки (Filter Chips) */
+        /* быстрые фильтры-чипсы над таблицей */
         .chips-container, .chip-group-wrap {
             display: flex;
             flex-direction: column;
@@ -576,7 +606,7 @@
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
             appearance: none !important;
-            border-radius: 9999px !important; /* Идеальная плашка-капсула */
+            border-radius: 9999px !important;
             padding: 6px 14px !important;
             font-size: 13px !important;
             font-weight: 600 !important;
@@ -592,7 +622,7 @@
             line-height: 1.2 !important;
         }
 
-        /* Тёмная тема: глубокие неоновые плашки */
+        /* плашки фильтров в темной теме */
         :root[data-theme="dark"] .filter-chip,
         :root[data-theme="dark"] .segmented-btn {
             background: #0d1410 !important;
@@ -617,7 +647,7 @@
             font-weight: 700 !important;
         }
 
-        /* Светлая тема: пастельные бумажные плашки */
+        /* плашки фильтров в светлой теме */
         :root[data-theme="light"] .filter-chip,
         :root[data-theme="light"] .segmented-btn {
             background: #ede6d8 !important;
@@ -641,7 +671,7 @@
             font-weight: 600 !important;
         }
 
-        /* Микро-бейдж для стрелочек внутри плашек */
+        /* бейджи со значками внутри плашек */
         .chip-badge, .chip-icon {
             display: inline-flex !important;
             align-items: center !important;
@@ -676,7 +706,7 @@
             color: #ffffff !important;
         }
 
-        /* 14. Красивые пустые состояния (Empty State) */
+        /* заглушка при пустом списке (empty state) */
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -731,7 +761,7 @@
             margin-bottom: 18px;
         }
 
-        /* 15. Умные алерты лимитов бюджета (Dashboard Budget Alerts) */
+        /* баннер предупреждения о превышении бюджета */
         .budget-alert-banner {
             background: rgba(255, 0, 85, 0.08);
             border: 1px solid var(--color-expense);
@@ -771,7 +801,7 @@
             color: var(--text-muted);
         }
 
-        /* 16. Подсказки горячих клавиш (Keyboard Hints) */
+        /* подсказки горячих клавиш клавиатуры */
         .kbd-hint {
             display: inline-flex;
             align-items: center;
@@ -808,7 +838,7 @@
             font-size: 11px;
         }
 
-        /* 17. Неоновый следящий блик на карточках (Glow Follower) */
+        /* неоновый следящий блик карточки за курсором мыши */
         .card, .account-card-item {
             position: relative;
         }
@@ -835,7 +865,7 @@
             opacity: 1;
         }
 
-        /* 18. Бегущий неоновый луч по рамке (Border Beam) */
+        /* вращающийся неоновый луч по рамке акцентной карточки баланса */
         .card-featured {
             position: relative;
             overflow: hidden;
@@ -870,7 +900,7 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 19. Каскадное появление списков и таблиц (Cascade Animation) */
+        /* каскадная задержка появления элементов списка */
         @keyframes cascadeSlideIn {
             from {
                 opacity: 0;
@@ -886,7 +916,7 @@
             animation-delay: calc(var(--item-idx, 0) * 35ms);
         }
 
-        /* 20. Мягкое схлопывание при удалении (Row & Card Collapse) */
+        /* плавное схлопывание строки при удалении */
         .row-deleting {
             animation: rowCollapse 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
             pointer-events: none !important;
@@ -915,7 +945,7 @@
             }
         }
 
-        /* 21. Неоновый Ripple-эффект при клике на кнопки */
+        /* анимация волны (ripple) при клике на кнопку */
         .btn-primary, .btn-secondary {
             position: relative;
             overflow: hidden;
@@ -938,7 +968,7 @@
             }
         }
 
-        /* 22. Плавное закрытие модальных окон (Modal Exit Animation) */
+        /* анимация плавного закрытия модального окна */
         @keyframes modalOverlayFadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
@@ -954,7 +984,7 @@
             animation: modalContentPopOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        /* 23. Пульсирующее «дыхание» предупреждений о бюджете */
+        /* пульсирующее свечение при превышении или риске бюджета */
         @keyframes pulseAlertGlow {
             0%, 100% {
                 box-shadow: 0 0 10px rgba(255, 0, 85, 0.15);
@@ -983,7 +1013,7 @@
             animation: pulseAlertGlow 2.2s infinite ease-in-out !important;
         }
 
-        /* 24. Значок закрытой цели накоплений */
+        /* бейдж успешно выполненной финансовой цели */
         .goal-achieved-badge {
             background: rgba(0, 255, 102, 0.15);
             color: var(--color-income);
@@ -1001,14 +1031,17 @@
 </head>
 <body>
 
-<!-- Боковая панель -->
+<!-- боковая панель навигации -->
 <div class="sidebar">
+    <!-- логотип и заголовок программы -->
     <div class="logo" style="display: flex; align-items: center; gap: 8px;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
         <span>Менеджер финансов</span>
     </div>
+    <!-- пункты навигации по разделам -->
     <ul class="nav-links">
         <li>
+            <!-- переход на главную страницу (хоткей 1) -->
             <a class="active" onclick="switchPage('dashboard', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                 <span>Главная</span>
@@ -1016,6 +1049,7 @@
             </a>
         </li>
         <li>
+            <!-- переход в раздел счетов (хоткей 2) -->
             <a onclick="switchPage('accounts', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
                 <span>Счета</span>
@@ -1023,6 +1057,7 @@
             </a>
         </li>
         <li>
+            <!-- переход в историю транзакций (хоткей 3) -->
             <a onclick="switchPage('transactions', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
                 <span>Транзакции</span>
@@ -1030,6 +1065,7 @@
             </a>
         </li>
         <li>
+            <!-- переход в управление бюджетом и категориями (хоткей 4) -->
             <a onclick="switchPage('budget', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
                 <span>Бюджет</span>
@@ -1037,6 +1073,7 @@
             </a>
         </li>
         <li>
+            <!-- переход в аналитику и отчеты (хоткей 5) -->
             <a onclick="switchPage('analytics', this)" style="display: flex; align-items: center; gap: 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 <span>Аналитика</span>
@@ -1044,6 +1081,7 @@
             </a>
         </li>
     </ul>
+    <!-- блок переключения светлой и темной темы -->
     <div class="theme-selector-container">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;" onclick="toggleTheme()" title="Переключить тему">Тема оформления</span>
@@ -1058,15 +1096,19 @@
     </div>
 </div>
 
-<!-- Основной контент -->
+<!-- основная рабочая область контента -->
 <div class="main-content">
+    <!-- динамический заголовок текущей страницы -->
     <h1 id="page-title">Главная</h1>
     <div id="page-content">
 
-        <!-- ВЬЮХА: ГЛАВНАЯ -->
+        <!-- страница 1: главная панель (дашборд) -->
         <div id="view-dashboard" class="page-view">
+            <!-- контейнер для баннеров предупреждений о превышении лимитов -->
             <div id="dashboard-budget-alerts"></div>
+            <!-- сетка сводных показателей за текущий месяц -->
             <div class="card-grid">
+                <!-- карточка общего баланса со световым лучом -->
                 <div class="card card-featured">
                     <div class="card-featured-glow"></div>
                     <div class="card-featured-inner">
@@ -1074,36 +1116,42 @@
                         <div class="amount" id="balance-val">Загрузка..</div>
                     </div>
                 </div>
+                <!-- карточка суммарных расходов -->
                 <div class="card">
                     <h3 style="color: var(--color-expense);">Расходы за месяц</h3>
                     <div class="amount" id="expenses-val">Загрузка..</div>
                 </div>
+                <!-- карточка суммарных доходов -->
                 <div class="card">
                     <h3 style="color: var(--color-income);">Доход за месяц</h3>
                     <div class="amount" id="incomes-val">Загрузка..</div>
                 </div>
             </div>
+            <!-- блок топа категорий трат -->
             <div style="margin-top: 32px;">
                 <h3 style="margin-bottom: 16px;">Топ расходов за месяц</h3>
                 <div id="top-categories-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
             </div>
         </div>
 
-        <!-- ВЬЮХА: СЧЕТА -->
+        <!-- страница 2: список счетов пользователя -->
         <div id="view-accounts" class="page-view" style="display: none;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                <!-- кнопка создания нового счета -->
                 <button onclick="openAccountModal()" class="btn-primary">+ Добавить счет</button>
             </div>
+            <!-- контейнер для карточек счетов (заполняется из accounts.js) -->
             <div id="accounts-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
 
-        <!-- ВЬЮХА: ТРАНЗАКЦИИ -->
+        <!-- страница 3: журнал транзакций -->
         <div id="view-transactions" class="page-view" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <!-- кнопка создания операции (хоткей N) -->
                 <button onclick="openTxModal()" class="btn-primary">+ Добавить операцию <span class="kbd-hint">[N]</span></button>
             </div>
 
-            <!-- Быстрые фильтры-плашки (по типу и по периоду) -->
+            <!-- панель быстрых кнопок-фильтров по типу и периоду -->
             <div class="chips-container">
                 <div class="chips-row">
                     <span class="chips-label">Тип:</span>
@@ -1126,13 +1174,16 @@
                 </div>
             </div>
 
+            <!-- строка поиска, фильтра по счету и сортировки -->
             <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <!-- поле текстового поиска с иконкой лупы -->
                 <div style="flex: 1; min-width: 220px; position: relative; display: flex; align-items: center;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; color: var(--text-muted); opacity: 0.6; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
                            class="form-input" style="width: 100%; margin-bottom: 0; padding-left: 36px;">
                 </div>
 
+                <!-- скрытый выпадающий список для синхронизации с чипсами -->
                 <select id="tx-filter-type" class="form-input" style="display: none;">
                     <option value="all">Все типы</option>
                     <option value="income">Доходы</option>
@@ -1141,10 +1192,12 @@
                     <option value="regular_expense">Регулярные</option>
                 </select>
 
+                <!-- фильтрация по конкретному счету -->
                 <select id="tx-filter-account" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                     <option value="all">Все счета</option>
                 </select>
 
+                <!-- сортировка по дате или сумме -->
                 <select id="tx-sort" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                     <option value="date-desc">Сначала новые</option>
                     <option value="date-asc">Сначала старые</option>
@@ -1152,6 +1205,8 @@
                     <option value="amount-asc">По сумме (возрастание)</option>
                 </select>
             </div>
+
+            <!-- таблица списка операций -->
             <div class="card" style="padding: 20px;">
                 <table style="width: 100%; text-align: left; border-collapse: collapse;">
                     <thead>
@@ -1167,21 +1222,25 @@
             </div>
         </div>
 
-        <!-- ВЬЮХА: БЮДЖЕТ -->
+        <!-- страница 4: управление бюджетом и категориями -->
         <div id="view-budget" class="page-view" style="display: none;">
             <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <!-- кнопки вызова модалок создания категории и лимита -->
                 <button onclick="openCategoryModal()" class="btn-secondary" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius); padding: 8px 16px;">+ Новая категория</button>
                 <button onclick="openBudgetModal()" class="btn-primary">+ Установить лимит</button>
             </div>
+            <!-- сетка категорий -->
             <h3 style="margin-bottom: 16px;">Мои категории</h3>
             <div id="categories-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
 
+            <!-- список шкал прогресса бюджетов -->
             <h3 style="margin-top: 32px; margin-bottom: 16px;">Бюджеты</h3>
             <div id="budget-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
         </div>
 
-        <!-- ВЬЮХА: АНАЛИТИКА -->
+        <!-- страница 5: аналитика и графики -->
         <div id="view-analytics" class="page-view" style="display: none;">
+            <!-- панель выбора месяца и валюты отчета -->
             <div style="display: flex; gap: 16px; margin-bottom: 24px;">
                 <input type="month" id="analytics-month" class="form-input" style="width: auto; margin: 0;">
                 <select id="analytics-currency" class="form-input" style="width: auto; margin: 0; cursor: pointer;">
@@ -1192,6 +1251,7 @@
                 </select>
                 <button onclick="loadAnalytics()" class="btn-primary">Применить</button>
             </div>
+            <!-- сводные карточки за выбранный месяц -->
             <div class="card-grid" style="margin-bottom: 24px;">
                 <div class="card">
                     <h3>Доход за месяц</h3>
@@ -1206,13 +1266,16 @@
                     <div class="amount" id="stat-balance">0 ₽</div>
                 </div>
             </div>
+            <!-- область графиков chart.js -->
             <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                <!-- круговая диаграмма расходов по категориям -->
                 <div class="card" style="display: flex; flex-direction: column; align-items: center;">
                     <h3 style="align-self: flex-start;">Структура расходов</h3>
                     <div style="width: 100%; max-width: 250px;">
                         <canvas id="categoryChart"></canvas>
                     </div>
                 </div>
+                <!-- столбчатая годовая диаграмма доходов и расходов -->
                 <div class="card">
                     <h3>Годовой отчет</h3>
                     <canvas id="yearlyChart"></canvas>
@@ -1225,34 +1288,42 @@
 
 <!-- ================== МОДАЛЬНЫЕ ОКНА ================== -->
 
-<!-- Модалка: Транзакция -->
+<!-- модальное окно добавления транзакции -->
 <div id="tx-modal" class="modal-overlay">
     <div class="modal-content">
         <h2 style="margin-bottom: 20px;">Новая транзакция</h2>
         <form id="tx-form">
+            <!-- сумма операции -->
             <input type="number" id="tx-amount" placeholder="Сумма" step="0.01" required class="form-input">
+            <!-- дата операции -->
             <input type="date" id="tx-date" required class="form-input">
+            <!-- выбор типа: расход, доход, регулярный расход, перевод -->
             <select id="tx-type" onchange="toggleTxFields()" class="form-input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
                 <option value="regular_expense">Постоянный расход</option>
                 <option value="transfer">Перевод</option>
             </select>
+            <!-- счет списания -->
             <select id="tx-account" required class="form-input">
                 <option value="" disabled selected>Счет списания...</option>
             </select>
+            <!-- счет зачисления (нужен только для переводов) -->
             <select id="tx-dest-account" style="display: none;" class="form-input">
                 <option value="" disabled selected>Счет зачисления...</option>
             </select>
+            <!-- периодичность повторения (только для регулярных расходов) -->
             <select id="tx-period" style="display: none;" class="form-input">
                 <option value="daily">Ежедневно</option>
                 <option value="weekly">Еженедельно</option>
                 <option value="monthly">Ежемесячно</option>
                 <option value="yearly">Ежегодно</option>
             </select>
+            <!-- категория операции -->
             <select id="tx-category" required class="form-input" style="margin-bottom: 24px;">
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
+            <!-- кнопки отмены и сохранения -->
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" onclick="closeTxModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
                 <button type="submit" class="btn-primary">Сохранить</button>
@@ -1261,26 +1332,33 @@
     </div>
 </div>
 
-<!-- Модалка: Счет -->
+<!-- модальное окно создания и редактирования счета -->
 <div id="account-modal" class="modal-overlay">
     <div class="modal-content">
         <h2 style="margin-bottom: 20px;">Новый счет</h2>
         <form id="account-form">
+            <!-- название счета -->
             <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required class="form-input">
+            <!-- начальный баланс -->
             <input type="number" id="acc-balance" placeholder="Баланс" step="0.01" required class="form-input">
+            <!-- валюта счета -->
             <select id="acc-currency" required class="form-input">
                 <option value="byn">BYN - Белорусский рубль</option>
                 <option value="usd">USD - Доллар США</option>
                 <option value="eur">EUR - Евро</option>
                 <option value="rub">RUB - Российский рубль</option>
             </select>
+            <!-- тип счета: наличные, банковский счет, копилка -->
             <select id="acc-type" onchange="toggleAccountFields()" required class="form-input">
                 <option value="cash_account">Наличные</option>
                 <option value="bank_account">Банковский счет</option>
                 <option value="savings_account">Копилка</option>
             </select>
+            <!-- последние 4 цифры (только для карт) -->
             <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры (напр. 1234)" maxlength="4" style="display: none;" class="form-input">
+            <!-- финансовая цель накоплений (только для копилок) -->
             <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none;" class="form-input">
+            <!-- крайний срок накопления цели -->
             <input type="date" id="acc-deadline" style="display: none; margin-bottom: 24px;" class="form-input">
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" onclick="closeAccountModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
@@ -1290,14 +1368,16 @@
     </div>
 </div>
 
-<!-- Модалка: Бюджет -->
+<!-- модальное окно установки лимита бюджета -->
 <div id="budget-modal" class="modal-overlay">
     <div class="modal-content">
         <h2 style="margin-bottom: 20px;">Установить лимит расходов</h2>
         <form id="budget-form">
+            <!-- выбор категории расхода -->
             <select id="budget-category" required class="form-input">
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
+            <!-- сумма месячного лимита -->
             <input type="number" id="budget-limit" placeholder="Лимит" step="0.01" required class="form-input" style="margin-bottom: 24px;">
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" onclick="closeBudgetModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
@@ -1307,16 +1387,19 @@
     </div>
 </div>
 
-<!-- Модалка: Категория -->
+<!-- модальное окно добавления категории -->
 <div id="category-modal" class="modal-overlay">
     <div class="modal-content">
         <h2 style="margin-bottom: 20px;">Новая категория</h2>
         <form id="category-form">
+            <!-- название категории -->
             <input type="text" id="cat-name" placeholder="Название (напр. Продукты)" required class="form-input">
+            <!-- тип: расход или доход -->
             <select id="cat-type" required class="form-input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
             </select>
+            <!-- выбор цвета маркера категории -->
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
                 <label style="color: var(--text-muted);">Цвет маркера:</label>
                 <input type="color" id="cat-color" value="#1db954" style="background: transparent; border: none; cursor: pointer; height: 32px; width: 32px;">
@@ -1329,17 +1412,22 @@
     </div>
 </div>
 
+<!-- модальное окно подробной информации о счете -->
 <div id="account-detail-modal" class="modal-overlay">
     <div class="modal-content" style="width: 500px; max-height: 80vh; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 id="modal-acc-name">Название счёта</h2>
+            <!-- кнопка закрытия -->
             <button onclick="closeAccountDetailModal()" class="btn-secondary" style="font-size: 20px;">×</button>
         </div>
 
+        <!-- динамический блок информации о счете (баланс, тип, цель) -->
         <div id="modal-acc-info" style="color: var(--text-muted); margin-bottom: 20px;"></div>
 
+        <!-- список последних операций по данному счету -->
         <h3 style="margin-bottom: 12px;">Последние транзакции</h3>
         <div id="modal-acc-transactions" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        <!-- действия со счетом: редактирование и удаление -->
         <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: auto;">
             <button id="btn-edit-account" class="btn-secondary" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Редактировать</button>
             <button id="btn-delete-account" class="btn-secondary" style="color: var(--color-expense);">Удалить счет</button>
@@ -1347,6 +1435,7 @@
     </div>
 </div>
 
+<!-- модальное окно подтверждения опасных действий (удаления) -->
 <div id="confirm-modal" class="modal-overlay" style="display: none;">
     <div class="modal-content" style="width: 360px;">
         <h3 id="confirm-title" style="margin-top: 0;">Подтверждение</h3>
@@ -1358,8 +1447,9 @@
     </div>
 </div>
 
-<!-- ================== ШАБЛОНЫ (TEMPLATES) ================== -->
+<!-- ================== ШАБЛОНЫ (TEMPLATES ДЛЯ КЛОНИРОВАНИЯ В JS) ================== -->
 
+<!-- шаблон элемента списка топ-категорий -->
 <template id="tpl-top-category">
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 0.2s ease;">
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -1370,6 +1460,7 @@
     </div>
 </template>
 
+<!-- шаблон карточки счета -->
 <template id="tpl-account-card">
     <div class="card account-card-item" style="cursor: pointer; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
@@ -1386,6 +1477,7 @@
             <div class="acc-number" style="font-size: 13px; color: var(--text-muted); font-family: monospace;">•••• 1234</div>
             <div class="acc-balance" style="font-size: 20px; font-weight: bold; color: var(--color-income);"></div>
         </div>
+        <!-- шкала прогресса цели (только для накопительных счетов) -->
         <div class="acc-goal-bar-wrap" style="display: none; margin-top: 12px;">
             <div style="width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden;">
                 <div class="acc-goal-bar" style="height: 100%; background: var(--accent-color); border-radius: 3px; transition: width 0.5s ease;"></div>
@@ -1394,6 +1486,7 @@
     </div>
 </template>
 
+<!-- шаблон строки таблицы транзакций -->
 <template id="tpl-transaction-row">
     <tr style="border-bottom: 1px solid var(--border-color);">
         <td class="tx-date" style="padding: 12px 8px; color: var(--text-muted); font-size: 13px;"></td>
@@ -1410,6 +1503,7 @@
     </tr>
 </template>
 
+<!-- шаблон карточки категории -->
 <template id="tpl-category-card">
     <div class="card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -1423,6 +1517,7 @@
     </div>
 </template>
 
+<!-- шаблон карточки шкалы бюджета -->
 <template id="tpl-budget-bar">
     <div class="card" style="padding: 16px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -1431,6 +1526,7 @@
                 <span class="b-current" style="color: var(--text-title);"></span> / <span class="b-limit"></span> (<span class="b-percent-text"></span>%)
             </span>
         </div>
+        <!-- шкала прогресса лимита -->
         <div style="width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden;">
             <div class="b-progress-bar" style="height: 100%; transition: width 0.3s;"></div>
         </div>
@@ -1441,10 +1537,10 @@
     </div>
 </template>
 
-<!-- Контейнер для всплывающих уведомлений -->
+<!-- контейнер для всплывающих тост-уведомлений -->
 <div id="toast-container" class="toast-container"></div>
 
-<!-- ================== СКРИПТЫ ================== -->
+<!-- подключение js модулей приложения -->
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
 <script src="js/pages/dashboard.js"></script>
@@ -1454,6 +1550,7 @@
 <script src="js/pages/analytics.js"></script>
 <script src="js/modals.js"></script>
 
+<!-- полноэкранный canvas для анимации конфетти при успехе -->
 <canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999; display: none;"></canvas>
 
 </body>

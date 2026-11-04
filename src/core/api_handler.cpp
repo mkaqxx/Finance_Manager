@@ -1,6 +1,8 @@
 #include "api_handler.h"
 
 
+//регистрация всех биндингов
+//при получении вызова возвращается соответствующая функция
 void ApiHandler::register_all() {
     //получение
     w.bind("getAccounts", [this](std::string seq) {
@@ -63,11 +65,12 @@ void ApiHandler::register_all() {
 }
 
 
-#include <cmath>
 
+//передача счетов
 std::string ApiHandler::handle_get_accounts(std::string seq) {
     (void)seq;
     try {
+        //создание и заполнение json-массива
         json response = json::array();
         for (auto* acc : manager.get_accounts_raw()) {
             if (!acc) continue;
@@ -90,16 +93,20 @@ std::string ApiHandler::handle_get_accounts(std::string seq) {
 
             response.push_back(a);
         }
+        //возврат json как строки
         return response.dump();
     } catch (const std::exception& e) {
+        //возврат ошибки
         return json{{"error", e.what()}}.dump();
     }
 }
 
 
+//передача транзакций
 std::string ApiHandler::handle_get_transactions(std::string seq) {
     (void)seq;
     try {
+        //создание и заполнение json-массива
         json response = json::array();
         for (auto* transaction : manager.get_transactions_raw()) {
             if (!transaction) continue;
@@ -122,16 +129,20 @@ std::string ApiHandler::handle_get_transactions(std::string seq) {
             }
             response.push_back(t);
         }
+        //передача json как строки
         return response.dump();
     } catch (const std::exception& e) {
+        //возврат ошибки
         return json{{"error", e.what()}}.dump();
     }
 }
 
 
+//передача категорий
 std::string ApiHandler::handle_get_categories(std::string seq) {
     (void)seq;
     try {
+        //создание и заполнение json-массива
         json response = json::array();
         for (auto& category : manager.get_categories()) {
             json c;
@@ -148,9 +159,11 @@ std::string ApiHandler::handle_get_categories(std::string seq) {
 }
 
 
+//передача лимитов
 std::string ApiHandler::handle_get_budgets(std::string seq) {
     (void)seq;
     try {
+        //создание и заполнение json-массива
         json response = json::array();
         for (const auto& budget : manager.get_budgets()) {
             json b;
@@ -169,11 +182,15 @@ std::string ApiHandler::handle_get_budgets(std::string seq) {
 }
 
 
+//передача транзакций одного счета
 std::string ApiHandler::handle_get_transactions_by_account(std::string seq) {
     try {
+        //парсинг входящей строки в json
         json args = json::parse(seq);
         json data = args[0];
+        //получение айди из аргументов
         unsigned id = data[0];
+        //создание и заполнение json-массива
         json response = json::array();
         for (auto* transaction : manager.get_transactions_raw()) {
             if (!transaction) continue;
@@ -205,13 +222,16 @@ std::string ApiHandler::handle_get_transactions_by_account(std::string seq) {
 }
 
 
+//передача месячного отчета для главной страницы
 std::string ApiHandler::handle_get_monthly_dashboard(std::string seq) {
     (void)seq;
     try {
+        //получение текущей точки времени
         auto now = std::chrono::system_clock::now();
         std::chrono::year_month_day today{std::chrono::floor<std::chrono::days>(now)};
         std::chrono::year_month_day first_day{today.year(), today.month(), std::chrono::day{1}};
 
+        //создание и заполнение json-объекта
         json report = manager.get_monthly_report(first_day, today);
         return report.dump();
     } catch (const std::exception& e) {
@@ -220,12 +240,15 @@ std::string ApiHandler::handle_get_monthly_dashboard(std::string seq) {
 }
 
 
+//передача отчета по категориям
 std::string ApiHandler::handle_get_category_report(std::string seq) {
     try {
+        //парсинг аргументов и извлечение дат
         json args = json::parse(seq);
         json data = args[0];
         auto from = ymd_from_string(data[0]);
         auto to = ymd_from_string(data[1]);
+        //создание и заполнение json-объекта
         json report = manager.get_category_report(from, to);
         return report.dump();
     }
@@ -235,11 +258,14 @@ std::string ApiHandler::handle_get_category_report(std::string seq) {
 }
 
 
+//передача годового отчета
 std::string ApiHandler::handle_get_yearly_report(std::string seq) {
     try {
+        //парсинг аргументов и извлечение года
         json args = json::parse(seq);
         json data = args[0];
         int year = data[0];
+        //создание и заполнение json-объекта
         json report = manager.get_yearly_report(year);
         return report.dump();
     } catch (const std::exception& e) {
@@ -248,15 +274,19 @@ std::string ApiHandler::handle_get_yearly_report(std::string seq) {
 }
 
 
+//добавление счета
 std::string ApiHandler::handle_add_account(std::string seq) {
     try {
+        //парсинг строки в json
         json args = json::parse(seq);
         json data = args[0];
+        //генерация нового айди
         unsigned max_id = 0;
         for (const auto* a : manager.get_accounts_raw()) {
             if (a->get_id() > max_id) max_id = a->get_id();
         }
         unsigned id = max_id + 1;
+        //извлечение данных из json-объекта. создание нового счета и его добавление
         std::string name = data["name"];
         if (name.empty()) {
             return json{{"error", "Название счёта не может быть пустым"}}.dump();
@@ -296,15 +326,19 @@ std::string ApiHandler::handle_add_account(std::string seq) {
 }
 
 
+//добавление транзакции
 std::string ApiHandler::handle_add_transaction(std::string seq) {
     try {
+        //парсинг строки-аргументов в json
         json args = json::parse(seq);
         json data = args[0];
+        //генерация айди
         unsigned max_id = 0;
         for (const auto* t : manager.get_transactions_raw()) {
             if (t->get_id() > max_id) max_id = t->get_id();
         }
         unsigned id = max_id + 1;
+        //извлечение данных и создание новой транзакции
         double amount = data["amount"];
         if (std::isnan(amount) || std::isinf(amount) || amount <= 0.0) {
             return json{{"error", "Сумма операции должна быть больше нуля"}}.dump();
@@ -369,11 +403,14 @@ std::string ApiHandler::handle_add_transaction(std::string seq) {
 }
 
 
+//добавление категории
 std::string ApiHandler::handle_add_category(std::string seq) {
     try {
+        //парсинг аргументов в json
         json args = json::parse(seq);
         json data = args[0];
 
+        //генерация айди
         unsigned max_id = 0;
         for (const auto& c : manager.get_categories()) {
             if (c.id > max_id) max_id = c.id;
@@ -401,6 +438,7 @@ std::string ApiHandler::handle_add_category(std::string seq) {
 }
 
 
+//добавление лимита
 std::string ApiHandler::handle_add_budget(std::string seq) {
     try {
         json args = json::parse(seq);
@@ -433,11 +471,14 @@ std::string ApiHandler::handle_add_budget(std::string seq) {
 }
 
 
+//удаление счета
 std::string ApiHandler::handle_remove_account(std::string seq) {
     try {
+        //парсинг аргументов и извлечение айди
         json args = json::parse(seq);
         json data = args[0];
         unsigned id = data[0];
+        //удаление счета
         auto res = manager.remove_account(id);
         if (!res) {
             return json{{"error", res.error().message}}.dump();
@@ -449,11 +490,14 @@ std::string ApiHandler::handle_remove_account(std::string seq) {
 }
 
 
+//удаление транзакции
 std::string ApiHandler::handle_remove_transaction(std::string seq) {
     try {
+        //парсинг аргументов и извлечение айди
         json args = json::parse(seq);
         json data = args[0];
         unsigned id = data[0];
+        //удаление транзакции
         auto res = manager.remove_transaction(id);
         if (!res) {
             return json{{"error", res.error().message}}.dump();
@@ -465,11 +509,14 @@ std::string ApiHandler::handle_remove_transaction(std::string seq) {
 }
 
 
+//удаление категории
 std::string ApiHandler::handle_remove_category(std::string seq) {
     try {
+        //парсинг аргументов и извлечение айди
         json args = json::parse(seq);
         json data = args[0];
         unsigned id = data[0];
+        //удаление категории
         auto res = manager.remove_category(id);
         if (!res) {
             return json{{"error", res.error().message}}.dump();
@@ -481,11 +528,14 @@ std::string ApiHandler::handle_remove_category(std::string seq) {
 }
 
 
+//удаление лимита
 std::string ApiHandler::handle_remove_budget(std::string seq) {
     try {
+        //парсинг аргументов и извлечение айди
         json args = json::parse(seq);
         json data = args[0];
         unsigned id = data[0];
+        //удаление лимита
         auto res = manager.remove_budget(id);
         if (!res) {
             return json{{"error", res.error().message}}.dump();
@@ -497,10 +547,13 @@ std::string ApiHandler::handle_remove_budget(std::string seq) {
 }
 
 
+//редактирование аккаунта
 std::string ApiHandler::handle_edit_account(std::string seq) {
     try {
+        //парсинг аргументов
         json args = json::parse(seq);
         json data = args[0];
+        //запись новых данных
         unsigned id = data["id"];
         std::string name = data["name"];
         if (name.empty()) {
@@ -527,6 +580,7 @@ std::string ApiHandler::handle_edit_account(std::string seq) {
             }
         }
 
+        //редактирование счета
         auto res = manager.edit_account(id, name, balance, currency, last_four_digits, goal_amount, deadline);
         if (!res) {
             return json{{"error", res.error().message}}.dump();
@@ -539,15 +593,19 @@ std::string ApiHandler::handle_edit_account(std::string seq) {
 }
 
 
+//редактирование лимита
 std::string ApiHandler::handle_edit_budget(std::string seq) {
     try {
+        //парсинг аргументов
         json args = json::parse(seq);
         json data = args[0];
+        //запись новых данных
         unsigned cat_id = data["category_id"];
         double limit = data["limit"];
         if (std::isnan(limit) || std::isinf(limit) || limit <= 0.0) {
             return json{{"error", "Лимит бюджета должен быть положительным числом"}}.dump();
         }
+        //редактирование лимита
         auto res = manager.edit_budget(cat_id, limit);
         if (!res) {
             return json{{"error", res.error().message}}.dump();

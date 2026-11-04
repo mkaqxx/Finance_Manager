@@ -1,9 +1,15 @@
-let allTransactions = []; // Сохраняем полученные с бэкенда транзакции
+//кэш полученных транзакций для быстрой фильтрации в памяти
+let allTransactions = []; 
+//текущий выбранный фильтр периода
 let currentPeriodFilter = 'all';
 
+//отрисовка скелетона во время загрузки данных
 function renderTransactionsSkeleton() {
+    //поиск тела таблицы
     const tbody = document.getElementById('transactions-table');
     if (!tbody) return;
+
+    //генерация временных мерцающих строк
     let skeletonHtml = '';
     for (let i = 0; i < 4; i++) {
         skeletonHtml += `
@@ -18,27 +24,33 @@ function renderTransactionsSkeleton() {
     tbody.innerHTML = skeletonHtml;
 }
 
+//загрузка списка транзакций из с++
 async function loadTransactions() {
     try {
+        //показ скелетона
         renderTransactionsSkeleton();
+
+        //запрос транзакций из с++ бэкенда
         allTransactions = await windowAPI.getTransactions();
 
-        // Заполняем фильтр счетов, если он есть на странице
+        //заполнение фильтра счетов при первом открытии
         await populateAccountFilter();
 
-        // Применяем текущие фильтры и отрисовываем
+        //применение фильтров и отрисовка таблицы
         applyFiltersAndRender();
     } catch (error) {
         console.error("Ошибка загрузки транзакций:", error);
     }
 }
 
-// Заполнение выпадающего списка счетов в панели фильтров
+//заполнение выпадающего списка счетов в панели фильтра
 async function populateAccountFilter() {
     const accSelect = document.getElementById('tx-filter-account');
-    if (!accSelect || accSelect.dataset.loaded) return; // Заполняем только один раз
+    //проверка: заполняем только один раз
+    if (!accSelect || accSelect.dataset.loaded) return;
 
     try {
+        //запрос счетов из с++
         const accounts = await windowAPI.getAccounts();
         accSelect.innerHTML = '<option value="all">Все счета</option>';
         accounts.forEach(acc => {
@@ -47,14 +59,16 @@ async function populateAccountFilter() {
             opt.textContent = acc.name;
             accSelect.appendChild(opt);
         });
+        //отметка об успешном заполнении
         accSelect.dataset.loaded = 'true';
     } catch (e) {
         console.error("Ошибка загрузки счетов для фильтра:", e);
     }
 }
 
-// Фильтрация, сортировка и вызов рендера
+//фильтрация, сортировка и вызов рендера таблицы
 function applyFiltersAndRender() {
+    //считывание параметров фильтрации и поиска
     const searchInput = document.getElementById('tx-search');
     const typeSelect = document.getElementById('tx-filter-type');
     const accountSelect = document.getElementById('tx-filter-account');
@@ -69,12 +83,12 @@ function applyFiltersAndRender() {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
 
-    // 1. Фильтрация
+    //фильтрация массива транзакций
     let filtered = allTransactions.filter(tx => {
-        // Фильтр по типу
+        //фильтр по типу операции
         if (typeFilter !== 'all' && tx.type !== typeFilter) return false;
 
-        // Фильтр по периоду
+        //фильтр по периоду дат
         if (currentPeriodFilter !== 'all' && tx.date) {
             const txDate = new Date(tx.date);
             if (currentPeriodFilter === 'this_month') {
@@ -89,14 +103,14 @@ function applyFiltersAndRender() {
             }
         }
 
-        // Фильтр по счёту
+        //фильтр по счету списания или зачисления
         if (accountFilter !== 'all') {
             const accId = Number(accountFilter);
             const matchesAccount = (tx.account_id === accId) || (tx.destination_id === accId);
             if (!matchesAccount) return false;
         }
 
-        // Поиск по сумме, дате или названию категории
+        //поиск по сумме, дате или названию категории
         if (searchQuery) {
             const category = categoriesMap[tx.category_id] || { name: "" };
             const matchesCategory = category.name.toLowerCase().includes(searchQuery);
@@ -108,7 +122,7 @@ function applyFiltersAndRender() {
         return true;
     });
 
-    // 2. Сортировка
+    //сортировка массива
     filtered.sort((a, b) => {
         if (sortBy === 'date-desc') return b.date.localeCompare(a.date);
         if (sortBy === 'date-asc') return a.date.localeCompare(b.date);
@@ -117,18 +131,20 @@ function applyFiltersAndRender() {
         return 0;
     });
 
-    // 3. Отрисовка
+    //отрисовка строк в таблице
     renderTransactionsTable(filtered);
 }
 
-// Отрисовка строк по готовому шаблону
+//отрисовка строк таблицы по html-шаблону
 function renderTransactionsTable(transactions) {
     const tbody = document.getElementById('transactions-table');
     const template = document.getElementById('tpl-transaction-row');
     if (!tbody || !template) return;
 
+    //очистка старых строк
     tbody.innerHTML = '';
 
+    //если транзакций нет, вывод пустого состояния
     if (!transactions.length) {
         tbody.innerHTML = `
             <tr class="empty-row">
@@ -147,16 +163,22 @@ function renderTransactionsTable(transactions) {
         return;
     }
 
+    //цикл по транзакциям
     transactions.forEach((tx, idx) => {
+        //клонирование шаблона строки
         const clone = template.content.cloneNode(true);
         const row = clone.querySelector('tr');
         if (row) {
+            //каскадная анимация появления
             row.classList.add('animate-cascade');
             row.style.setProperty('--item-idx', Math.min(idx, 25));
         }
+
+        //получение категории из словаря
         const category = categoriesMap[tx.category_id] || { name: "-", color: "var(--text-title)" };
         const sign = tx.type === "income" ? '+' : '-';
 
+        //настройка иконки и типа бейджа
         const badge = clone.querySelector('.tx-badge');
         if (badge) {
             if (tx.type === 'income') {
@@ -171,26 +193,35 @@ function renderTransactionsTable(transactions) {
             }
         }
 
+        //заполнение даты
         clone.querySelector('.tx-date').textContent = tx.date;
+
+        //заполнение категории и цвета
         const catCell = clone.querySelector('.tx-category');
         catCell.textContent = category.name;
         catCell.style.color = category.color || 'var(--text-title)';
+
+        //заполнение суммы и валюты
         const cur = tx.currency;
         const sym = CURRENCY_SYMBOLS[cur] || cur;
         const amountEl = clone.querySelector('.tx-amount');
         amountEl.textContent = `${sign}${tx.amount.toLocaleString()} ${sym}`;
         amountEl.style.color = tx.type === 'income' ? 'var(--color-income)' : 'var(--text-title)';
+
+        //обработчик кнопки удаления
         clone.querySelector('.tx-delete-btn').onclick = (e) => {
             const tr = e.target.closest('tr');
             handleRemoveTransaction(tx, tr);
         };
 
+        //добавление строки в таблицу
         tbody.appendChild(clone);
     });
 }
 
-// Привязываем события быстрых чипсов и сегментированных кнопок
+//привязка событий кнопок быстрых фильтров (чипсов)
 function initTransactionChips() {
+    //кнопки фильтра по типу
     const typeButtons = document.querySelectorAll('#tx-type-chips .segmented-btn, #tx-type-chips .filter-chip');
     typeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -202,6 +233,7 @@ function initTransactionChips() {
         });
     });
 
+    //кнопки фильтра по периоду
     const periodButtons = document.querySelectorAll('#tx-period-chips .segmented-btn, #tx-period-chips .filter-chip');
     periodButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -213,28 +245,39 @@ function initTransactionChips() {
     });
 }
 
+//инициализация чипсов при загрузке
 initTransactionChips();
 
-// Привязываем события фильтрации (поиск и выбор из селектов)
+//слушатели ввода в поиск и смены выпадающих списков
 document.getElementById('tx-search')?.addEventListener('input', applyFiltersAndRender);
 document.getElementById('tx-filter-type')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('tx-filter-account')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('tx-sort')?.addEventListener('change', applyFiltersAndRender);
 
+//удаление транзакции с подтверждением
 async function handleRemoveTransaction(tx, row) {
+    //запрос подтверждения у пользователя
     const ok = await showConfirm({
         title: 'Удаление транзакции',
         message: 'Удалить эту операцию? Баланс счёта будет пересчитан.',
         confirmText: 'Удалить'
     });
     if (!ok) return;
+
     try {
+        //анимация исчезновения строки таблицы
         if (row) {
             row.classList.add('row-deleting');
             await new Promise(r => setTimeout(r, 260));
         }
+
+        //вызов удаления транзакции в с++
         await windowAPI.removeTransaction(tx.id);
+
+        //уведомление
         if (typeof showToast === 'function') showToast('Операция удалена', 'info');
+
+        //перезагрузка списка транзакций
         loadTransactions();
     } catch (e) {
         if (row) row.classList.remove('row-deleting');

@@ -1,12 +1,18 @@
+//хранит id категории при редактировании бюджета
 let editingBudgetCategId = null;
 
+//отрисовка списка категорий
 async function renderCategories() {
     try {
+        //получение категорий из с++
         const categories = await windowAPI.getCategories();
+
+        //поиск контейнера и шаблона карточки
         const container = document.getElementById('categories-list');
         const template = document.getElementById('tpl-category-card');
         container.innerHTML = '';
 
+        //если категорий нет, вывод заглушки
         if (!categories || !categories.length) {
             container.innerHTML = `
                 <div class="empty-state" style="grid-column: 1 / -1; padding: 32px 20px;">
@@ -21,35 +27,50 @@ async function renderCategories() {
             return;
         }
 
+        //цикл по категориям
         categories.forEach((cat, idx) => {
+            //клонирование шаблона карточки
             const clone = template.content.cloneNode(true);
             const card = clone.querySelector('.card');
             if (card) {
+                //каскадное появление
                 card.classList.add('animate-cascade');
                 card.style.setProperty('--item-idx', idx);
             }
+
+            //цветной кружок категории
             clone.querySelector('.cat-color-dot').style.backgroundColor = cat.color;
+            //название категории
             clone.querySelector('.cat-name').textContent = cat.name;
+            //тип: расход или доход
             clone.querySelector('.cat-type').textContent = cat.type === 'expense' ? 'Расход' : 'Доход';
 
-            // Вызов функции удаления категории с анимацией
+            //обработчик удаления категории
             clone.querySelector('.cat-delete-btn').onclick = (e) => {
                 const cardEl = e.target.closest('.card');
                 handleRemoveCategory(cat, cardEl);
             };
 
+            //добавление карточки в контейнер
             container.appendChild(clone);
         });
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error("Ошибка отрисовки категорий:", e);
+    }
 }
 
+//отрисовка карточек бюджетов
 async function renderBudgets() {
     try {
+        //получение списка бюджетов из с++
         const budgets = await windowAPI.getBudgets();
+
+        //поиск контейнера и шаблона
         const container = document.getElementById('budget-list');
         const template = document.getElementById('tpl-budget-bar');
         container.innerHTML = '';
 
+        //если лимиты не заданы, вывод пустого состояния
         if (!budgets || !budgets.length) {
             container.innerHTML = `
                 <div class="empty-state" style="padding: 32px 20px;">
@@ -64,47 +85,65 @@ async function renderBudgets() {
             return;
         }
 
+        //цикл по бюджетам
         budgets.forEach((b, idx) => {
             const clone = template.content.cloneNode(true);
             const card = clone.querySelector('.card');
             if (card) {
                 card.classList.add('animate-cascade');
                 card.style.setProperty('--item-idx', idx);
+                //пульсация при превышении лимита
                 if (b.status === 'exceeded') {
                     card.classList.add('budget-exceeded-pulse');
                 }
             }
-            const percent = b.limit > 0 ? Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1) : (b.current_amount > 0 ? '100.0' : '0.0');
-            let barColor = b.status === 'exceeded' ? 'var(--color-expense)' : b.status === 'warning' ? '#f39c12' : 'var(--color-income)';
 
+            //расчет процента заполнения шкалы
+            const percent = b.limit > 0
+                ? Math.min((b.current_amount / b.limit) * 100, 100).toFixed(1)
+                : (b.current_amount > 0 ? '100.0' : '0.0');
+
+            //цвет шкалы по статусу
+            let barColor = b.status === 'exceeded' ? 'var(--color-expense)'
+                : b.status === 'warning' ? '#f39c12'
+                : 'var(--color-income)';
+
+            //название категории
             const nameEl = clone.querySelector('.b-name');
             nameEl.textContent = b.name;
             nameEl.style.color = b.color;
+
+            //потраченная сумма и лимит
             clone.querySelector('.b-current').textContent = b.current_amount.toLocaleString();
             const curSym = (typeof CURRENCY_SYMBOLS !== 'undefined' && CURRENCY_SYMBOLS['byn']) ? CURRENCY_SYMBOLS['byn'] : 'BYN';
             clone.querySelector('.b-limit').textContent = `${b.limit.toLocaleString()} ${curSym}`;
             clone.querySelector('.b-percent-text').textContent = percent;
 
+            //установка ширины и цвета прогресс-бара
             const bar = clone.querySelector('.b-progress-bar');
             bar.style.width = `${percent}%`;
             bar.style.backgroundColor = barColor;
 
-            // Вызов функции удаления бюджета с анимацией
+            //кнопка удаления лимита
             clone.querySelector('.bud-delete-btn').onclick = (e) => {
                 const cardEl = e.target.closest('.card');
                 handleRemoveBudget(b, cardEl);
             };
+
+            //кнопка редактирования лимита
             clone.querySelector('.bud-edit-btn').onclick = () => openBudgetModal(b);
 
             container.appendChild(clone);
         });
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error("Ошибка отрисовки бюджетов:", e);
+    }
 }
 
-// === ФУНКЦИИ УДАЛЕНИЯ (с плавным схлопыванием) ===
-
+//удаление категории с подтверждением
 async function handleRemoveCategory(cat, cardEl) {
     try {
+        //запрос подтверждения у пользователя
         const ok = await showConfirm({
             title: 'Удаление категории',
             message: `При удалении категории "${cat.name}" будут безвозвратно удалены все связанные с ней транзакции и лимиты. Продолжить?`,
@@ -112,25 +151,33 @@ async function handleRemoveCategory(cat, cardEl) {
         });
         if (!ok) return;
 
+        //анимация схлопывания карточки
         if (cardEl) {
             cardEl.classList.add('row-deleting');
             await new Promise(r => setTimeout(r, 260));
         }
 
+        //удаление категории в с++
         await windowAPI.removeCategory(cat.id);
+
+        //уведомление
         if (typeof showToast === 'function') showToast(`Категория "${cat.name}" удалена`, 'info');
+
+        //перезагрузка кэша категорий и перерисовка
         await loadCategories();
         renderCategories();
         renderBudgets();
     } catch (e) {
         if (cardEl) cardEl.classList.remove('row-deleting');
-        console.error("Ошибка удаления: " + e.message);
+        console.error("Ошибка удаления категории: " + e.message);
         if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }
 
+//сброс установленного лимита бюджета
 async function handleRemoveBudget(b, cardEl) {
     try {
+        //запрос подтверждения
         const ok = await showConfirm({
             title: 'Удаление лимита',
             message: `Сбросить установленный лимит для "${b.name}"?`,
@@ -138,19 +185,23 @@ async function handleRemoveBudget(b, cardEl) {
         });
         if (!ok) return;
 
+        //анимация схлопывания карточки
         if (cardEl) {
             cardEl.classList.add('row-deleting');
             await new Promise(r => setTimeout(r, 260));
         }
 
+        //удаление бюджета в с++
         await windowAPI.removeBudget(b.category_id);
+
+        //уведомление
         if (typeof showToast === 'function') showToast(`Лимит для "${b.name}" сброшен`, 'info');
+
+        //перерисовка списка бюджетов
         renderBudgets();
     } catch (e) {
         if (cardEl) cardEl.classList.remove('row-deleting');
-        console.error("Ошибка удаления: " + e.message);
+        console.error("Ошибка сброса бюджета: " + e.message);
         if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }
-
-
