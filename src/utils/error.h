@@ -1,18 +1,23 @@
 #pragma once
 #include <string>
 
-enum class ErrorCode {
+enum class ErrorCode { //коды ошибок
     Success = 0,
-    FileNotFound,
+    InvalidInput,
+    NotFound,
+    InsufficientFunds,
+    CurrencyMismatch,
     IoError,
     ParseError,
-    NotFound,
-    AlreadyExists,
-    InvalidInput,
     Unknown
 };
 
-struct AppError {
-    ErrorCode code{ErrorCode::Success};
+struct AppError { //ошибка
+    ErrorCode code = ErrorCode::Unknown;
     std::string message;
+
+    //конструкторы
+    AppError() = default;
+    AppError(ErrorCode code, std::string message) : code(code), message(std::move(message)) {}
+    AppError(std::string message) : code(ErrorCode::Unknown), message(std::move(message)) {}
 };

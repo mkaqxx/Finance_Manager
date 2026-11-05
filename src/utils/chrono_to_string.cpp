@@ -2,7 +2,7 @@
 #include <iomanip>
 
 
-std::string ymd_to_string(std::chrono::year_month_day ymd) {
+std::string ymd_to_string(std::chrono::year_month_day ymd) { //сбор строки через поток
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << static_cast<int>(ymd.year()) << '-'
        << std::setw(2) << std::setfill('0') << static_cast<unsigned>(ymd.month()) << '-'
@@ -15,6 +15,7 @@ std::chrono::year_month_day ymd_from_string(const std::string &str) {
     std::stringstream ss(str);
     unsigned y, m, d;
     char dash1, dash2;
+    //парсинг строки вида гггг-мм-дд
     if (ss >> y >> dash1 >> m >> dash2 >> d && dash1 == '-' && dash2 == '-') {
         std::chrono::year_month_day ymd{
             std::chrono::year(static_cast<int>(y)),

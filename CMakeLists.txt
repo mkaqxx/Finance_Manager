@@ -65,3 +65,43 @@
                 version advapi32 ole32 shell32 shlwapi user32
         )
     endif()
+
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests" AND NOT EMSCRIPTEN)
+        include(FetchContent)
+        FetchContent_Declare(
+                googletest
+                URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+                DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+        )
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(googletest)
+
+        enable_testing()
+
+        file(GLOB TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
+
+        add_executable(FinanceTests
+                ${TEST_SOURCES}
+                src/models/account.cpp
+                src/models/transaction.cpp
+                src/models/budget.cpp
+                src/core/finance_manager.cpp
+                src/core/storage.cpp
+                src/core/statistics.cpp
+                src/core/report.cpp
+                src/utils/chrono_to_string.cpp
+                src/utils/safe_open_file.cpp
+                src/core/api_handler.cpp
+        )
+
+        target_include_directories(FinanceTests PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/src
+        )
+
+        target_link_libraries(FinanceTests PRIVATE
+                GTest::gtest_main
+        )
+
+        include(GoogleTest)
+        gtest_discover_tests(FinanceTests)
+    endif()

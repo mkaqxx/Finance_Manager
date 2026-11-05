@@ -1,3 +1,4 @@
+//словарь символов валют
 const CURRENCY_SYMBOLS = {
     'byn': 'BYN',
     'usd': '$',
@@ -5,7 +6,9 @@ const CURRENCY_SYMBOLS = {
     'rub': '₽'
 };
 
+//отрисовка скелетона для карточек статистики
 function renderDashboardSkeleton() {
+    //шаблон мерцающих полосок
     const skeletonBox = `
         <div style="padding: 4px 0;">
             <div class="skeleton skeleton-text" style="width: 70%; height: 16px; margin-bottom: 6px;"></div>
@@ -13,38 +16,51 @@ function renderDashboardSkeleton() {
             <div class="skeleton skeleton-text" style="width: 40%; height: 16px;"></div>
         </div>
     `;
+
+    //поиск элементов карточек баланса, расходов и доходов
     const bVal = document.getElementById('balance-val');
     const eVal = document.getElementById('expenses-val');
     const iVal = document.getElementById('incomes-val');
+
+    //замена текста на заглушки если данные еще не получены
     if (bVal && bVal.textContent.includes('Загрузка')) bVal.innerHTML = skeletonBox;
     if (eVal && eVal.textContent.includes('Загрузка')) eVal.innerHTML = skeletonBox;
     if (iVal && iVal.textContent.includes('Загрузка')) iVal.innerHTML = skeletonBox;
 }
 
+//проверка бюджетов и вывод предупреждений о превышении
 function renderDashboardBudgetAlerts(budgets) {
+    //поиск контейнера предупреждений
     const alertContainer = document.getElementById('dashboard-budget-alerts');
     if (!alertContainer) return;
     alertContainer.innerHTML = '';
 
     if (!budgets || !budgets.length) return;
 
-    // Ищем превышенные или близкие к исчерпанию лимиты (от 85%)
+    //фильтрация бюджетов с расходом 85% и выше либо превышенных
     const urgentBudgets = budgets.filter(b => {
         const ratio = b.limit > 0 ? (b.current_amount / b.limit) : 0;
         return b.status === 'exceeded' || ratio >= 0.85;
     });
 
+    //создание баннера для каждого тревожного бюджета
     urgentBudgets.forEach(b => {
         const ratio = b.limit > 0 ? (b.current_amount / b.limit) : 0;
         const percent = (ratio * 100).toFixed(1);
         const isExceeded = b.status === 'exceeded' || ratio >= 1.0;
+
+        //создание элемента баннера
         const banner = document.createElement('div');
         banner.className = `budget-alert-banner ${isExceeded ? '' : 'warning'}`;
 
+        //экранирование названия категории для защиты от xss
+        const safeName = typeof escapeHtml === 'function' ? escapeHtml(b.name) : b.name;
         const icon = isExceeded ? '⚠️' : '⚡';
         const title = isExceeded
-            ? `Превышен бюджет по категории «${b.name}»!`
-            : `Внимание: лимит «${b.name}» израсходован на ${percent}%`;
+            ? `Превышен бюджет по категории «${safeName}»!`
+            : `Внимание: лимит «${safeName}» израсходован на ${percent}%`;
+
+        //текст перерасхода или остатка лимита
         const diffText = isExceeded
             ? `Потрачено ${b.current_amount.toLocaleString()} из ${b.limit.toLocaleString()} BYN (перерасход ${(b.current_amount - b.limit).toLocaleString()} BYN)`
             : `Потрачено ${b.current_amount.toLocaleString()} из ${b.limit.toLocaleString()} BYN (осталось ${(b.limit - b.current_amount).toLocaleString()} BYN)`;
@@ -65,25 +81,33 @@ function renderDashboardBudgetAlerts(budgets) {
     });
 }
 
+//загрузка данных за текущий месяц и заполнение дашборда
 async function loadDashboard() {
     try {
+        //показ скелетона
         renderDashboardSkeleton();
+
+        //параллельный запрос отчета и бюджетов из с++
         const [report, budgets] = await Promise.all([
             windowAPI.getMonthlyDashboard(),
             windowAPI.getBudgets().catch(() => [])
         ]);
 
-        // Отрисовываем алерты превышения лимитов
+        //отрисовка предупреждений по бюджетам
         renderDashboardBudgetAlerts(budgets);
 
+        //извлечение данных по каждой валюте
         const byn = report.byn || { balance: 0, expense: 0, income: 0, top_categories: [] };
         const usd = report.usd || { balance: 0, expense: 0, income: 0, top_categories: [] };
         const eur = report.eur || { balance: 0, expense: 0, income: 0, top_categories: [] };
         const rub = report.rub || { balance: 0, expense: 0, income: 0, top_categories: [] };
 
+        //отрисовка валютных строк с плавной анимацией чисел
         function renderAnimatedMultiCurrency(containerId, b, u, e, r) {
             const container = document.getElementById(containerId);
             if (!container) return;
+
+            //генерация разметки 4 валют
             container.innerHTML = `
                 <div style="font-size: 16px; line-height: 1.5;">
                     <div><span class="anim-num-b">0</span> <span style="font-size: 12px; color: var(--text-muted);">BYN</span></div>
@@ -92,12 +116,15 @@ async function loadDashboard() {
                     <div><span class="anim-num-r">0</span> <span style="font-size: 12px; color: var(--text-muted);">₽</span></div>
                 </div>
             `;
+
+            //запуск анимации счетчика при наличии animateValue
             if (typeof animateValue === 'function') {
                 animateValue(container.querySelector('.anim-num-b'), 0, b, 700);
                 animateValue(container.querySelector('.anim-num-u'), 0, u, 700);
                 animateValue(container.querySelector('.anim-num-e'), 0, e, 700);
                 animateValue(container.querySelector('.anim-num-r'), 0, r, 700);
             } else {
+                //прямой вывод без анимации
                 container.querySelector('.anim-num-b').textContent = Number(b).toLocaleString();
                 container.querySelector('.anim-num-u').textContent = Number(u).toLocaleString();
                 container.querySelector('.anim-num-e').textContent = Number(e).toLocaleString();
@@ -105,16 +132,12 @@ async function loadDashboard() {
             }
         }
 
-        // Общий баланс
+        //заполнение карточек баланса, расходов и доходов
         renderAnimatedMultiCurrency('balance-val', byn.balance, usd.balance, eur.balance, rub.balance);
-
-        // Расходы за месяц
         renderAnimatedMultiCurrency('expenses-val', byn.expense, usd.expense, eur.expense, rub.expense);
-
-        // Доходы за месяц
         renderAnimatedMultiCurrency('incomes-val', byn.income, usd.income, eur.income, rub.income);
 
-        // Топ категорий по всем валютам
+        //отрисовка списка топ категорий расходов
         const container = document.getElementById('top-categories-list');
         const template = document.getElementById('tpl-top-category');
         container.innerHTML = '';
@@ -127,17 +150,20 @@ async function loadDashboard() {
             { key: 'eur', label: '€' },
             { key: 'rub', label: '₽' }
         ];
+
+        //цикл по валютам
         currencies.forEach(curr => {
             const topList = report[curr.key]?.top_categories || [];
             if (topList.length > 0) {
                 hasAnyTop = true;
 
-                // Заголовок валютной группы
+                //заголовок группы валюты
                 const groupTitle = document.createElement('div');
                 groupTitle.style.cssText = 'color: var(--text-muted); font-size: 12px; font-weight: bold; margin-top: 8px; text-transform: uppercase;';
                 groupTitle.textContent = `Топ расходов (${curr.label})`;
                 container.appendChild(groupTitle);
 
+                //вывод категорий из топ списка
                 topList.forEach(cat => {
                     const clone = template.content.cloneNode(true);
                     const item = clone.querySelector('div');
@@ -149,17 +175,20 @@ async function loadDashboard() {
                     nameEl.textContent = cat.name;
                     nameEl.style.color = cat.color || 'var(--text-title)';
 
+                    //цветная точка категории
                     const dotEl = clone.querySelector('.tc-dot');
                     if (dotEl) {
                         dotEl.style.backgroundColor = cat.color || 'var(--accent-color)';
                     }
 
+                    //сумма расходов
                     clone.querySelector('.tc-amount').textContent = `${cat.amount.toLocaleString()} ${curr.label}`;
                     container.appendChild(clone);
                 });
             }
         });
 
+        //если расходов нет, вывод заглушки
         if (!hasAnyTop) {
             container.innerHTML = `
                 <div class="empty-state" style="padding: 24px; text-align: left; align-items: flex-start;">

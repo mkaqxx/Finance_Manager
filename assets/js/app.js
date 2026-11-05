@@ -1,13 +1,32 @@
-let categoriesMap = {};
-
-async function loadCategories() {
-    try {
-        const data = await windowAPI.getCategories();
-        categoriesMap = {};
-        data.forEach(cat => { categoriesMap[cat.id] = { name: cat.name, color: cat.color }; });
-    } catch (error) { console.error(error); }
+//экранирование спецсимволов html для защиты от xss
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
+//словарь категорий по айди: { id: { name, color } }
+let categoriesMap = {};
+
+//загрузка категорий из с++ и заполнение словаря
+async function loadCategories() {
+    try {
+        //вызов метода getCategories через api
+        const data = await windowAPI.getCategories();
+        //очистка словаря
+        categoriesMap = {};
+        //заполнение хэш-таблицы категорий
+        data.forEach(cat => { categoriesMap[cat.id] = { name: cat.name, color: cat.color }; });
+    } catch (error) { 
+        console.error("Ошибка загрузки категорий:", error); 
+    }
+}
+
+//заголовки страниц для шапки
 const pageTitles = {
     'dashboard': 'Главная',
     'accounts': 'Мои счета',
@@ -16,25 +35,26 @@ const pageTitles = {
     'analytics': 'Аналитика'
 };
 
+//переключение страниц
 function switchPage(page, element) {
-    const pageTitle = pageTitles[page] || 'Менеджер финансов';
-    const titleEl = document.getElementById('page-title');
-    if (titleEl) titleEl.innerText = pageTitle;
-
+    //установка заголовка страницы
+    document.getElementById('page-title').innerText = pageTitles[page];
+    //снятие активного класса со ссылок навигации
     document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
     
+    //поиск элемента навигации если не передан явно
     if (!element) {
         element = document.querySelector(`.nav-links a[onclick*="'${page}'"]`);
     }
+    //подсветка активной ссылки
     if (element) element.classList.add('active');
 
+    //скрытие всех страниц
     document.querySelectorAll('.page-view').forEach(el => el.style.display = 'none');
-    const viewEl = document.getElementById(`view-${page}`);
-    if (viewEl) viewEl.style.display = 'block';
+    //показ выбранной страницы
+    document.getElementById(`view-${page}`).style.display = 'block';
 
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) mainContent.scrollTop = 0;
-
+    //загрузка данных для выбранной страницы
     if (page === 'dashboard') loadDashboard();
     else if (page === 'accounts') loadAccounts();
     else if (page === 'transactions') loadTransactions();
@@ -42,16 +62,20 @@ function switchPage(page, element) {
     else if (page === 'analytics') loadAnalytics();
 }
 
+//плавное закрытие модального окна с анимацией
 function closeModalAnimated(modalOrId) {
     const modal = typeof modalOrId === 'string' ? document.getElementById(modalOrId) : modalOrId;
     if (!modal || modal.style.display === 'none') return;
+    //добавление класса анимации закрытия
     modal.classList.add('modal-closing');
+    //скрытие окна после окончания анимации (180 мс)
     setTimeout(() => {
         modal.style.display = 'none';
         modal.classList.remove('modal-closing');
     }, 180);
 }
 
+//закрытие всех открытых модальных окон
 function closeAllModals() {
     const modalOverlays = document.querySelectorAll('.modal-overlay');
     let closedAny = false;
@@ -64,23 +88,29 @@ function closeAllModals() {
     return closedAny;
 }
 
+//переключение темы оформления (светлая/темная)
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
     const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
     changeAppTheme(nextTheme);
 }
 
+//создание и отображение всплывающего уведомления (toast)
 function showToast(message, type = 'info') {
+    //поиск контейнера уведомлений
     const container = document.getElementById('toast-container');
     if (!container) return;
 
+    //создание элемента плашки
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
+    //значок по типу уведомления
     let icon = 'ℹ️';
     if (type === 'success') icon = '✓';
     else if (type === 'error') icon = '✕';
 
+    //разметка тоста с индикатором времени
     toast.innerHTML = `
         <span style="font-weight: bold; font-size: 16px;">${icon}</span>
         <span class="toast-text" style="flex: 1; line-height: 1.4;"></span>
@@ -88,13 +118,16 @@ function showToast(message, type = 'info') {
     `;
     toast.querySelector('.toast-text').textContent = message;
 
+    //клик по тосту скрывает его досрочно
     toast.addEventListener('click', () => {
         toast.classList.add('toast-hiding');
         setTimeout(() => toast.remove(), 300);
     });
 
+    //добавление тоста в контейнер
     container.appendChild(toast);
 
+    //автоматическое удаление через 3.5 секунды
     setTimeout(() => {
         if (toast.parentNode) {
             toast.classList.add('toast-hiding');
@@ -103,37 +136,48 @@ function showToast(message, type = 'info') {
     }, 3500);
 }
 
+//установка темы оформления и сохранение выбора
 function changeAppTheme(themeName) {
     const validTheme = (themeName === 'light') ? 'light' : 'dark';
+    //установка атрибута data-theme у тега html
     document.documentElement.setAttribute('data-theme', validTheme);
+    //сохранение выбора в localstorage
     localStorage.setItem('finance-app-theme', validTheme);
 
+    //обновление цвета строки состояния браузера на мобильных устройствах
     const metaThemeColor = document.getElementById('meta-theme-color');
     if (metaThemeColor) {
         metaThemeColor.setAttribute('content', validTheme === 'light' ? '#f2eadc' : '#000000');
     }
 
+    //отправка события themeChanged для обновления графиков
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
 }
 
+//первичная загрузка данных приложения после готовности wasm
 async function bootstrapApp() {
     await loadCategories();
     switchPage('dashboard');
 }
 
+//инициализация приложения при загрузке dom
 window.addEventListener('DOMContentLoaded', () => {
+    //восстановление сохраненной темы
     const savedTheme = localStorage.getItem('finance-app-theme') || 'dark';
     changeAppTheme(savedTheme);
 
+    //если wasm модуль уже готов, сразу стартуем
     if (window.wasmApiReady) {
         bootstrapApp();
     } else {
+        //иначе ждем события готовности wasm ядра
         window.addEventListener('finance-wasm-ready', bootstrapApp, { once: true });
     }
 });
 
-// Глобальные горячие клавиши (Hotkeys)
+//глобальные горячие клавиши
 window.addEventListener('keydown', (e) => {
+    //проверка фокуса в поле ввода
     const activeEl = document.activeElement;
     const isInput = activeEl && (
         activeEl.tagName === 'INPUT' ||
@@ -142,7 +186,7 @@ window.addEventListener('keydown', (e) => {
         activeEl.isContentEditable
     );
 
-    // Escape: всегда закрывает открытые модальные окна
+    //escape: закрытие открытых модальных окон
     if (e.key === 'Escape') {
         if (isInput) activeEl.blur();
         const closed = closeAllModals();
@@ -152,10 +196,10 @@ window.addEventListener('keydown', (e) => {
         }
     }
 
-    // Если фокус в поле ввода — не перехватываем другие горячие клавиши
+    //если фокус в поле ввода, другие клавиши не перехватываем
     if (isInput) return;
 
-    // N или Ctrl+N: создание новой транзакции
+    //n или ctrl+n: создание новой транзакции
     if ((e.ctrlKey && e.code === 'KeyN') || (!e.ctrlKey && !e.metaKey && !e.altKey && e.code === 'KeyN')) {
         e.preventDefault();
         if (typeof openTxModal === 'function') {
@@ -164,7 +208,7 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
-    // Цифры 1..5: Быстрая навигация по вкладкам
+    //клавиши 1..5: навигация по вкладкам
     if (!e.ctrlKey && !e.metaKey && !e.altKey) {
         const pageMap = {
             'Digit1': 'dashboard',
@@ -185,7 +229,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// Анимация плавного накручивания чисел (Rolling Numbers / Odometer)
+//анимация нарастания чисел (rolling numbers)
 function animateValue(elem, start, end, duration = 750, formatter = null) {
     if (!elem) return;
     const startVal = Number(start) || 0;
@@ -197,15 +241,17 @@ function animateValue(elem, start, end, duration = 750, formatter = null) {
     const startTime = performance.now();
     const diff = endVal - startVal;
 
+    //шаг анимации на каждый кадр
     function step(currentTime) {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        // Easing: easeOutCubic
+        //функция плавности easeOutCubic
         const ease = 1 - Math.pow(1 - progress, 3);
         const current = startVal + diff * ease;
 
         elem.textContent = formatter ? formatter(current) : Math.round(current).toLocaleString();
 
+        //запрос следующего кадра или завершение анимации
         if (progress < 1) {
             requestAnimationFrame(step);
         } else {
@@ -216,7 +262,7 @@ function animateValue(elem, start, end, duration = 750, formatter = null) {
     requestAnimationFrame(step);
 }
 
-// Эффект микро-конфетти / салюта на Canvas
+//салют конфетти на canvas
 let confettiAnimId = null;
 function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerHeight * 0.4) {
     const canvas = document.getElementById('confetti-canvas');
@@ -226,12 +272,14 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
     canvas.height = window.innerHeight;
     canvas.style.display = 'block';
 
+    //остановка предыдущей анимации
     if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
 
     const colors = ['#00ff66', '#00e5ff', '#ff0055', '#ffd700', '#ffffff', '#72968b'];
     const particles = [];
     const count = 65;
 
+    //генерация массива частиц со скоростями и цветами
     for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = 4 + Math.random() * 8;
@@ -250,6 +298,7 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
         });
     }
 
+    //отрисовка физики движения частиц
     function renderConfetti() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         let active = false;
@@ -277,6 +326,7 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
         if (active) {
             confettiAnimId = requestAnimationFrame(renderConfetti);
         } else {
+            //очистка и скрытие холста при завершении
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             canvas.style.display = 'none';
             confettiAnimId = null;
@@ -286,17 +336,18 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
     renderConfetti();
 }
 
-// Интерактивный неоновый следящий блик на карточках
+//интерактивный неоновый блик карточки за курсором
 document.addEventListener('mousemove', (e) => {
     const card = e.target.closest('.card, .account-card-item');
     if (card) {
         const rect = card.getBoundingClientRect();
+        //передача координат мыши в css-переменные карточки
         card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
         card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
     }
 });
 
-// Неоновый Ripple-эффект при нажатии на кнопки
+//неоновый ripple-эффект при нажатии на кнопки
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('.btn-primary, .btn-secondary');
     if (!btn) return;
@@ -311,5 +362,6 @@ document.addEventListener('click', (e) => {
     const oldRipple = btn.querySelector('.btn-ripple');
     if (oldRipple) oldRipple.remove();
     btn.appendChild(circle);
+    //удаление элемента волны после завершения анимации
     setTimeout(() => circle.remove(), 600);
-});
+});

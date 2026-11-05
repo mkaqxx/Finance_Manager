@@ -17,30 +17,38 @@
 
 using json = nlohmann::json;
 
+//класс для управления постоянным хранилищем данных
 class Storage {
 public:
+    //загрузка из файла. при ошибке загрузки вместо выброса
+    //исключения возвращает std::unexpected – код ошибки и информацию о ней
     std::expected<void, AppError> load(std::vector<std::unique_ptr<Account>>& accounts,
                                        std::vector<std::unique_ptr<Transaction>>& transactions,
                                        std::vector<Category>& categories,
                                        std::vector<Budget>& budgets);
 
+    //сохранение в файл. при ошибке сохранения вместо выброса
+    //исключения возвращает std::unexpected – код ошибки и информацию о ней
     std::expected<void, AppError> save(const std::vector<std::unique_ptr<Account>>& accounts,
                                        const std::vector<std::unique_ptr<Transaction>>& transactions,
                                        const std::vector<Category>& categories,
                                        const std::vector<Budget>& budgets);
 
-    // Синхронизация виртуальной ФС Emscripten с IndexedDB браузера
+    //синхронизация виртуальной файловой системы emscripten memfs с indexeddb браузера
     void sync_to_database() noexcept;
 
 private:
+    //вспомогательные методы сохранения отдельных сущностей в json
     void save_accounts(json& j, const std::vector<std::unique_ptr<Account>>& accounts);
     void save_transactions(json& j, const std::vector<std::unique_ptr<Transaction>>& transactions);
     void save_categories(json& j, const std::vector<Category>& categories);
     void save_budgets(json& j, const std::vector<Budget>& budgets);
 
 #ifdef __EMSCRIPTEN__
+    //в среде webassembly данные сохраняются в смонтированную директорию idbfs
     std::string filename = "/data/data.json";
 #else
+    //на десктопе сохранение идет в локальный файл
     std::string filename = "data.json";
 #endif
 };
