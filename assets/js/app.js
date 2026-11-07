@@ -4,11 +4,8 @@ let categoriesMap = {};
 //загрузка категорий из с++ и заполнение словаря
 async function loadCategories() {
     try {
-        //вызов метода getCategories через api
         const data = await windowAPI.getCategories();
-        //очистка словаря
         categoriesMap = {};
-        //заполнение хэш-таблицы категорий
         data.forEach(cat => { categoriesMap[cat.id] = { name: cat.name, color: cat.color }; });
     } catch (error) { 
         console.error("Ошибка загрузки категорий:", error); 
@@ -17,63 +14,163 @@ async function loadCategories() {
 
 //заголовки страниц для шапки
 const pageTitles = {
-    'dashboard': 'Главная',
+    'dashboard': 'Главная панель',
     'accounts': 'Мои счета',
     'transactions': 'История транзакций',
     'budget': 'Управление бюджетом',
-    'analytics': 'Аналитика'
+    'analytics': 'Финансовая аналитика'
 };
 
 //переключение страниц
 function switchPage(page, element) {
-    //установка заголовка страницы
-    document.getElementById('page-title').innerText = pageTitles[page];
-    //снятие активного класса со ссылок навигации
+    const titleEl = document.getElementById('page-title');
+    if (titleEl) titleEl.innerText = pageTitles[page] || 'Главная';
+
     document.querySelectorAll('.nav-links a').forEach(el => el.classList.remove('active'));
         
-    //поиск элемента навигации если не передан явно
     if (!element) {
         element = document.querySelector(`.nav-links a[onclick*="'${page}'"]`);
     }
-    //подсветка активной ссылки
     if (element) element.classList.add('active');
 
     //скрытие всех страниц
     document.querySelectorAll('.page-view').forEach(el => el.style.display = 'none');
+    
     //показ выбранной страницы
-    document.getElementById(`view-${page}`).style.display = 'block';
+    const targetPage = document.getElementById(`view-${page}`);
+    if (targetPage) targetPage.style.display = 'block';
 
     //загрузка данных для выбранной страницы
     if (page === 'dashboard') loadDashboard();
     else if (page === 'accounts') loadAccounts();
     else if (page === 'transactions') loadTransactions();
     else if (page === 'budget') { renderCategories(); renderBudgets(); }
-    else if (page === 'analytics') loadAnalytics();
+    else if (page === 'analytics') {
+        requestAnimationFrame(() => loadAnalytics());
+    }
+}
+
+// ========================================================
+// АНИМАЦИИ И УТИЛИТЫ ФОРМАТИРОВАНИЯ ЧИСЕЛ (COUNTUP)
+// ========================================================
+
+// Форматирование чисел: пробелы между тысячами и 2 знака после запятой
+function formatMoneyWithSpaces(val, decimals = 2) {
+    const num = Number(val) || 0;
+    const fixed = num.toFixed(decimals);
+    const parts = fixed.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return parts.join('.');
+}
+
+// Форматирование суммы с разделением целой части и копеек в отдельные span для изящной типографики
+function formatMoneyPartsHtml(amount, decimals = 2, suffix = '') {
+    const num = Number(amount) || 0;
+    const fixed = num.toFixed(decimals);
+    const parts = fixed.split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    const decPart = parts.length > 1 ? '.' + parts[1] : '';
+    const suffHtml = suffix ? `<span class="amount-currency">${suffix}</span>` : '';
+    return `<span class="amount-int">${intPart}</span><span class="amount-dec">${decPart}</span>${suffHtml}`;
+}
+
+// Плавная анимация набегания чисел (CountUp) за ~800мс с кубическим ease-out
+function animateValue(element, startVal, endVal, duration = 800, formatter = null, isHtml = false) {
+    if (!element) return;
+    const start = Number(startVal) || 0;
+    const end = Number(endVal) || 0;
+    const startTime = performance.now();
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    function step(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const currentVal = start + (end - start) * easeOutCubic(progress);
+
+        const res = typeof formatter === 'function' ? formatter(currentVal) : formatMoneyWithSpaces(currentVal, 2);
+        if (isHtml) {
+            element.innerHTML = res;
+        } else {
+            element.textContent = res;
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        } else {
+            const finalRes = typeof formatter === 'function' ? formatter(end) : formatMoneyWithSpaces(end, 2);
+            if (isHtml) {
+                element.innerHTML = finalRes;
+            } else {
+                element.textContent = finalRes;
+            }
+        }
+    }
+
+    requestAnimationFrame(step);
+}
+
+// Удобная обертка для анимации сумм с суффиксом валюты
+function animateCountUp(element, endVal, duration = 800, suffix = '', decimals = 2, splitDecimals = false) {
+    if (!element) return;
+    const isSplit = splitDecimals || (element.classList && element.classList.contains('split-amount'));
+    animateValue(element, 0, endVal, duration, (val) => {
+        if (isSplit) {
+            return formatMoneyPartsHtml(val, decimals, suffix);
+        }
+        const formatted = formatMoneyWithSpaces(val, decimals);
+        return suffix ? `${formatted} ${suffix}` : formatted;
+    }, isSplit);
 }
 
 //плавное закрытие модального окна с анимацией
 function closeModalAnimated(modalOrId) {
     const modal = typeof modalOrId === 'string' ? document.getElementById(modalOrId) : modalOrId;
-    if (!modal || modal.style.display === 'none') return;
-    //добавление класса анимации закрытия
+    if (!modal) return;
+    
+    // Проверка для Sheet/Drawer
+    if (modal.classList.contains('sheet-overlay')) {
+        closeAccountDetailModal();
+        return;
+    }
+
+    if (modal.style.display === 'none') return;
     modal.classList.add('modal-closing');
-    //скрытие окна после окончания анимации (180 мс)
     setTimeout(() => {
         modal.style.display = 'none';
         modal.classList.remove('modal-closing');
-    }, 180);
+    }, 150);
 }
 
-//закрытие всех открытых модальных окон
+//закрытие всех открытых окон, модалок и боковых панелей
 function closeAllModals() {
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
     let closedAny = false;
+
+    // 1. Проверяем Sheet / Drawer
+    const sheet = document.getElementById('account-detail-modal');
+    if (sheet && sheet.classList.contains('sheet-open')) {
+        closeAccountDetailModal();
+        closedAny = true;
+    }
+
+    // 2. Проверяем Command Palette
+    const cmdModal = document.getElementById('command-palette-modal');
+    if (cmdModal && cmdModal.style.display === 'flex') {
+        closeCommandPalette();
+        closedAny = true;
+    }
+
+    // 3. Проверяем все остальные модалки
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
     modalOverlays.forEach(m => {
         if (m.style.display === 'flex' || m.style.display === 'block') {
             closeModalAnimated(m);
             closedAny = true;
         }
     });
+
     return closedAny;
 }
 
@@ -87,156 +184,50 @@ function toggleTheme() {
 //установка темы оформления и сохранение выбора
 function changeAppTheme(themeName) {
     const validTheme = (themeName === 'light') ? 'light' : 'dark';
-    //установка атрибута data-theme у тега html
     document.documentElement.setAttribute('data-theme', validTheme);
-    //сохранение выбора в localstorage
     localStorage.setItem('finance-app-theme', validTheme);
 
-    //отправка события themeChanged для обновления графиков
+    // Уведомление для Chart.js
     window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
 }
 
-//создание и отображение всплывающего уведомления (toast)
+//всплывающее тост-уведомление
 function showToast(message, type = 'info') {
-    //поиск контейнера уведомлений
     const container = document.getElementById('toast-container');
     if (!container) return;
 
-    //создание элемента плашки
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
-    //значок по типу уведомления
     let icon = 'ℹ️';
     if (type === 'success') icon = '✓';
     else if (type === 'error') icon = '✕';
 
-    //разметка тоста с индикатором времени
     toast.innerHTML = `
-        <span style="font-weight: bold; font-size: 16px;">${icon}</span>
+        <span style="font-weight: bold; font-size: 15px; color: ${type === 'success' ? 'var(--color-income)' : type === 'error' ? 'var(--color-expense)' : 'var(--text-muted)'};">${icon}</span>
         <span class="toast-text" style="flex: 1; line-height: 1.4;"></span>
         <div class="toast-progress"></div>
     `;
     toast.querySelector('.toast-text').textContent = message;
 
-    //клик по тосту скрывает его досрочно
     toast.addEventListener('click', () => {
-        toast.classList.add('toast-hiding');
-        setTimeout(() => toast.remove(), 300);
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 200);
     });
 
-    //добавление тоста в контейнер
     container.appendChild(toast);
 
-    //автоматическое удаление через 3.5 секунды
     setTimeout(() => {
         if (toast.parentNode) {
-            toast.classList.add('toast-hiding');
-            setTimeout(() => toast.remove(), 300);
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(10px)';
+            setTimeout(() => toast.remove(), 250);
         }
     }, 3500);
 }
 
-//инициализация приложения при загрузке dom
-window.addEventListener('DOMContentLoaded', async () => {
-    //восстановление сохраненной темы оформления
-    const savedTheme = localStorage.getItem('finance-app-theme') || 'dark';
-    changeAppTheme(savedTheme);
-
-    //загрузка категорий из с++ бэкенда
-    await loadCategories();
-    //открытие главной страницы по умолчанию
-    switchPage('dashboard');
-});
-
-//глобальные горячие клавиши
-window.addEventListener('keydown', (e) => {
-    //проверка фокуса в поле ввода
-    const activeEl = document.activeElement;
-    const isInput = activeEl && (
-        activeEl.tagName === 'INPUT' ||
-        activeEl.tagName === 'TEXTAREA' ||
-        activeEl.tagName === 'SELECT' ||
-        activeEl.isContentEditable
-    );
-
-    //escape: закрытие открытых модальных окон
-    if (e.key === 'Escape') {
-        if (isInput) activeEl.blur();
-        const closed = closeAllModals();
-        if (closed) {
-            e.preventDefault();
-            return;
-        }
-    }
-
-    //если фокус в поле ввода, другие клавиши не перехватываем
-    if (isInput) return;
-
-    //n или ctrl+n: создание новой транзакции
-    if ((e.ctrlKey && e.code === 'KeyN') || (!e.ctrlKey && !e.metaKey && !e.altKey && e.code === 'KeyN')) {
-        e.preventDefault();
-        if (typeof openTxModal === 'function') {
-            openTxModal();
-        }
-        return;
-    }
-
-    //клавиши 1..5: навигация по вкладкам
-    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-        const pageMap = {
-            'Digit1': 'dashboard',
-            'Digit2': 'accounts',
-            'Digit3': 'transactions',
-            'Digit4': 'budget',
-            'Digit5': 'analytics',
-            'Numpad1': 'dashboard',
-            'Numpad2': 'accounts',
-            'Numpad3': 'transactions',
-            'Numpad4': 'budget',
-            'Numpad5': 'analytics'
-        };
-        if (pageMap[e.code]) {
-            e.preventDefault();
-            switchPage(pageMap[e.code]);
-        }
-    }
-});
-
-//анимация нарастания чисел (rolling numbers)
-function animateValue(elem, start, end, duration = 750, formatter = null) {
-    if (!elem) return;
-    const startVal = Number(start) || 0;
-    const endVal = Number(end) || 0;
-    if (startVal === endVal) {
-        elem.textContent = formatter ? formatter(endVal) : Math.round(endVal).toLocaleString();
-        return;
-    }
-    const startTime = performance.now();
-    const diff = endVal - startVal;
-
-    //шаг анимации на каждый кадр
-    function step(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        //функция плавности easeOutCubic
-        const ease = 1 - Math.pow(1 - progress, 3);
-        const current = startVal + diff * ease;
-
-        elem.textContent = formatter ? formatter(current) : Math.round(current).toLocaleString();
-
-        //запрос следующего кадра или завершение анимации
-        if (progress < 1) {
-            requestAnimationFrame(step);
-        } else {
-            elem.textContent = formatter ? formatter(endVal) : Math.round(endVal).toLocaleString();
-        }
-    }
-
-    requestAnimationFrame(step);
-}
-
-//салют конфетти на canvas
+//анимация конфетти при успехе
 let confettiAnimId = null;
 function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerHeight * 0.4) {
     const canvas = document.getElementById('confetti-canvas');
@@ -246,33 +237,30 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
     canvas.height = window.innerHeight;
     canvas.style.display = 'block';
 
-    //остановка предыдущей анимации
     if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
 
-    const colors = ['#00ff66', '#00e5ff', '#ff0055', '#ffd700', '#ffffff', '#72968b'];
+    const colors = ['#10b981', '#38bdf8', '#f59e0b', '#f43f5e', '#6366f1', '#ffffff'];
     const particles = [];
-    const count = 65;
+    const count = 55;
 
-    //генерация массива частиц со скоростями и цветами
     for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 4 + Math.random() * 8;
+        const speed = 4 + Math.random() * 7;
         particles.push({
             x: x,
             y: y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed - 3,
-            size: 4 + Math.random() * 6,
+            size: 4 + Math.random() * 5,
             color: colors[Math.floor(Math.random() * colors.length)],
             rotation: Math.random() * 360,
-            rotationSpeed: (Math.random() - 0.5) * 12,
+            rotationSpeed: (Math.random() - 0.5) * 10,
             opacity: 1,
-            gravity: 0.18,
-            decay: 0.012 + Math.random() * 0.012
+            gravity: 0.16,
+            decay: 0.014 + Math.random() * 0.01
         });
     }
 
-    //отрисовка физики движения частиц
     function renderConfetti() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         let active = false;
@@ -300,7 +288,6 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
         if (active) {
             confettiAnimId = requestAnimationFrame(renderConfetti);
         } else {
-            //очистка и скрытие холста при завершении
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             canvas.style.display = 'none';
             confettiAnimId = null;
@@ -310,32 +297,70 @@ function triggerCelebrationConfetti(x = window.innerWidth / 2, y = window.innerH
     renderConfetti();
 }
 
-//интерактивный неоновый блик карточки за курсором
-document.addEventListener('mousemove', (e) => {
-    const card = e.target.closest('.card, .account-card-item');
-    if (card) {
-        const rect = card.getBoundingClientRect();
-        //передача координат мыши в css-переменные карточки
-        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-    }
+//инициализация приложения при загрузке DOM
+window.addEventListener('DOMContentLoaded', async () => {
+    const savedTheme = localStorage.getItem('finance-app-theme') || 'dark';
+    changeAppTheme(savedTheme);
+
+    await loadCategories();
+    switchPage('dashboard');
 });
 
-//неоновый ripple-эффект при нажатии на кнопки
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-primary, .btn-secondary');
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    const circle = document.createElement('span');
-    const diameter = Math.max(rect.width, rect.height);
-    const radius = diameter / 2;
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${e.clientX - rect.left - radius}px`;
-    circle.style.top = `${e.clientY - rect.top - radius}px`;
-    circle.classList.add('btn-ripple');
-    const oldRipple = btn.querySelector('.btn-ripple');
-    if (oldRipple) oldRipple.remove();
-    btn.appendChild(circle);
-    //удаление элемента волны после завершения анимации
-    setTimeout(() => circle.remove(), 600);
+//глобальные горячие клавиши (Ctrl+K, Esc, N, 1..5)
+window.addEventListener('keydown', (e) => {
+    // Ctrl+K или Cmd+K: Command Palette
+    if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyK' || e.key === 'k' || e.key === 'K' || e.key === 'л' || e.key === 'Л')) {
+        e.preventDefault();
+        openCommandPalette();
+        return;
+    }
+
+    const activeEl = document.activeElement;
+    const isInput = activeEl && (
+        activeEl.tagName === 'INPUT' ||
+        activeEl.tagName === 'TEXTAREA' ||
+        activeEl.tagName === 'SELECT' ||
+        activeEl.isContentEditable
+    );
+
+    // Escape: закрытие открытых окон
+    if (e.key === 'Escape') {
+        if (isInput) activeEl.blur();
+        const closed = closeAllModals();
+        if (closed) {
+            e.preventDefault();
+            return;
+        }
+    }
+
+    if (isInput) return;
+
+    // N: новая транзакция
+    if ((e.ctrlKey && e.code === 'KeyN') || (!e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyN' || e.key === 'n' || e.key === 'т'))) {
+        e.preventDefault();
+        if (typeof openTxModal === 'function') {
+            openTxModal();
+        }
+        return;
+    }
+
+    // 1..5: навигация по разделам
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        const pageMap = {
+            'Digit1': 'dashboard',
+            'Digit2': 'accounts',
+            'Digit3': 'transactions',
+            'Digit4': 'budget',
+            'Digit5': 'analytics',
+            'Numpad1': 'dashboard',
+            'Numpad2': 'accounts',
+            'Numpad3': 'transactions',
+            'Numpad4': 'budget',
+            'Numpad5': 'analytics'
+        };
+        if (pageMap[e.code]) {
+            e.preventDefault();
+            switchPage(pageMap[e.code]);
+        }
+    }
 });
