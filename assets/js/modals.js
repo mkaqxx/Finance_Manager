@@ -21,12 +21,17 @@ function toggleTxFields() {
     }
 }
 
-//открытие модального окна добавления транзакции
-async function openTxModal() {
-    //показ окна, сброс формы и установка текущей даты
+//открытие модального окна добавления транзакции с опциональным пресетом типа
+async function openTxModal(defaultType = null) {
     document.getElementById('tx-modal').style.display = 'flex';
     document.getElementById('tx-form').reset();
     document.getElementById('tx-date').valueAsDate = new Date();
+
+    if (defaultType) {
+        const typeSelect = document.getElementById('tx-type');
+        if (typeSelect) typeSelect.value = defaultType;
+    }
+
     toggleTxFields();
 
     //очистка списков счетов
@@ -35,71 +40,67 @@ async function openTxModal() {
     accSelect.innerHTML = '<option value="" disabled selected>Счет списания...</option>';
     destSelect.innerHTML = '<option value="" disabled selected>Счет зачисления...</option>';
 
-    //запрос счетов из с++ бэкенда
-    const accounts = await windowAPI.getAccounts();
-    accounts.forEach(acc => {
-        //безопасное добавление опций счетов в список
-        const optText = `${acc.name} (${acc.balance} ${acc.currency})`;
-        accSelect.appendChild(new Option(optText, acc.id));
-        destSelect.appendChild(new Option(optText, acc.id));
-    });
+    try {
+        const accounts = await windowAPI.getAccounts();
+        accounts.forEach(acc => {
+            const sym = CURRENCY_SYMBOLS[(acc.currency || 'byn').toLowerCase()] || acc.currency;
+            const opt = `<option value="${acc.id}">${acc.name} (${acc.balance.toLocaleString()} ${sym})</option>`;
+            accSelect.innerHTML += opt;
+            destSelect.innerHTML += opt;
+        });
 
-    //при переводе фильтруем счета зачисления в той же валюте
-    accSelect.onchange = () => {
-        const type = document.getElementById('tx-type').value;
-        if (type !== 'transfer') return;
+        //при переводе фильтруем счета зачисления в той же валюте
+        accSelect.onchange = () => {
+            const type = document.getElementById('tx-type').value;
+            if (type !== 'transfer') return;
 
-        const srcId = parseInt(accSelect.value);
-        const src = accounts.find(a => a.id === srcId);
-        if (!src) return;
+            const srcId = parseInt(accSelect.value);
+            const src = accounts.find(a => a.id === srcId);
+            if (!src) return;
 
-        destSelect.innerHTML = '<option value="" disabled selected>Счет зачисления...</option>';
-        accounts
-            .filter(a => a.currency === src.currency && a.id !== srcId)
-            .forEach(acc => {
-                //безопасное добавление отфильтрованных счетов
-                const optText = `${acc.name} (${acc.balance} ${acc.currency})`;
-                destSelect.appendChild(new Option(optText, acc.id));
-            });
-    };
+            destSelect.innerHTML = '<option value="" disabled selected>Счет зачисления...</option>';
+            accounts
+                .filter(a => a.currency === src.currency && a.id !== srcId)
+                .forEach(acc => {
+                    const sym = CURRENCY_SYMBOLS[(acc.currency || 'byn').toLowerCase()] || acc.currency;
+                    destSelect.innerHTML += `<option value="${acc.id}">${acc.name} (${acc.balance.toLocaleString()} ${sym})</option>`;
+                });
+        };
+    } catch (e) {
+        console.error("Ошибка загрузки счетов в модалку:", e);
+    }
 
     //заполнение категорий из словаря
     const catSelect = document.getElementById('tx-category');
     catSelect.innerHTML = '<option value="" disabled selected>Выберите категорию...</option>';
     for (const [id, cat] of Object.entries(categoriesMap)) {
-        //безопасное добавление категорий
-        catSelect.appendChild(new Option(cat.name, id));
+        catSelect.innerHTML += `<option value="${id}">${cat.name}</option>`;
     }
+
+    //фокус в поле суммы
+    setTimeout(() => {
+        document.getElementById('tx-amount')?.focus();
+    }, 50);
 }
 
-//закрытие окна транзакций с анимацией
+//закрытие окна транзакций
 function closeTxModal() { 
     closeModalAnimated('tx-modal'); 
 }
 
 //обработка отправки формы транзакции
 document.getElementById('tx-form').addEventListener('submit', async (e) => {
-    //отмена перезагрузки страницы
     e.preventDefault();
     const type = document.getElementById('tx-type').value;
 
-    const amountVal = parseFloat(document.getElementById('tx-amount').value);
-    //проверка валидности суммы
-    if (!Number.isFinite(amountVal) || amountVal <= 0) {
-        if (typeof showToast === 'function') showToast('Пожалуйста, введите корректную сумму', 'error');
-        return;
-    }
-
-    //сбор данных транзакции
     const data = {
-        amount: amountVal,
+        amount: parseFloat(document.getElementById('tx-amount').value),
         date: document.getElementById('tx-date').value,
         type: type,
         account_id: parseInt(document.getElementById('tx-account').value),
         category_id: type === 'transfer' ? 0 : parseInt(document.getElementById('tx-category').value)
     };
 
-    //добавление получателя при переводе или периода при регулярном расходе
     if (type === 'transfer') {
         data.destination_id = parseInt(document.getElementById('tx-dest-account').value);
     } else if (type === 'regular_expense') {
@@ -107,28 +108,23 @@ document.getElementById('tx-form').addEventListener('submit', async (e) => {
     }
 
     try {
-        //сохранение транзакции в с++ через api
         await windowAPI.addTransaction(data);
-        //закрытие окна
         closeTxModal();
 
-        //уведомление
-        if (typeof showToast === 'function') showToast('Транзакция успешно сохранена', 'success');
+        if (typeof showToast === 'function') showToast('Операция успешно добавлена', 'success');
 
-        //конфетти при доходе
         if (type === 'income' && typeof triggerCelebrationConfetti === 'function') {
             triggerCelebrationConfetti();
         }
 
-        //обновление открытых страниц
         if (document.getElementById('view-transactions').style.display === 'block') loadTransactions();
         if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
+        if (document.getElementById('view-accounts').style.display === 'block') loadAccounts();
     } catch (error) {
         if (typeof showToast === 'function') showToast(error.message, 'error');
         else alert(error.message);
     }
 });
-
 
 //хранит id редактируемого счета
 let editingAccountId = null;
@@ -137,11 +133,9 @@ let editingAccountId = null;
 function toggleAccountFields() {
     const type = document.getElementById('acc-type').value;
 
-    //номер карты для банковского счета
     document.getElementById('acc-bank-digits').style.display = type === 'bank_account' ? 'block' : 'none';
     document.getElementById('acc-bank-digits').required = type === 'bank_account';
 
-    //цель и дедлайн для накопительного счета
     document.getElementById('acc-goal').style.display = type === 'savings_account' ? 'block' : 'none';
     document.getElementById('acc-goal').required = type === 'savings_account';
     document.getElementById('acc-deadline').style.display = type === 'savings_account' ? 'block' : 'none';
@@ -161,110 +155,145 @@ function openAccountModal(editData = null) {
     form.reset();
 
     if (editData) {
-        //режим редактирования счета
         editingAccountId = editData.id;
         title.textContent = 'Редактировать счет';
         submitBtn.textContent = 'Сохранить';
 
         document.getElementById('acc-name').value = editData.name;
         document.getElementById('acc-balance').value = editData.balance;
-        currSelect.value = editData.currency;
-        typeSelect.value = editData.type;
-
-        //блокировка типа и валюты для существующего счета
-        typeSelect.disabled = true;
+        currSelect.value = (editData.currency || 'byn').toLowerCase();
         currSelect.disabled = true;
 
+        typeSelect.value = editData.type;
+        typeSelect.disabled = true;
+
         if (editData.type === 'bank_account') {
-            document.getElementById('acc-bank-digits').value = editData.number || '';
+            document.getElementById('acc-bank-digits').value = editData.number || editData.last_four_digits || '';
         } else if (editData.type === 'savings_account') {
-            document.getElementById('acc-goal').value = editData.goal || '';
+            document.getElementById('acc-goal').value = editData.goal || editData.goal_amount || '';
             document.getElementById('acc-deadline').value = editData.deadline || '';
         }
     } else {
-        //режим добавления нового счета
         editingAccountId = null;
         title.textContent = 'Новый счет';
-        submitBtn.textContent = 'Добавить';
-        typeSelect.disabled = false;
+        submitBtn.textContent = 'Сохранить';
         currSelect.disabled = false;
+        typeSelect.disabled = false;
         document.getElementById('acc-deadline').valueAsDate = new Date();
     }
 
-    //настройка видимости полей
     toggleAccountFields();
+    setTimeout(() => {
+        document.getElementById('acc-name')?.focus();
+    }, 50);
 }
 
-//закрытие формы счета с анимацией
+//закрытие формы счета
 function closeAccountModal() { 
     closeModalAnimated('account-modal'); 
 }
 
-//модальное окно детальной информации о счете
-function openAccountDetailModal(acc) {
-    //показ окна
-    document.getElementById('account-detail-modal').style.display = 'flex';
+// ========================================================
+// ВЫДВИЖНАЯ БОКОВАЯ ПАНЕЛЬ СПРАВА (SHEET / DRAWER 400PX)
+// ДЛЯ ДЕТАЛЬНОГО ПРОСМОТРА СЧЕТА (#account-detail-modal)
+// ========================================================
 
-    //установка названия счета
+function openAccountDetailModal(acc) {
+    const sheet = document.getElementById('account-detail-modal');
+    if (!sheet) return;
+
+    // Сброс классов и открытие панели
+    sheet.classList.remove('sheet-closing');
+    sheet.classList.add('sheet-open');
+
+    // Название счета
     document.getElementById('modal-acc-name').textContent = acc.name;
 
-    //формирование информации о счете
-    const sym = { 'rub': '₽', 'usd': '$', 'eur': '€', 'byn': 'Br' }[acc.currency] || acc.currency;
-    let info = `
-        <p>Баланс: <strong style="color: var(--text-title);">${acc.balance.toLocaleString()} ${sym}</strong></p>
-        <p>Тип: ${acc.type}</p>
+    const cur = (acc.currency || 'byn').toLowerCase();
+    const sym = CURRENCY_SYMBOLS[cur] || acc.currency.toUpperCase();
+
+    let typeLabel = 'Наличные';
+    if (acc.type === 'bank_account') typeLabel = 'Банковский счёт / Карта';
+    else if (acc.type === 'savings_account') typeLabel = 'Копилка / Финансовая цель';
+
+    let infoHtml = `
+        <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 16px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Текущий баланс</span>
+                <span class="badge-pill">${acc.currency.toUpperCase()}</span>
+            </div>
+            <div class="amount" style="font-size: 26px; font-weight: 700; color: var(--text-title); line-height: 1.2;">
+                ${Number(acc.balance).toLocaleString()} <span style="font-size: 16px; color: var(--text-muted);">${sym}</span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 6px;">
+                Тип: <strong style="color: var(--text-title);">${typeLabel}</strong>
+            </div>
+        </div>
     `;
 
-    //информация о цели для накопительного счета
+    // Инфо о цели для накопительного счета
     if (acc.type === 'savings_account') {
-        const isReached = acc.progress >= 100;
-        info += `
-            <p>Цель: ${acc.goal.toLocaleString()} ${sym}</p>
-            <p>Прогресс: ${acc.progress.toFixed(1)}% ${isReached ? '<span class="goal-achieved-badge">🎉 Цель достигнута!</span>' : ''}</p>
-            <p>Нужно откладывать: ${acc.monthly_required.toLocaleString()} ${sym}/мес</p>
-            <p>Дедлайн: ${acc.deadline}</p>
+        const isReached = (acc.progress || 0) >= 100;
+        const goalVal = acc.goal || acc.goal_amount || 0;
+        const progressVal = Math.min(Math.max(acc.progress || 0, 0), 100);
+
+        infoHtml += `
+            <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 16px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                    <span style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Прогресс накопления</span>
+                    <span class="tab-num" style="font-weight: 700; color: var(--text-title);">${progressVal.toFixed(1)}%</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                    <div style="width: ${progressVal}%; height: 100%; background: var(--accent-color); border-radius: 3px; transition: width 0.5s ease;"></div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--text-muted);">
+                    <div>Цель: <strong class="tab-num" style="color: var(--text-title);">${Number(goalVal).toLocaleString()} ${sym}</strong></div>
+                    <div>Нужно откладывать: <strong class="tab-num" style="color: var(--text-title);">${Number(acc.monthly_required || 0).toLocaleString()} ${sym}/мес</strong></div>
+                    <div>Крайний срок: <strong class="tab-num" style="color: var(--text-title);">${acc.deadline || '—'}</strong></div>
+                </div>
+                ${isReached ? '<div style="margin-top: 10px; padding: 6px 10px; background: var(--color-income-subtle); color: var(--color-income); font-size: 12px; font-weight: 600; border-radius: 4px;">🎉 Финансовая цель успешно достигнута!</div>' : ''}
+            </div>
         `;
-        //конфетти при достижении цели
-        if (isReached && typeof triggerCelebrationConfetti === 'function') {
-            setTimeout(() => triggerCelebrationConfetti(), 200);
-        }
     }
 
-    //информация о карте
-    if (acc.type === 'bank_account') {
-        info += `<p>Карта: •••• ${acc.number}</p>`;
+    if (acc.type === 'bank_account' && (acc.number || acc.last_four_digits)) {
+        infoHtml += `
+            <div style="background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: var(--card-radius); padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
+                Номер карты: <strong class="tab-num" style="color: var(--text-title);">•••• ${acc.number || acc.last_four_digits}</strong>
+            </div>
+        `;
     }
-    document.getElementById('modal-acc-info').innerHTML = info;
 
-    //загрузка истории операций счета
+    document.getElementById('modal-acc-info').innerHTML = infoHtml;
+
+    // Загрузка последних транзакций по счету
     loadAccountTransactions(acc.id);
 
-    //кнопка удаления счета
+    // Кнопка удаления
     const deleteBtn = document.getElementById('btn-delete-account');
     if (deleteBtn) {
         deleteBtn.onclick = async () => {
             const ok = await showConfirm({
                 title: 'Удаление счёта',
-                message: `Удалить счёт "${acc.name}"? Все привязанные к нему транзакции также будут удалены.`,
+                message: `Удалить счёт «${acc.name}»? Все привязанные операции будут также удалены.`,
                 confirmText: 'Удалить'
             });
             if (!ok) return;
 
             try {
-                //вызов удаления счета в с++
                 await windowAPI.removeAccount(acc.id);
-                if (typeof showToast === 'function') showToast(`Счёт "${acc.name}" удалён`, 'info');
+                if (typeof showToast === 'function') showToast(`Счёт «${acc.name}» удалён`, 'info');
                 closeAccountDetailModal();
-                loadAccounts();
+                if (document.getElementById('view-accounts').style.display === 'block') loadAccounts();
                 if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
             } catch (e) {
-                console.error("Ошибка удаления: " + e.message);
+                console.error("Ошибка удаления счета:", e);
                 if (typeof showToast === 'function') showToast(e.message, 'error');
             }
         };
     }
 
-    //кнопка редактирования счета
+    // Кнопка редактирования
     const editBtn = document.getElementById('btn-edit-account');
     if (editBtn) {
         editBtn.onclick = () => {
@@ -274,130 +303,102 @@ function openAccountDetailModal(acc) {
     }
 }
 
-//закрытие окна деталей счета
+// Закрытие Drawer панели справа
 function closeAccountDetailModal() {
-    closeModalAnimated('account-detail-modal');
+    const sheet = document.getElementById('account-detail-modal');
+    if (!sheet || !sheet.classList.contains('sheet-open')) return;
+
+    sheet.classList.add('sheet-closing');
+    setTimeout(() => {
+        sheet.classList.remove('sheet-open');
+        sheet.classList.remove('sheet-closing');
+    }, 220);
 }
 
-//загрузка истории транзакций счета
+// Загрузка истории транзакций для Sheet
 async function loadAccountTransactions(accountId) {
     const container = document.getElementById('modal-acc-transactions');
-    container.innerHTML = '<span style="color: var(--text-muted);">Загрузка...</span>';
+    container.innerHTML = '<span style="color: var(--text-muted); font-size: 13px;">Загрузка операций...</span>';
 
     try {
-        //запрос транзакций по счету из с++
         const transactions = await windowAPI.getTransactionsByAccount(accountId);
         container.innerHTML = '';
 
-        //если транзакций нет, вывод заглушки
-        if (!transactions.length) {
-            container.innerHTML = '<span style="color: var(--text-muted);">Транзакций нет</span>';
+        if (!transactions || !transactions.length) {
+            container.innerHTML = '<span style="color: var(--text-muted); font-size: 13px;">Операций по этому счету пока нет.</span>';
             return;
         }
 
-        //цикл по операциям счета
-        transactions.forEach(tx => {
-            const cat = categoriesMap[tx.category_id] || { name: '-', color: 'var(--text-title)' };
-            const sign = tx.type === 'income' ? '+' : '-';
+        transactions.slice(0, 10).forEach(tx => {
+            const cat = categoriesMap[tx.category_id] || { name: 'Операция', color: 'var(--text-title)' };
+            const isInc = tx.type === 'income';
+            const sign = isInc ? '+' : '-';
             const cur = (tx.currency || 'byn').toLowerCase();
             const sym = CURRENCY_SYMBOLS[cur] || cur.toUpperCase();
 
-            //создание строки транзакции
             const row = document.createElement('div');
-            row.style.cssText = 'display:flex; justify-content:space-between; padding:10px; background:var(--bg-input); border: 1px solid var(--border-color); border-radius:var(--card-radius);';
+            row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:var(--bg-hover); border:1px solid var(--border-color); border-radius:var(--btn-radius); font-size:13px;';
 
-            //дата
-            const dateSpan = document.createElement('span');
-            dateSpan.style.color = 'var(--text-muted)';
-            dateSpan.textContent = tx.date;
-
-            //категория
-            const catSpan = document.createElement('span');
-            catSpan.style.color = cat.color || 'var(--text-title)';
-            catSpan.textContent = cat.name;
-
-            //сумма
-            const amountSpan = document.createElement('span');
-            amountSpan.style.fontWeight = 'bold';
-            amountSpan.style.color = 'var(--text-title)';
-            amountSpan.textContent = `${sign}${tx.amount.toLocaleString()}${sym}`;
-
-            row.appendChild(dateSpan);
-            row.appendChild(catSpan);
-            row.appendChild(amountSpan);
+            row.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-weight: 600; color: var(--text-title);">${cat.name}</span>
+                    <span class="tx-date" style="color: var(--text-muted); font-size: 11.5px;">${tx.date}</span>
+                </div>
+                <span class="amount" style="font-weight: 700; color: ${isInc ? 'var(--color-income)' : 'var(--text-title)'};">
+                    ${sign}${tx.amount.toLocaleString()} ${sym}
+                </span>
+            `;
             container.appendChild(row);
         });
     } catch (e) {
-        console.error("Ошибка загрузки транзакций счёта:", e);
-        container.innerHTML = '<span style="color: var(--color-expense);">Ошибка загрузки</span>';
+        console.error("Ошибка загрузки операций счета:", e);
+        container.innerHTML = '<span style="color: var(--color-expense); font-size: 13px;">Ошибка загрузки</span>';
     }
 }
 
-//обработка формы сохранения счета
+// Сохранение счета
 document.getElementById('account-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const type = document.getElementById('acc-type').value;
-    const nameVal = document.getElementById('acc-name').value.trim();
-    const balanceVal = parseFloat(document.getElementById('acc-balance').value);
-
-    //проверка заполнения имени и баланса счета
-    if (!nameVal) {
-        if (typeof showToast === 'function') showToast('Пожалуйста, введите название счёта', 'error');
-        return;
-    }
-    if (!Number.isFinite(balanceVal)) {
-        if (typeof showToast === 'function') showToast('Пожалуйста, введите корректный баланс', 'error');
-        return;
-    }
-
     const data = {
-        name: nameVal,
-        balance: balanceVal,
+        name: document.getElementById('acc-name').value,
+        balance: parseFloat(document.getElementById('acc-balance').value),
         currency: document.getElementById('acc-currency').value,
         type: type
     };
 
-    //поля типа счета
     if (type === 'bank_account') {
         data.last_four_digits = document.getElementById('acc-bank-digits').value;
     } else if (type === 'savings_account') {
-        const goalVal = parseFloat(document.getElementById('acc-goal').value);
-        if (!Number.isFinite(goalVal) || goalVal <= 0) {
-            if (typeof showToast === 'function') showToast('Пожалуйста, введите корректную сумму цели', 'error');
-            return;
-        }
-        data.goal_amount = goalVal;
+        data.goal_amount = parseFloat(document.getElementById('acc-goal').value);
         data.deadline = document.getElementById('acc-deadline').value;
     }
 
     try {
         if (editingAccountId) {
-            //редактирование счета
             data.id = editingAccountId;
             await windowAPI.editAccount(data);
             if (typeof showToast === 'function') showToast('Счёт успешно обновлён', 'success');
         } else {
-            //добавление нового счета
             await windowAPI.addAccount(data);
             if (typeof showToast === 'function') showToast('Счёт успешно добавлен', 'success');
         }
 
-        //закрытие окна и обновление интерфейса
         closeAccountModal();
         if (document.getElementById('view-accounts').style.display === 'block') loadAccounts();
-        if (document.getElementById('account-detail-modal').style.display === 'flex') closeAccountDetailModal();
+        if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
+        closeAccountDetailModal();
     } catch (error) {
-        console.error("Ошибка сохранения:", error);
+        console.error("Ошибка сохранения счета:", error);
         if (typeof showToast === 'function') showToast(error.message, 'error');
     }
 });
 
-
-//хранит id категории редактируемого бюджета
+// Хранит id редактируемого бюджета
 let editingBudgetCategId = null;
 
-//открытие модального окна бюджета
+// Модальное окно бюджета
 async function openBudgetModal(editData = null) {
     const modal = document.getElementById('budget-modal');
     const form = document.getElementById('budget-form');
@@ -408,7 +409,6 @@ async function openBudgetModal(editData = null) {
     form.reset();
 
     if (editData) {
-        //режим редактирования бюджета
         editingBudgetCategId = editData.category_id;
         title.textContent = 'Редактировать лимит';
         submitBtn.textContent = 'Сохранить';
@@ -417,25 +417,16 @@ async function openBudgetModal(editData = null) {
         catSelect.disabled = true;
         document.getElementById('budget-limit').value = editData.limit;
     } else {
-        //режим добавления нового лимита
         editingBudgetCategId = null;
-        title.textContent = 'Установить лимит';
+        title.textContent = 'Установить лимит расходов';
         submitBtn.textContent = 'Сохранить';
         catSelect.disabled = false;
         catSelect.innerHTML = '<option value="" disabled selected>Загрузка категорий...</option>';
 
         try {
-            //запрос категорий из с++
             const categories = await windowAPI.getCategories();
-
             catSelect.innerHTML = '<option value="" disabled selected>Выберите категорию...</option>';
-
-            //фильтрация только категорий расходов
-            const expenseCategories = categories.filter(c => {
-                const type = (c.type || '').toLowerCase();
-                return type === 'expense';
-            });
-
+            const expenseCategories = categories.filter(c => (c.type || '').toLowerCase() === 'expense');
             const listToRender = expenseCategories.length > 0 ? expenseCategories : categories;
 
             listToRender.forEach(cat => {
@@ -445,25 +436,21 @@ async function openBudgetModal(editData = null) {
                 catSelect.appendChild(opt);
             });
         } catch (err) {
-            console.error("Ошибка загрузки категорий в бюджет:", err);
+            console.error("Ошибка категорий бюджета:", err);
             catSelect.innerHTML = '<option value="" disabled selected>Ошибка загрузки</option>';
         }
     }
 
     modal.style.display = 'flex';
+    setTimeout(() => {
+        document.getElementById('budget-limit')?.focus();
+    }, 50);
 }
 
-//обработка отправки формы бюджета
 document.getElementById('budget-form').onsubmit = async (e) => {
     e.preventDefault();
 
     const limitValue = parseFloat(document.getElementById('budget-limit').value);
-    //проверка валидности лимита
-    if (!Number.isFinite(limitValue) || limitValue <= 0) {
-        if (typeof showToast === 'function') showToast('Пожалуйста, введите корректный лимит бюджета', 'error');
-        return;
-    }
-
     const catId = editingBudgetCategId !== null
         ? editingBudgetCategId
         : parseInt(document.getElementById('budget-category').value);
@@ -475,53 +462,48 @@ document.getElementById('budget-form').onsubmit = async (e) => {
 
     try {
         if (editingBudgetCategId) {
-            //вызов редактирования бюджета в с++
             await windowAPI.editBudget(data);
             if (typeof showToast === 'function') showToast('Лимит бюджета обновлён', 'success');
         } else {
-            //добавление нового бюджета в с++
             await windowAPI.addBudget(data);
             if (typeof showToast === 'function') showToast('Лимит бюджета установлен', 'success');
         }
 
-        //закрытие окна и перерисовка
         closeBudgetModal();
-        renderBudgets();
+        if (document.getElementById('view-budget').style.display === 'block') renderBudgets();
+        if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
     } catch (error) {
         if (typeof showToast === 'function') showToast(error.message, 'error');
         else alert("Ошибка: " + error.message);
     }
 };
 
-//закрытие окна бюджета
 function closeBudgetModal() { 
     closeModalAnimated('budget-modal'); 
 }
 
-
-//открытие окна создания категории
+// Модальное окно категорий
 function openCategoryModal() { 
     document.getElementById('category-modal').style.display = 'flex'; 
     document.getElementById('category-form').reset(); 
+    setTimeout(() => {
+        document.getElementById('cat-name')?.focus();
+    }, 50);
 }
 
-//закрытие окна категории с анимацией
 function closeCategoryModal() { 
     closeModalAnimated('category-modal'); 
 }
 
-//обработка отправки формы категории
 document.getElementById('category-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
-        //добавление категории в с++
         await windowAPI.addCategory({
             name: document.getElementById('cat-name').value,
             type: document.getElementById('cat-type').value,
             color: document.getElementById('cat-color').value
         });
 
-        //закрытие окна и обновление кэша категорий
         closeCategoryModal();
         await loadCategories();
 
@@ -533,26 +515,22 @@ document.getElementById('category-form').addEventListener('submit', async (e) =>
     }
 });
 
-
-//диалог подтверждения действия (возвращает promise)
+// Диалог подтверждения
 function showConfirm({ title = 'Подтверждение', message = 'Вы уверены?', confirmText = 'Удалить', isDanger = true }) {
     return new Promise((resolve) => {
-        //поиск элементов окна подтверждения
         const modal = document.getElementById('confirm-modal');
         const titleEl = document.getElementById('confirm-title');
         const msgEl = document.getElementById('confirm-message');
         const okBtn = document.getElementById('confirm-btn-ok');
         const cancelBtn = document.getElementById('confirm-btn-cancel');
 
-        //заполнение текстов и цвета кнопки
         titleEl.textContent = title;
         msgEl.textContent = message;
         okBtn.textContent = confirmText;
-        okBtn.style.background = isDanger ? 'var(--color-expense)' : 'var(--accent-color)';
+        okBtn.className = isDanger ? 'btn-danger' : 'btn-primary';
 
         modal.style.display = 'flex';
 
-        //очистка обработчиков и закрытие окна
         function cleanup(result) {
             closeModalAnimated(modal);
             okBtn.onclick = null;
@@ -560,8 +538,225 @@ function showConfirm({ title = 'Подтверждение', message = 'Вы у�
             resolve(result);
         }
 
-        //клики: ок -> true, отмена -> false
         okBtn.onclick = () => cleanup(true);
         cancelBtn.onclick = () => cleanup(false);
+    });
+}
+
+// ========================================================
+// COMMAND PALETTE (CTRL+K) РЕАЛИЗАЦИЯ
+// ========================================================
+
+const COMMAND_PALETTE_ACTIONS = [
+    {
+        id: 'new-expense',
+        title: 'Добавить расход',
+        category: 'Операции',
+        icon: '↓',
+        hint: 'N',
+        handler: () => openTxModal('expense')
+    },
+    {
+        id: 'new-income',
+        title: 'Добавить доход',
+        category: 'Операции',
+        icon: '↑',
+        hint: '',
+        handler: () => openTxModal('income')
+    },
+    {
+        id: 'new-transfer',
+        title: 'Добавить перевод между счетами',
+        category: 'Операции',
+        icon: '⇄',
+        hint: '',
+        handler: () => openTxModal('transfer')
+    },
+    {
+        id: 'new-account',
+        title: 'Создать новый счет',
+        category: 'Счета',
+        icon: '💳',
+        hint: '',
+        handler: () => openAccountModal()
+    },
+    {
+        id: 'new-budget',
+        title: 'Установить лимит бюджета',
+        category: 'Бюджет',
+        icon: '🎯',
+        hint: '',
+        handler: () => openBudgetModal()
+    },
+    {
+        id: 'new-category',
+        title: 'Создать категорию',
+        category: 'Бюджет',
+        icon: '🏷️',
+        hint: '',
+        handler: () => openCategoryModal()
+    },
+    {
+        id: 'nav-dashboard',
+        title: 'Перейти на Главную',
+        category: 'Навигация',
+        icon: '📊',
+        hint: '1',
+        handler: () => switchPage('dashboard')
+    },
+    {
+        id: 'nav-accounts',
+        title: 'Перейти в Счета',
+        category: 'Навигация',
+        icon: '💳',
+        hint: '2',
+        handler: () => switchPage('accounts')
+    },
+    {
+        id: 'nav-transactions',
+        title: 'Перейти в Транзакции',
+        category: 'Навигация',
+        icon: '📜',
+        hint: '3',
+        handler: () => switchPage('transactions')
+    },
+    {
+        id: 'nav-budget',
+        title: 'Перейти в Бюджет',
+        category: 'Навигация',
+        icon: '🎯',
+        hint: '4',
+        handler: () => switchPage('budget')
+    },
+    {
+        id: 'nav-analytics',
+        title: 'Перейти в Аналитику',
+        category: 'Навигация',
+        icon: '📈',
+        hint: '5',
+        handler: () => switchPage('analytics')
+    },
+    {
+        id: 'toggle-theme',
+        title: 'Переключить тему оформления (Светлая / Темная)',
+        category: 'Интерфейс',
+        icon: '🌓',
+        hint: '',
+        handler: () => toggleTheme()
+    }
+];
+
+let selectedCommandIndex = 0;
+let filteredCommands = [];
+
+function openCommandPalette() {
+    const modal = document.getElementById('command-palette-modal');
+    const input = document.getElementById('cmd-palette-input');
+    if (!modal || !input) return;
+
+    modal.style.display = 'flex';
+    input.value = '';
+    renderCommandPalette('');
+    setTimeout(() => input.focus(), 40);
+}
+
+function closeCommandPalette() {
+    closeModalAnimated('command-palette-modal');
+}
+
+function renderCommandPalette(query = '') {
+    const list = document.getElementById('cmd-palette-list');
+    if (!list) return;
+
+    const q = query.toLowerCase().trim();
+    filteredCommands = COMMAND_PALETTE_ACTIONS.filter(item => {
+        return item.title.toLowerCase().includes(q) ||
+               item.category.toLowerCase().includes(q) ||
+               (item.hint && item.hint.toLowerCase().includes(q));
+    });
+
+    selectedCommandIndex = 0;
+    list.innerHTML = '';
+
+    if (!filteredCommands.length) {
+        list.innerHTML = `
+            <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                Ничего не найдено по запросу «${query}»
+            </div>
+        `;
+        return;
+    }
+
+    filteredCommands.forEach((cmd, idx) => {
+        const item = document.createElement('div');
+        item.className = `cmd-item ${idx === selectedCommandIndex ? 'selected' : ''}`;
+        item.dataset.index = idx;
+
+        item.innerHTML = `
+            <div class="cmd-item-left">
+                <span style="font-size: 15px; width: 20px; text-align: center;">${cmd.icon}</span>
+                <span class="cmd-category-tag">${cmd.category}</span>
+                <span style="font-weight: 500;">${cmd.title}</span>
+            </div>
+            ${cmd.hint ? `<span class="kbd-hint">${cmd.hint}</span>` : ''}
+        `;
+
+        item.onclick = () => {
+            closeCommandPalette();
+            cmd.handler();
+        };
+
+        item.onmouseenter = () => {
+            selectedCommandIndex = idx;
+            updateCommandSelection();
+        };
+
+        list.appendChild(item);
+    });
+}
+
+function updateCommandSelection() {
+    const items = document.querySelectorAll('.cmd-item');
+    items.forEach((el, idx) => {
+        if (idx === selectedCommandIndex) {
+            el.classList.add('selected');
+            el.scrollIntoView({ block: 'nearest' });
+        } else {
+            el.classList.remove('selected');
+        }
+    });
+}
+
+// Слушатели Command Palette
+const cmdInput = document.getElementById('cmd-palette-input');
+if (cmdInput) {
+    cmdInput.addEventListener('input', (e) => {
+        renderCommandPalette(e.target.value);
+    });
+
+    cmdInput.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (filteredCommands.length > 0) {
+                selectedCommandIndex = (selectedCommandIndex + 1) % filteredCommands.length;
+                updateCommandSelection();
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (filteredCommands.length > 0) {
+                selectedCommandIndex = (selectedCommandIndex - 1 + filteredCommands.length) % filteredCommands.length;
+                updateCommandSelection();
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (filteredCommands[selectedCommandIndex]) {
+                const action = filteredCommands[selectedCommandIndex];
+                closeCommandPalette();
+                action.handler();
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            closeCommandPalette();
+        }
     });
 }

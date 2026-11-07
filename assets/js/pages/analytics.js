@@ -11,12 +11,12 @@ function getChartThemeColors() {
     const computed = getComputedStyle(document.documentElement);
 
     //считывание css-переменных темы
-    const legendColor = computed.getPropertyValue('--text-title').trim() || (isDark ? '#ffffff' : '#2c2824');
-    const tickColor = computed.getPropertyValue('--text-muted').trim() || (isDark ? '#737373' : '#8c8273');
-    const gridColor = computed.getPropertyValue('--border-color').trim() || (isDark ? '#222222' : '#e2dbce');
-    const incomeColor = computed.getPropertyValue('--color-income').trim() || (isDark ? '#00ff66' : '#5b8a72');
-    const expenseColor = computed.getPropertyValue('--color-expense').trim() || (isDark ? '#ff0055' : '#c86d5e');
-    const emptyColor = computed.getPropertyValue('--border-color').trim() || (isDark ? '#222222' : '#e2dbce');
+    const legendColor = computed.getPropertyValue('--text-title').trim() || (isDark ? '#f4f4f5' : '#18181b');
+    const tickColor = computed.getPropertyValue('--text-muted').trim() || (isDark ? '#a1a1aa' : '#71717a');
+    const gridColor = computed.getPropertyValue('--border-color').trim() || (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)');
+    const incomeColor = computed.getPropertyValue('--color-income').trim() || (isDark ? '#10b981' : '#059669');
+    const expenseColor = computed.getPropertyValue('--color-expense').trim() || (isDark ? '#f43f5e' : '#e11d48');
+    const emptyColor = computed.getPropertyValue('--border-color').trim() || (isDark ? '#27272a' : '#e4ded4');
 
     //возврат набора цветов
     return {
@@ -121,11 +121,15 @@ async function loadAnalytics() {
         const expEl = document.getElementById('stat-expense');
         const balEl = document.getElementById('stat-balance');
 
-        //анимация счетчиков
-        if (typeof animateValue === 'function') {
-            animateValue(incEl, 0, currentMonthData.income, 700, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
-            animateValue(expEl, 0, currentMonthData.expense, 700, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
-            animateValue(balEl, 0, totalBalance, 700, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
+        //анимация счетчиков (CountUp с 2 знаками и разделителями)
+        if (typeof animateCountUp === 'function') {
+            animateCountUp(incEl, currentMonthData.income, 800, curSymbol, 2);
+            animateCountUp(expEl, currentMonthData.expense, 800, curSymbol, 2);
+            animateCountUp(balEl, totalBalance, 800, curSymbol, 2);
+        } else if (typeof animateValue === 'function') {
+            animateValue(incEl, 0, currentMonthData.income, 800, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
+            animateValue(expEl, 0, currentMonthData.expense, 800, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
+            animateValue(balEl, 0, totalBalance, 800, v => `${Math.round(v).toLocaleString()} ${curSymbol}`);
         } else {
             incEl.innerText = `${currentMonthData.income.toLocaleString()} ${curSymbol}`;
             expEl.innerText = `${currentMonthData.expense.toLocaleString()} ${curSymbol}`;
@@ -142,7 +146,7 @@ async function loadAnalytics() {
 
         const hasCategoryData = categoriesList.length > 0;
 
-        //создание круговой диаграммы
+        //создание круговой диаграммы с плавной анимацией вращения и масштабирования
         categoryChartInstance = new Chart(catCtx, {
             type: 'doughnut',
             data: {
@@ -154,23 +158,79 @@ async function loadAnalytics() {
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: true,
                 animation: {
-                    duration: 750,
-                    easing: 'easeOutQuart'
+                    animateRotate: true,
+                    animateScale: true,
+                    duration: 900,
+                    easing: 'easeOutCubic'
                 },
                 plugins: {
-                    legend: { position: 'bottom', labels: { color: themeColors.legendColor } }
+                    legend: {
+                        display: false // Скрываем встроенную легенду: используем двухколоночную HTML-сетку
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                return ` ${context.label}: ${Number(val).toLocaleString()} ${curSymbol} (${pct}%)`;
+                            }
+                        }
+                    }
                 },
                 cutout: '70%'
             }
         });
+
+        //отрисовка адаптивной двухколоночной сетки элементов легенды
+        const legendContainer = document.getElementById('category-chart-legend');
+        if (legendContainer) {
+            legendContainer.innerHTML = '';
+            if (hasCategoryData) {
+                const totalExpense = categoriesList.reduce((sum, c) => sum + (c.amount || 0), 0);
+                categoriesList.forEach((cat, idx) => {
+                    const item = document.createElement('div');
+                    item.className = 'category-legend-item';
+                    item.title = `${cat.name}: ${Number(cat.amount).toLocaleString()} ${curSymbol} (нажмите, чтобы скрыть/показать)`;
+
+                    const color = cat.color || themeColors.incomeColor;
+                    const pctVal = cat.percent !== undefined 
+                        ? Number(cat.percent).toFixed(1) 
+                        : (totalExpense > 0 ? ((cat.amount / totalExpense) * 100).toFixed(1) : '0.0');
+
+                    item.innerHTML = `
+                        <span class="category-legend-dot" style="background-color: ${color};"></span>
+                        <span class="category-legend-name" title="${cat.name}">${cat.name}</span>
+                        <span class="category-legend-pct">${pctVal}%</span>
+                    `;
+
+                    item.onclick = () => {
+                        const isVisible = categoryChartInstance.getDataVisibility(idx);
+                        categoryChartInstance.toggleDataVisibility(idx);
+                        categoryChartInstance.update();
+                        item.classList.toggle('hidden-cat', isVisible);
+                    };
+
+                    legendContainer.appendChild(item);
+                });
+            } else {
+                legendContainer.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; font-size: 12px; color: var(--text-muted); padding: 8px 0;">
+                        Нет расходов за выбранный период
+                    </div>
+                `;
+            }
+        }
 
         //годовой график доходов и расходов по месяцам (bar)
         const yearCtx = document.getElementById('yearlyChart').getContext('2d');
         //уничтожение предыдущего экземпляра графика
         if (yearlyChartInstance) yearlyChartInstance.destroy();
 
-        //создание столбчатой диаграммы
+        //создание столбчатой диаграммы с плавной каскадной анимацией роста столбиков
         yearlyChartInstance = new Chart(yearCtx, {
             type: 'bar',
             data: {
@@ -192,9 +252,19 @@ async function loadAnalytics() {
             },
             options: {
                 responsive: true,
-                animation: {
-                    duration: 750,
-                    easing: 'easeOutQuart'
+                animations: {
+                    y: {
+                        easing: 'easeOutQuart',
+                        duration: 800,
+                        from: (ctx) => {
+                            if (ctx.type === 'data') {
+                                return ctx.chart.scales.y.getPixelForValue(0);
+                            }
+                        },
+                        delay: (ctx) => {
+                            return ctx.type === 'data' ? ctx.dataIndex * 35 : 0;
+                        }
+                    }
                 },
                 scales: {
                     y: {

@@ -1,641 +1,1068 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <!-- параметры области просмотра с поддержкой безопасных зон экранов с вырезами -->
+    <!-- Параметры области просмотра с поддержкой безопасных зон экранов с вырезами (iPhone notch / Dynamic Island) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- настройки веб-приложения для ios и android (pwa) -->
+    <!-- Настройки веб-приложения для iOS и Android (PWA) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FinanceApp">
-    <meta name="theme-color" content="#000000" id="meta-theme-color">
+    <meta name="theme-color" content="#09090b" id="meta-theme-color">
     <meta name="format-detection" content="telephone=no">
     <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="manifest.json">
     <title>Finance Manager</title>
-    <!-- библиотека chart.js для рисования графиков на canvas -->
+    <!-- Библиотека Chart.js для визуализации аналитики -->
     <script src="assets/js/chart.js"></script>
     <style>
-        /* переменные темной темы оформления */
+        /* ========================================================
+           ДИЗАЙН-СИСТЕМА BENTO + SHADCN / ENTERPRISE
+           ======================================================== */
+
+        /* Темная тема: глубокий нейтральный Zinc-950, изумрудный акцент, строгий контраст */
         :root, :root[data-theme="dark"] {
-            --bg-page: #000000;
-            --bg-sidebar: #030805; /* темный оттенок сайдбара */
-            --bg-sidebar-glass: rgba(3, 8, 5, 0.90);
-            --bg-card: #050d08;
-            --border-color: rgba(0, 255, 102, 0.35); /* полупрозрачная рамка */
-            --card-shadow: 0 0 15px rgba(0, 255, 102, 0.1), inset 0 0 10px rgba(0, 255, 102, 0.02);
-            --text-main: #e5e5e5;
-            --text-muted: #668877; /* приглушенный цвет текста */
+            --bg-page: #09090b;             /* Zinc-950 */
+            --bg-sidebar: #0f0f12;          /* Сайдбар */
+            --bg-card: #141418;             /* Карточки */
+            --bg-card-hover: #1a1a20;       /* Карточки при наведении */
+            --bg-input: #18181b;            /* Инпуты */
+            --bg-input-focus: #121215;
+            --bg-hover: rgba(255, 255, 255, 0.04);
+            --bg-active: rgba(255, 255, 255, 0.08);
+
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --border-input: rgba(255, 255, 255, 0.12);
+            --border-input-focus: #10b981;
+
             --text-title: #ffffff;
-            --accent-color: #00ff66;
-            --accent-text: #000000;
-            --color-income: #00ff66;
-            --color-expense: #ff0055;
-            --font-family: 'Consolas', 'Courier New', monospace;
-            --card-radius: 6px;
-            --bg-input: #001105;
-            --border-input: rgba(0, 255, 102, 0.5);
-            --bg-hover: #001f0a;
-            --modal-overlay: rgba(0, 10, 5, 0.85);
+            --text-main: #f4f4f5;           /* Zinc-100 */
+            --text-muted: #a1a1aa;          /* Zinc-400 */
+            --text-subtle: #71717a;         /* Zinc-500 */
 
-            /* безопасные зоны для вырезов и домашнего индикатора (ios safe area insets) */
-            --sat: env(safe-area-inset-top, 0px);
-            --sab: env(safe-area-inset-bottom, 0px);
-            --sal: env(safe-area-inset-left, 0px);
-            --sar: env(safe-area-inset-right, 0px);
-            --bottom-nav-height: calc(56px + var(--sab));
-
-            /* эффекты неонового свечения */
-            --neon-glow-text: 0 0 10px rgba(0, 255, 102, 0.7);
-            --neon-glow-btn: 0 0 15px rgba(0, 255, 102, 0.5);
-            --neon-glow-amount: 0 0 12px rgba(255, 255, 255, 0.25);
-        }
-
-        :root[data-theme="light"] {
-            /* переменные светлой темы (кремово-бумажные тона) */
-            --bg-page: #f2eadc; /* кремовый фон */
-            --bg-sidebar: #e6dac3; /* бежевый фон панели */
-            --bg-sidebar-glass: rgba(242, 234, 220, 0.92);
-            --bg-card: #fcf9f2; /* цвет карточек */
-            --border-color: #d4c5ab;
-            --card-shadow: 0 4px 16px rgba(90, 70, 50, 0.08);
-            --text-main: #4a4238;
-            --text-muted: #8c7f6d;
-            --text-title: #2c251d;
-            --accent-color: #72968b;
+            --accent-color: #10b981;        /* Emerald-500 */
+            --accent-hover: #059669;        /* Emerald-600 */
             --accent-text: #ffffff;
-            --color-income: #5b8a72;
-            --color-expense: #c86d5e;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --card-radius: 14px;
-            --bg-input: #ece1cd;
-            --border-input: #d4c5ab;
-            --bg-hover: #e3d5bd;
-            --modal-overlay: rgba(60, 50, 40, 0.5);
+            --accent-subtle: rgba(16, 185, 129, 0.12);
 
-            /* безопасные зоны для светлой темы */
+            --color-income: #10b981;        /* Emerald-500 */
+            --color-income-subtle: rgba(16, 185, 129, 0.12);
+            --color-expense: #f43f5e;       /* Rose-500 */
+            --color-expense-subtle: rgba(244, 63, 94, 0.12);
+            --color-transfer: #38bdf8;      /* Sky-400 */
+            --color-transfer-subtle: rgba(56, 189, 248, 0.12);
+            --color-warning: #f59e0b;       /* Amber-500 */
+            --color-warning-subtle: rgba(245, 158, 11, 0.12);
+
+            --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+            --card-shadow-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+            --modal-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.7);
+
+            --modal-overlay: rgba(0, 0, 0, 0.65);
+
+            /* Единая геометрия компонентов */
+            --card-radius: 10px;
+            --btn-radius: 6px;
+            --input-radius: 6px;
+            --chip-radius: 20px;
+
+            /* Безопасные зоны для вырезов и домашнего индикатора (iOS safe-area-insets) */
             --sat: env(safe-area-inset-top, 0px);
             --sab: env(safe-area-inset-bottom, 0px);
             --sal: env(safe-area-inset-left, 0px);
             --sar: env(safe-area-inset-right, 0px);
             --bottom-nav-height: calc(56px + var(--sab));
 
-            /* отключение неонового свечения в светлой теме */
-            --neon-glow-text: none;
-            --neon-glow-btn: none;
-            --neon-glow-amount: none;
+            --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         }
 
-        * {
+        /* Светлая тема: теплая кремово-бумажная эстетика, мягкий контраст */
+        :root[data-theme="light"] {
+            --bg-page: #f7f4ed;             /* Теплый кремовый фон */
+            --bg-sidebar: #efeae0;          /* Пергаментный сайдбар */
+            --bg-card: #ffffff;             /* Чистая белая карточка */
+            --bg-card-hover: #faf8f4;       /* Мягкий hover */
+            --bg-input: #ffffff;
+            --bg-input-focus: #ffffff;
+            --bg-hover: rgba(0, 0, 0, 0.04);
+            --bg-active: rgba(0, 0, 0, 0.07);
+
+            --border-color: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.16);
+            --border-input: rgba(0, 0, 0, 0.14);
+            --border-input-focus: #059669;
+
+            --text-title: #18181b;          /* Темные глубокие чернила */
+            --text-main: #27272a;           /* Основной текст */
+            --text-muted: #71717a;          /* Приглушенный */
+            --text-subtle: #a1a1aa;
+
+            --accent-color: #059669;        /* Emerald-600 */
+            --accent-hover: #047857;        /* Emerald-700 */
+            --accent-text: #ffffff;
+            --accent-subtle: rgba(5, 150, 105, 0.1);
+
+            --color-income: #059669;        /* Emerald-600 */
+            --color-income-subtle: rgba(5, 150, 105, 0.1);
+            --color-expense: #e11d48;       /* Rose-600 */
+            --color-expense-subtle: rgba(225, 29, 72, 0.1);
+            --color-transfer: #0284c7;      /* Sky-600 */
+            --color-transfer-subtle: rgba(2, 132, 199, 0.1);
+            --color-warning: #d97706;       /* Amber-600 */
+            --color-warning-subtle: rgba(217, 119, 6, 0.1);
+
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+            --card-shadow-hover: 0 4px 12px rgba(40, 30, 20, 0.08), 0 2px 4px rgba(40, 30, 20, 0.04);
+            --modal-shadow: 0 20px 25px -5px rgba(20, 15, 10, 0.15), 0 8px 10px -6px rgba(20, 15, 10, 0.1);
+
+            --modal-overlay: rgba(15, 23, 42, 0.45);
+
+            /* Строго одинаковая геометрия в обеих темах */
+            --card-radius: 10px;
+            --btn-radius: 6px;
+            --input-radius: 6px;
+            --chip-radius: 20px;
+
+            /* Безопасные зоны для вырезов и домашнего индикатора (iOS safe-area-insets) */
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+            --bottom-nav-height: calc(56px + var(--sab));
+
+            --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        /* ========================================================
+           БАЗОВЫЙ СБРОС И ТИПОГРАФИКА
+           ======================================================== */
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: var(--font-family);
-        }
-
-        html {
-            height: 100%;
-            -webkit-text-size-adjust: 100%;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background-color: var(--bg-page);
             color: var(--text-main);
+            font-family: var(--font-ui);
             display: flex;
-            height: 100%;
-            min-height: 100vh;
-            min-height: 100dvh;
+            height: 100vh;
             overflow: hidden;
-            font-family: var(--font-family);
-            transition: background-color 0.25s ease, color 0.25s ease;
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        /* боковая панель навигации (сайдбар) */
+        h1, h2, h3, h4 {
+            color: var(--text-title);
+            font-weight: 600;
+            line-height: 1.25;
+            letter-spacing: -0.025em;
+        }
 
+        h1 { font-size: 24px; letter-spacing: -0.03em; }
+        h2 { font-size: 18px; letter-spacing: -0.025em; }
+        h3 { font-size: 15px; letter-spacing: -0.02em; }
+
+        /* Числа, суммы и даты строго в моноширинном шрифте с выравниванием колонок */
+        .amount, .acc-balance, .tx-amount, .tc-amount, .b-current, .b-limit,
+        .tx-date, .metric-val, .hero-amount, .gauge-percent, .tab-num, .acc-number,
+        .amount-int, .amount-dec {
+            font-family: var(--font-mono) !important;
+            font-variant-numeric: tabular-nums !important;
+        }
+
+        /* Оптическая иерархия чисел (дробная часть и валюта) */
+        .amount-int {
+            font-weight: 700;
+        }
+        .amount-dec {
+            font-size: 0.68em;
+            opacity: 0.72;
+            font-weight: 500;
+        }
+        .amount-currency {
+            font-size: 0.55em;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        /* Тонкие кастомные скроллбары */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+        :root[data-theme="light"] ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.14);
+        }
+        :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.28);
+        }
+
+        /* ========================================================
+           САЙДБАР (НАВИГАЦИЯ СЛЕВА)
+           ======================================================== */
         .sidebar {
-            width: 240px;
+            width: 250px;
             background-color: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
-            padding: 24px;
+            padding: 20px 16px;
             border-right: 1px solid var(--border-color);
-            transition: background-color 0.25s ease, border-color 0.25s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            user-select: none;
             flex-shrink: 0;
         }
 
-        .logo {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 32px;
-            text-shadow: var(--neon-glow-text); /* свечение логотипа */
+        .logo-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px 20px 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--btn-radius);
+            background: var(--accent-color);
+            color: var(--accent-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .logo-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-title);
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+        }
+        .logo-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* Кнопка быстрого поиска / команд (Ctrl+K) */
+        .cmd-trigger-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--btn-radius);
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 16px;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .cmd-trigger-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-main);
+            background: var(--bg-card-hover);
+        }
+        .cmd-trigger-left {
             display: flex;
             align-items: center;
             gap: 8px;
         }
+        .kbd-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 2px 5px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            line-height: 1;
+        }
 
+        /* Список навигации */
         .nav-links {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 4px;
+            flex: 1;
         }
-
-        .nav-links li {
-            list-style: none;
-        }
-
         .nav-links li a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: color 0.2s, padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 10px;
-            border-left: 0px solid transparent;
-        }
-
-        .nav-links li a:hover, .nav-links li a.active {
-            padding-left: 12px;
-            border-left: 3px solid var(--accent-color);
-            color: var(--text-title);
-        }
-
-        /* основная область для содержимого страниц справа */
-
-        .main-content {
-            flex: 1;
-            background-color: var(--bg-page);
-            padding: 32px;
-            overflow-y: auto;
-            min-width: 0;
-            transition: background-color 0.25s ease;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .page-header h1 {
-            margin-bottom: 0;
-        }
-
-        .mobile-header-branding {
-            display: none;
-        }
-
-        .mobile-header-theme-toggle {
-            display: none;
-        }
-
-        h1, h2, h3 {
-            color: var(--text-title);
-        }
-
-        h1 {
-            font-size: 28px;
-            margin-bottom: 24px;
-        }
-
-            .card-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 20px;
-            }
-
-            .card {
-                background-color: var(--bg-card);
-                padding: 20px;
-                border-radius: var(--card-radius);
-                border: 1px solid var(--border-color);
-                box-shadow: var(--card-shadow);
-                transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease;
-            }
-
-            .card h3 {
-                font-size: 16px;
-                margin-bottom: 8px;
-                color: var(--text-muted);
-            }
-
-            .card .amount {
-                font-size: 24px;
-                font-weight: bold;
-                color: var(--text-title);
-                text-shadow: var(--neon-glow-amount); /* свечение цифр баланса */
-            }
-
-            /* стилизация полосы прокрутки */
-            ::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
-            }
-            ::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            ::-webkit-scrollbar-thumb {
-                background: var(--border-color);
-                border-radius: 4px;
-            }
-            ::-webkit-scrollbar-thumb:hover {
-                background: var(--text-muted);
-            }
-
-            .amount, .acc-balance, .tx-amount, .tc-amount, .b-current, .b-limit {
-                font-variant-numeric: tabular-nums;
-            }
-
-            /* модальные окна с эффектом матового стекла */
-
-            .modal-overlay {
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: var(--modal-overlay);
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                align-items: center;
-                justify-content: center;
-                z-index: 1000;
-            }
-
-            .modal-content {
-                background: var(--bg-card);
-                padding: 24px;
-                border-radius: var(--card-radius);
-                width: 400px;
-                max-width: calc(100vw - 32px);
-                box-sizing: border-box;
-                border: 1px solid var(--border-color);
-                box-shadow: var(--card-shadow);
-                color: var(--text-main);
-            }
-
-            .modal-account-detail {
-                width: 500px;
-                max-width: calc(100vw - 32px);
-            }
-
-            .modal-confirm {
-                width: 360px;
-                max-width: calc(100vw - 32px);
-            }
-
-            .form-input {
-                width: 100%;
-                margin-bottom: 12px;
-                padding: 10px;
-                background: var(--bg-input);
-                color: var(--text-main);
-                border: 1px solid var(--border-input);
-                border-radius: var(--card-radius);
-                outline: none;
-                font-family: inherit;
-            }
-
-            .btn-primary {
-                padding: 8px 16px;
-                background: var(--accent-color);
-                color: var(--accent-text);
-                font-weight: bold;
-                border: none;
-                border-radius: var(--card-radius);
-                cursor: pointer;
-                font-family: inherit;
-                transition: opacity 0.2s, box-shadow 0.2s;
-                box-shadow: var(--neon-glow-btn); /* свечение кнопок */
-            }
-
-            .btn-primary:hover {
-                opacity: 0.9;
-            }
-
-            .btn-secondary {
-                padding: 8px 16px;
-                background: transparent;
-                color: var(--text-muted);
-                border: none;
-                cursor: pointer;
-                font-family: inherit;
-                transition: color 0.2s;
-            }
-
-            .btn-secondary:hover {
-                color: var(--text-title);
-            }
-
-            .theme-selector-container {
-                margin-top: auto;
-                padding-top: 18px;
-                border-top: 1px solid var(--border-color);
-            }
-        /* анимация и интерактивные эффекты */
-
-        /* плавное появление страниц с подъемом */
-        @keyframes fadeInSlideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .page-view {
-            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-
-        /* появление модальных окон */
-        @keyframes modalPop {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .modal-content {
-            animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; /* пружинящий эффект */
-        }
-
-        /* подъем карточек при наведении */
-        .card {
-            transition: background-color 0.25s ease, border-color 0.25s ease, border-radius 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card:hover {
-            transform: translateY(-3px); /* приподнимание карточки */
-        }
-
-        /* усиление тени или свечения карточек при наведении */
-        :root[data-theme="dark"] .card:hover {
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2), inset 0 0 10px rgba(0, 255, 102, 0.05);
-            border-color: rgba(0, 255, 102, 0.6);
-        }
-        :root[data-theme="light"] .card:hover {
-            box-shadow: 0 8px 24px rgba(90, 70, 50, 0.12);
-            border-color: #c4b498;
-        }
-
-        /* тактильное сжатие кнопок при клике */
-        .btn-primary {
-            transition: transform 0.1s ease, box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
-        }
-        .btn-primary:hover {
-            transform: scale(1.02); /* увеличение при наведении */
-            filter: brightness(1.1);
-        }
-        .btn-primary:active {
-            transform: scale(0.97); /* нажатие при клике */
-        }
-
-        /* сдвиг строк при наведении */
-        tbody tr:not(.empty-row):not(.skeleton-row), .account-card-item {
-            transition: transform 0.2s ease, background-color 0.2s ease;
-        }
-        tbody tr:not(.empty-row):not(.skeleton-row):hover {
-            transform: translateX(4px); /* сдвиг вправо */
-            background-color: var(--bg-hover) !important;
-        }
-        tr.empty-row, tr.skeleton-row, thead tr {
-            background-color: transparent !important;
-            transform: none !important;
-            cursor: default !important;
-        }
-        tr.empty-row:hover, tr.skeleton-row:hover, thead tr:hover {
-            background-color: transparent !important;
-            transform: none !important;
-        }
-        .b-progress-bar {
-            /* плавная анимация прогресс-бара */
-            transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease !important;
-        }
-
-        /* плавная подсветка навигации в сайдбаре */
-        .nav-links li a {
-            position: relative;
-            transition: color 0.3s ease, padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 0px solid transparent; /* плавное появление рамки */
-        }
-        .nav-links li a:hover, .nav-links li a.active {
-            padding-left: 12px;
-            border-left: 3px solid var(--accent-color);
-            color: var(--text-title);
-        }
-        /* неоновое свечение текста активного пункта */
-        :root[data-theme="dark"] .nav-links li a.active {
-            text-shadow: 0 0 8px rgba(0, 255, 102, 0.4);
-        }
-
-        /* анимация вращения кнопки удаления */
-        .tx-delete-btn, .cat-delete-btn {
-            transition: transform 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
-            transform-origin: center;
-        }
-        .tx-delete-btn:hover, .cat-delete-btn:hover {
-            transform: scale(1.3) rotate(90deg); /* поворот и увеличение крестика */
-            color: var(--color-expense) !important;
-        }
-        :root[data-theme="dark"] .tx-delete-btn:hover,
-        :root[data-theme="dark"] .cat-delete-btn:hover {
-            text-shadow: 0 0 10px var(--color-expense); /* красный неон */
-        }
-
-        /* мягкий фокус и подсветка полей ввода */
-        .form-input {
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
-        }
-        .form-input:focus {
-            background-color: var(--bg-card); /* подсветка поля при вводе */
-        }
-        :root[data-theme="dark"] .form-input:focus {
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.15); /* неоновый ореол вокруг инпута */
-        }
-
-        /* стили бейджей типов операций */
-        .badge-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 8px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: var(--bg-input);
+            padding: 9px 12px;
             color: var(--text-muted);
-            border: 1px solid var(--border-input);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13.5px;
+            border-radius: var(--btn-radius);
+            transition: all 0.15s ease;
+            cursor: pointer;
         }
-        .tx-badge {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: bold;
-            flex-shrink: 0;
+        .nav-links li a:hover {
+            color: var(--text-title);
+            background: var(--bg-hover);
         }
-        .tx-badge.income {
-            background: rgba(0, 255, 102, 0.15);
-            color: var(--color-income);
+        .nav-links li a.active {
+            color: var(--text-title);
+            background: var(--bg-active);
+            font-weight: 600;
         }
-        .tx-badge.expense {
-            background: rgba(255, 0, 85, 0.15);
-            color: var(--color-expense);
+        .nav-links li a.active svg {
+            color: var(--accent-color);
         }
-        .tx-badge.transfer {
-            background: rgba(80, 160, 255, 0.15);
-            color: #50a0ff;
+        .nav-links li a .kbd-hint {
+            margin-left: auto;
+            opacity: 0.6;
+        }
+        .nav-links li a:hover .kbd-hint,
+        .nav-links li a.active .kbd-hint {
+            opacity: 1;
         }
 
-        /* переключатель цветовой темы день/ночь */
+        /* Переключатель темы внизу сайдбара */
+        .theme-selector-container {
+            margin-top: auto;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+        }
         .theme-toggle-switch {
-            display: inline-flex;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--btn-radius);
             cursor: pointer;
-            user-select: none;
-            padding: 2px;
+            transition: all 0.15s ease;
+        }
+        .theme-toggle-switch:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+        .theme-toggle-label {
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-muted);
         }
         .theme-toggle-track {
-            width: 48px;
-            height: 24px;
+            width: 44px;
+            height: 22px;
             background: var(--bg-input);
             border: 1px solid var(--border-input);
-            border-radius: 12px;
+            border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 5px;
+            padding: 0 4px;
             position: relative;
-            transition: all 0.3s ease;
-        }
-        .theme-toggle-switch:hover .theme-toggle-track {
-            border-color: var(--accent-color);
         }
         .theme-toggle-thumb {
             position: absolute;
             top: 2px;
             left: 2px;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             background: var(--accent-color);
             border-radius: 50%;
-            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-            z-index: 1;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         :root[data-theme="light"] .theme-toggle-thumb {
-            transform: translateX(24px);
+            transform: translateX(22px);
         }
         .theme-icon-sun, .theme-icon-moon {
-            color: var(--text-muted);
-            transition: color 0.2s ease, opacity 0.2s ease;
             z-index: 2;
-            cursor: pointer;
-        }
-        :root[data-theme="dark"] .theme-icon-moon {
-            color: #000000;
-        }
-        :root[data-theme="dark"] .theme-icon-sun {
+            width: 11px;
+            height: 11px;
             color: var(--text-muted);
-            opacity: 0.5;
+            opacity: 0.6;
         }
-        :root[data-theme="light"] .theme-icon-sun {
-            color: #ffffff;
-        }
-        :root[data-theme="light"] .theme-icon-moon {
-            color: var(--text-muted);
-            opacity: 0.5;
-        }
+        :root[data-theme="dark"] .theme-icon-moon { color: #ffffff; opacity: 1; }
+        :root[data-theme="light"] .theme-icon-sun { color: #ffffff; opacity: 1; }
 
-        /* всплывающие тост-уведомления */
-        .toast-container {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
+        /* ========================================================
+           ОСНОВНАЯ РАБОЧАЯ ОБЛАСТЬ
+           ======================================================== */
+        .main-content {
+            flex: 1;
+            background-color: var(--bg-page);
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            z-index: 9999;
-            pointer-events: none;
+            overflow: hidden;
+            transition: background-color 0.2s ease;
         }
-        .toast {
-            pointer-events: auto;
-            min-width: 280px;
-            max-width: 380px;
-            background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-radius: var(--card-radius);
-            box-shadow: var(--card-shadow), 0 8px 24px rgba(0,0,0,0.25);
-            padding: 12px 16px;
+
+        .main-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 32px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-page);
+            flex-shrink: 0;
+        }
+        .main-header-left {
             display: flex;
             align-items: center;
             gap: 12px;
-            animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            position: relative;
-            overflow: hidden;
+        }
+        .main-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-scroll-area {
+            flex: 1;
+            padding: 24px 32px 40px 32px;
+            overflow-y: auto;
+        }
+
+        /* ========================================================
+           КОМПОНЕНТЫ: КАРТОЧКИ И BENTO GRID
+           ======================================================== */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+        }
+
+        /* Bento Grid архитектура */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .bento-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .bento-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        /* Эффект стеклянной фаски (Hairline Inner Highlight) и вертикальный градиент */
+        :root[data-theme="dark"] .bento-card,
+        :root[data-theme="dark"] .card,
+        :root[data-theme="dark"] .modal-content,
+        :root[data-theme="dark"] .sheet-panel {
+            background: linear-gradient(180deg, #16161b 0%, #121216 100%);
+            box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 10px -2px rgba(0, 0, 0, 0.45);
+        }
+        :root[data-theme="dark"] .bento-card:hover,
+        :root[data-theme="dark"] .card:hover {
+            background: linear-gradient(180deg, #1b1b22 0%, #15151a 100%);
+        }
+        :root[data-theme="dark"] .bento-hero {
+            background: linear-gradient(145deg, #181822 0%, #121216 100%) !important;
+        }
+
+        :root[data-theme="light"] .bento-card,
+        :root[data-theme="light"] .card,
+        :root[data-theme="light"] .modal-content,
+        :root[data-theme="light"] .sheet-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #faf8f5 100%);
+            box-shadow: 0 1px 3px rgba(35, 25, 15, 0.04), 0 8px 24px -4px rgba(35, 25, 15, 0.05);
+        }
+        :root[data-theme="light"] .bento-card:hover,
+        :root[data-theme="light"] .card:hover {
+            background: linear-gradient(180deg, #ffffff 0%, #f5f2eb 100%);
+            box-shadow: 0 4px 16px rgba(40, 30, 20, 0.08);
+        }
+        :root[data-theme="light"] .bento-hero {
+            background: linear-gradient(145deg, #ffffff 0%, #f6f3ed 100%) !important;
+        }
+
+        /* 1. Hero Bento Card (доминанта, 8 колонок) */
+        .bento-hero {
+            grid-column: span 8;
+            padding: 24px;
+        }
+        .bento-hero-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .bento-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .hero-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-title);
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+        .hero-net-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        .net-flow-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--chip-radius);
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            background: var(--color-income-subtle);
+            color: var(--color-income);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .net-flow-badge.negative {
+            background: var(--color-expense-subtle);
+            color: var(--color-expense);
+            border-color: rgba(244, 63, 94, 0.25);
+        }
+        .net-flow-subtext {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Sparkline в Hero Bento */
+        .hero-sparkline-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            transition: all 0.15s ease;
+        }
+        @media (max-width: 680px) {
+            .hero-sparkline-wrap {
+                display: none;
+            }
+        }
+        .sparkline-tag {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: color 0.15s ease;
+        }
+        .sparkline-svg-container {
+            width: 130px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: crosshair;
+        }
+        .sparkline-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .sparkline-stroke {
+            stroke-dasharray: 250;
+            stroke-dashoffset: 250;
+            animation: drawSparkline 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes drawSparkline {
+            to { stroke-dashoffset: 0; }
+        }
+        .sparkline-dot {
+            animation: popSparklineDot 0.3s cubic-bezier(0.16, 1, 0.3, 1) 0.8s backwards;
+        }
+        @keyframes popSparklineDot {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Кнопки быстрых действий внутри Hero Bento */
+        .hero-quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        .btn-quick-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: var(--btn-radius);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-title);
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .btn-quick-action:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-hover);
+            transform: translateY(-1px);
+        }
+        .btn-quick-action.action-income:hover {
+            border-color: var(--color-income);
+            color: var(--color-income);
+        }
+        .btn-quick-action.action-expense:hover {
+            border-color: var(--color-expense);
+            color: var(--color-expense);
+        }
+        .btn-quick-action.action-transfer:hover {
+            border-color: var(--color-transfer);
+            color: var(--color-transfer);
+        }
+        .action-icon {
+            font-weight: 800;
             font-size: 14px;
         }
-        .toast.toast-hiding {
-            opacity: 0;
-            transform: translateX(30px);
+
+        /* 2 & 3. Доход и Расход за месяц (по 4 колонки) */
+        .bento-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
         }
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: var(--accent-color);
-            width: 100%;
-            animation: toastProgress 3.5s linear forwards;
+        .bento-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
         }
-        .toast.toast-error .toast-progress {
-            background: var(--color-expense);
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: var(--chip-radius);
+            font-size: 11px;
+            font-weight: 600;
         }
-        .toast.toast-success .toast-progress {
-            background: var(--color-income);
+        .pill-income {
+            background: var(--color-income-subtle);
+            color: var(--color-income);
         }
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(12px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        .pill-expense {
+            background: var(--color-expense-subtle);
+            color: var(--color-expense);
         }
-        @keyframes toastProgress {
-            from { width: 100%; }
-            to { width: 0%; }
+        .pill-budget {
+            background: var(--color-warning-subtle);
+            color: var(--color-warning);
+        }
+        .pill-budget.good {
+            background: var(--color-income-subtle);
+            color: var(--color-income);
+        }
+        .pill-budget.exceeded {
+            background: var(--color-expense-subtle);
+            color: var(--color-expense);
         }
 
-        /* скелетоны и эффект мерцания во время загрузки данных */
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+        .metric-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-title);
+            margin-bottom: 6px;
         }
-        .skeleton {
-            background: linear-gradient(90deg, var(--bg-card) 20%, var(--bg-hover) 50%, var(--bg-card) 80%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            border-radius: var(--card-radius);
-        }
-        .skeleton-text {
-            height: 14px;
-            margin-bottom: 8px;
-            border-radius: 4px;
+        .metric-val.income-color { color: var(--color-income); }
+        .metric-val.expense-color { color: var(--color-expense); }
+        .bento-stat-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
         }
 
-        /* быстрые фильтры-плашки */
-        .chips-container, .chip-group-wrap {
+        .bento-hero { grid-column: span 8; }
+        .bento-savings-goals { grid-column: span 4; display: flex; flex-direction: column; }
+        .bento-income { grid-column: span 6; }
+        .bento-expense { grid-column: span 6; }
+        .bento-top-categories { grid-column: span 8; }
+        .bento-accounts { grid-column: span 4; }
+
+        /* Копилки и цели в Bento */
+        .bento-savings-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 18px;
+            margin-top: 8px;
+            overflow-y: auto;
+            max-height: 200px;
         }
-        .chips-row, .segmented-group {
+        .bento-savings-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+            cursor: pointer;
+        }
+        .bento-savings-item:hover {
+            background: var(--border-color);
+            border-color: var(--border-hover);
+        }
+        .bento-savings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bento-savings-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-title);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 170px;
+        }
+        .bento-savings-pct {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+        .bento-savings-bar-track {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-page);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        .bento-savings-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--accent-color);
+            transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+        }
+        .bento-savings-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        .btn-text-link {
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.15s ease;
+        }
+        .btn-text-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .b-progress-bar-track {
+            width: 100%;
+            height: 7px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .b-progress-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: var(--accent-color);
+            transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+        }
+
+        /* Список счетов в мини Bento */
+        .bento-link-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+        }
+        .bento-link-btn:hover {
+            text-decoration: underline;
+        }
+        .bento-mini-accounts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .bento-mini-acc-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .bento-mini-acc-item:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+        .bento-mini-acc-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        .bento-mini-acc-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-title);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bento-mini-acc-balance {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        /* Топ категорий в Bento */
+        .bento-categories-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .bento-cat-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            border-radius: var(--btn-radius);
+            transition: all 0.15s ease;
+        }
+        .bento-cat-row:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+        }
+        .bento-cat-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 3px;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+        }
+        :root[data-theme="light"] .bento-cat-dot {
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
+        }
+        .bento-cat-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-title);
+            min-width: 120px;
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .bento-cat-bar-wrap {
+            flex: 1;
+            height: 6px;
+            background: var(--bg-hover);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bento-cat-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bento-cat-amount {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        .bento-muted-badge {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================================
+           КОМПОНЕНТЫ: КНОПКИ, ИНПУТЫ, ЧИПСЫ
+           ======================================================== */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--accent-color);
+            color: var(--accent-text);
+            font-weight: 600;
+            font-size: 13.5px;
+            border: none;
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+            line-height: 1.3;
+        }
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+        .btn-primary:active {
+            transform: scale(0.972);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 13.5px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s ease;
+            line-height: 1.3;
+        }
+        .btn-secondary:hover {
+            color: var(--text-title);
+            border-color: var(--border-hover);
+            background: var(--bg-hover);
+        }
+
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: var(--color-expense-subtle);
+            color: var(--color-expense);
+            font-weight: 600;
+            font-size: 13.5px;
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+        .btn-danger:hover {
+            background: var(--color-expense);
+            color: #ffffff;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-input);
+            border-radius: var(--input-radius);
+            outline: none;
+            font-family: inherit;
+            font-size: 13.5px;
+            transition: border-color 0.15s ease, background-color 0.15s ease;
+            margin-bottom: 14px;
+        }
+        .form-input:focus {
+            border-color: var(--border-input-focus);
+            background: var(--bg-input-focus);
+        }
+
+        /* Быстрые фильтры-чипсы (единый радиус 20px) */
+        .chips-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .chips-row {
             display: flex;
             align-items: center;
             gap: 12px;
@@ -646,846 +1073,977 @@
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.05em;
             min-width: 60px;
-            user-select: none;
-            opacity: 0.8;
         }
         .filter-chips {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
             align-items: center;
         }
-        .filter-chip, .segmented-btn {
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            appearance: none !important;
-            border-radius: 9999px !important; /* форма капсулы */
-            padding: 6px 14px !important;
-            font-size: 13px !important;
-            font-weight: 600 !important;
+        .filter-chip {
+            border-radius: var(--chip-radius) !important;
+            padding: 5px 12px !important;
+            font-size: 12.5px !important;
+            font-weight: 500 !important;
             cursor: pointer !important;
             white-space: nowrap !important;
-            transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-            user-select: none !important;
+            transition: all 0.15s ease !important;
             display: inline-flex !important;
             align-items: center !important;
             gap: 6px !important;
             font-family: inherit !important;
             outline: none !important;
-            line-height: 1.2 !important;
-        }
-
-        /* темная тема: неоновые плашки */
-        :root[data-theme="dark"] .filter-chip,
-        :root[data-theme="dark"] .segmented-btn {
-            background: #0d1410 !important;
-            border: 1px solid rgba(0, 255, 102, 0.25) !important;
-            color: #9ab4a5 !important;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
-        }
-        :root[data-theme="dark"] .filter-chip:hover,
-        :root[data-theme="dark"] .segmented-btn:hover {
-            border-color: #00ff66 !important;
-            color: #ffffff !important;
-            background: #132418 !important;
-            transform: translateY(-1px) !important;
-            box-shadow: 0 0 10px rgba(0, 255, 102, 0.2) !important;
-        }
-        :root[data-theme="dark"] .filter-chip.active,
-        :root[data-theme="dark"] .segmented-btn.active {
-            background: rgba(0, 255, 102, 0.15) !important;
-            color: #00ff66 !important;
-            border: 1.5px solid #00ff66 !important;
-            box-shadow: 0 0 14px rgba(0, 255, 102, 0.25), inset 0 0 8px rgba(0, 255, 102, 0.08) !important;
-            font-weight: 700 !important;
-        }
-
-        /* светлая тема: пастельные бумажные плашки */
-        :root[data-theme="light"] .filter-chip,
-        :root[data-theme="light"] .segmented-btn {
-            background: #ede6d8 !important;
-            border: 1px solid #d4c8b4 !important;
-            color: #554b3e !important;
-            box-shadow: 0 1px 3px rgba(90, 70, 50, 0.08) !important;
-        }
-        :root[data-theme="light"] .filter-chip:hover,
-        :root[data-theme="light"] .segmented-btn:hover {
-            background: #e4dccb !important;
-            border-color: #72968b !important;
-            color: #2c251d !important;
-            transform: translateY(-1px) !important;
-        }
-        :root[data-theme="light"] .filter-chip.active,
-        :root[data-theme="light"] .segmented-btn.active {
-            background: #72968b !important;
-            color: #ffffff !important;
-            border: 1.5px solid #5b7c72 !important;
-            box-shadow: 0 3px 10px rgba(114, 150, 139, 0.35) !important;
-            font-weight: 600 !important;
-        }
-
-        /* микро-бейдж стрелки внутри плашки */
-        .chip-badge, .chip-icon {
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            width: 18px !important;
-            height: 18px !important;
-            border-radius: 50% !important;
-            font-size: 11px !important;
-            font-weight: 800 !important;
-            line-height: 1 !important;
-            flex-shrink: 0 !important;
-        }
-        .chip-badge.expense, .chip-icon.icon-expense {
-            background: rgba(255, 0, 85, 0.18) !important;
-            color: var(--color-expense) !important;
-        }
-        .chip-badge.income, .chip-icon.icon-income {
-            background: rgba(0, 255, 102, 0.18) !important;
-            color: var(--color-income) !important;
-        }
-        .chip-badge.transfer, .chip-icon.icon-transfer {
-            background: rgba(80, 160, 255, 0.2) !important;
-            color: #50a0ff !important;
-        }
-        .chip-badge.regular, .chip-icon.icon-regular {
-            background: rgba(140, 140, 140, 0.2) !important;
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
             color: var(--text-muted) !important;
         }
-        :root[data-theme="light"] .filter-chip.active .chip-badge,
-        :root[data-theme="light"] .segmented-btn.active .chip-icon {
-            background: rgba(255, 255, 255, 0.25) !important;
-            color: #ffffff !important;
+        .filter-chip:hover {
+            color: var(--text-title) !important;
+            border-color: var(--border-hover) !important;
+            background: var(--bg-card-hover) !important;
+        }
+        .filter-chip.active {
+            background: var(--bg-active) !important;
+            border-color: var(--accent-color) !important;
+            color: var(--accent-color) !important;
+            font-weight: 600 !important;
+        }
+        .chip-badge {
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .chip-badge.income { color: var(--color-income); }
+        .chip-badge.expense { color: var(--color-expense); }
+        .chip-badge.transfer { color: var(--color-transfer); }
+
+        /* Бейджи статусов */
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: var(--chip-radius);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            background: var(--bg-hover);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
         }
 
-        /* блок пустого состояния при отсутствии записей */
+        .tx-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .tx-badge.income {
+            background: var(--color-income-subtle);
+            color: var(--color-income);
+        }
+        .tx-badge.expense {
+            background: var(--color-expense-subtle);
+            color: var(--color-expense);
+        }
+        .tx-badge.transfer {
+            background: var(--color-transfer-subtle);
+            color: var(--color-transfer);
+        }
+
+        /* Баннер предупреждений бюджета */
+        .budget-alert-banner {
+            background: var(--color-expense-subtle);
+            border: 1px solid var(--color-expense);
+            border-radius: var(--card-radius);
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            animation: fadeIn 0.25s ease;
+        }
+        .budget-alert-banner.warning {
+            background: var(--color-warning-subtle);
+            border-color: var(--color-warning);
+        }
+        .budget-alert-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .budget-alert-icon { font-size: 20px; line-height: 1; }
+        .budget-alert-text strong {
+            display: block;
+            font-size: 13.5px;
+            color: var(--text-title);
+            margin-bottom: 2px;
+        }
+        .budget-alert-text span {
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+        .btn-alert-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .btn-alert-close:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-title);
+        }
+
+        /* Аналитика: Сетка графиков и двуколоночная адаптивная легенда */
+        .analytics-charts-grid {
+            display: grid;
+            grid-template-columns: minmax(450px, 1.28fr) 1.72fr;
+            gap: 16px;
+            align-items: start;
+        }
+        @media (max-width: 1080px) {
+            .analytics-charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .analytics-category-card {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            overflow: visible;
+        }
+        .analytics-yearly-card {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+        .analytics-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .analytics-card-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-title);
+            margin: 0;
+        }
+        .category-chart-container {
+            width: 100%;
+            max-width: 230px;
+            height: 230px;
+            margin: 0 auto 14px auto;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .yearly-chart-container {
+            width: 100%;
+            position: relative;
+        }
+        .category-legend-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 8px 10px;
+            width: 100%;
+            margin-top: 8px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+        }
+        .category-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-title);
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: var(--radius-sm);
+            transition: background 0.15s ease, opacity 0.15s ease;
+            user-select: none;
+            min-width: 0;
+        }
+        .category-legend-item:hover {
+            background: var(--bg-hover);
+        }
+        .category-legend-item.hidden-cat {
+            opacity: 0.35;
+            text-decoration: line-through;
+        }
+        .category-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .category-legend-name {
+            flex: 1;
+            min-width: 0;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+        .category-legend-pct {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-left: auto;
+            flex-shrink: 0;
+            padding-left: 4px;
+        }
+
+        /* ========================================================
+           МОДАЛЬНЫЕ ОКНА (ЦЕНТРИРОВАННЫЕ ДИАЛОГИ)
+           ======================================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.18s ease;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: var(--card-radius);
+            width: 420px;
+            max-width: 90vw;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--modal-shadow);
+            color: var(--text-main);
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .modal-close-btn:hover {
+            color: var(--text-title);
+            background: var(--bg-hover);
+        }
+
+        /* ========================================================
+           ВЫДВИЖНАЯ БОКОВАЯ ПАНЕЛЬ СПРАВА (SHEET / DRAWER 400PX)
+           ======================================================== */
+        .sheet-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            z-index: 1200;
+            justify-content: flex-end;
+            animation: fadeIn 0.2s ease;
+        }
+        .sheet-panel {
+            width: 400px;
+            max-width: 100vw;
+            height: 100%;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .sheet-overlay.sheet-open {
+            display: flex;
+        }
+        .sheet-overlay.sheet-open .sheet-panel {
+            transform: translateX(0);
+        }
+        .sheet-overlay.sheet-closing {
+            animation: fadeOut 0.2s ease forwards;
+        }
+        .sheet-overlay.sheet-closing .sheet-panel {
+            transform: translateX(100%);
+        }
+
+        .sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+        .sheet-eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+            display: block;
+        }
+        .sheet-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .sheet-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 20px 0 10px 0;
+        }
+        .sheet-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            background: var(--bg-card);
+        }
+
+        /* Адаптивность боковой панели для мобильных экранов */
+        @media (max-width: 640px) {
+            .sheet-panel {
+                width: 100%;
+                max-width: 100%;
+                border-left: none;
+                border-radius: 0;
+            }
+            .sheet-header,
+            .sheet-body,
+            .sheet-footer {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+        }
+
+        /* ========================================================
+           COMMAND PALETTE (CTRL+K)
+           ======================================================== */
+        .cmd-palette-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--card-radius);
+            box-shadow: var(--modal-shadow);
+            width: 540px;
+            max-width: 90vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .cmd-palette-search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cmd-palette-search svg {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .cmd-palette-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-title);
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .cmd-palette-list {
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .cmd-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: var(--btn-radius);
+            cursor: pointer;
+            font-size: 13.5px;
+            color: var(--text-main);
+            transition: all 0.1s ease;
+        }
+        .cmd-item:hover, .cmd-item.selected {
+            background: var(--bg-hover);
+            color: var(--text-title);
+        }
+        .cmd-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cmd-category-tag {
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--bg-hover);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+        .cmd-palette-footer {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 10px 18px;
+            background: var(--bg-hover);
+            border-top: 1px solid var(--border-color);
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        /* ========================================================
+           УВЕДОМЛЕНИЯ (TOASTS)
+           ======================================================== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            min-width: 280px;
+            max-width: 360px;
+            background: var(--bg-card);
+            color: var(--text-title);
+            border: 1px solid var(--border-color);
+            border-radius: var(--btn-radius);
+            box-shadow: var(--modal-shadow);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 13.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        .toast-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent-color);
+            width: 100%;
+            animation: toastProgress 3.5s linear forwards;
+        }
+        .toast.toast-error .toast-progress { background: var(--color-expense); }
+        .toast.toast-success .toast-progress { background: var(--color-income); }
+
+        /* ========================================================
+           ПУСТЫЕ СОСТОЯНИЯ И СКЕЛЕТОНЫ
+           ======================================================== */
         .empty-state {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 36px 20px;
+            padding: 42px 24px;
             text-align: center;
             color: var(--text-muted);
-            border: none;
-            background: transparent !important;
-            box-shadow: none !important;
-            user-select: none;
+            border: 1px dashed var(--border-color);
+            border-radius: var(--card-radius);
+            background: var(--bg-hover);
+            margin: 8px 0;
         }
         .empty-state-icon {
-            width: 54px;
-            height: 54px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: var(--bg-input) !important;
-            border: 1px solid var(--border-input);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             color: var(--text-muted);
-            pointer-events: none !important;
-            transition: none !important;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-        .empty-state-icon svg {
-            stroke: var(--text-muted);
-            opacity: 0.65;
-            pointer-events: none !important;
-            transition: none !important;
-            transform: none !important;
-        }
-        .empty-state-icon:hover, .empty-state:hover {
-            background-color: transparent !important;
-            transform: none !important;
-            box-shadow: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .empty-state h4 {
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 600;
             color: var(--text-title);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
+            letter-spacing: -0.015em;
         }
         .empty-state p {
             font-size: 13px;
-            max-width: 360px;
-            line-height: 1.5;
-            margin-bottom: 18px;
+            max-width: 340px;
+            line-height: 1.4;
+            margin-bottom: 16px;
         }
 
-        /* предупреждающие баннеры о превышении бюджета на дашборде */
-        .budget-alert-banner {
-            background: rgba(255, 0, 85, 0.08);
-            border: 1px solid var(--color-expense);
-            border-radius: var(--card-radius);
-            padding: 14px 18px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            box-shadow: 0 4px 14px rgba(255, 0, 85, 0.1);
+        /* Мягкая бегущая волна на скелетонах (Shimmer Wave) */
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-hover) 20%, rgba(255, 255, 255, 0.08) 50%, var(--bg-hover) 80%);
+            background-size: 200% 100%;
+            animation: shimmerWave 1.6s infinite ease-in-out;
+            border-radius: 4px;
         }
-        .budget-alert-banner.warning {
-            background: rgba(243, 156, 18, 0.09);
-            border-color: #f39c12;
-            box-shadow: 0 4px 14px rgba(243, 156, 18, 0.1);
+        :root[data-theme="light"] .skeleton {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.04) 20%, rgba(0, 0, 0, 0.09) 50%, rgba(0, 0, 0, 0.04) 80%);
+            background-size: 200% 100%;
+            animation: shimmerWave 1.6s infinite ease-in-out;
         }
-        .budget-alert-content {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .budget-alert-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-            line-height: 1;
-        }
-        .budget-alert-text strong {
-            display: block;
-            font-size: 14px;
-            color: var(--text-title);
-            margin-bottom: 3px;
-        }
-        .budget-alert-text span {
-            font-size: 13px;
-            color: var(--text-muted);
+        .skeleton-text {
+            height: 14px;
+            margin-bottom: 8px;
         }
 
-        /* подсказки горячих клавиш клавиатуры */
-        .kbd-hint {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            font-family: inherit;
-            color: var(--text-muted);
-            margin-left: 6px;
-            opacity: 0.75;
-            vertical-align: middle;
-            line-height: 1;
-            user-select: none;
-            letter-spacing: 0.5px;
+        /* Интерактивные строки таблицы транзакций */
+        #transactions-table tr {
+            transition: background-color 0.12s ease;
         }
-        .btn-primary .kbd-hint {
-            color: var(--accent-text);
-            opacity: 0.85;
-            font-weight: 600;
+        #transactions-table tr:hover {
+            background-color: var(--bg-hover) !important;
         }
-        .nav-links li a .kbd-hint {
-            margin-left: auto;
-            opacity: 0.5;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .nav-links li a:hover .kbd-hint,
-        .nav-links li a.active .kbd-hint {
-            color: var(--accent-color);
-            opacity: 0.9;
-        }
-        .btn-secondary .kbd-hint {
-            opacity: 0.55;
-            font-size: 11px;
-        }
-
-        /* неоновый блик следующий за курсором */
-        .card, .account-card-item {
-            position: relative;
-        }
-        .card::before, .account-card-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            padding: 1px;
-            background: radial-gradient(300px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(0, 255, 102, 0.4), transparent 70%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 1;
-        }
-        :root[data-theme="light"] .card::before,
-        :root[data-theme="light"] .account-card-item::before {
-            background: radial-gradient(300px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(114, 150, 139, 0.45), transparent 70%);
-        }
-        .card:hover::before, .account-card-item:hover::before {
+        #transactions-table tr:hover .tx-delete-btn {
             opacity: 1;
         }
-
-        /* бегущий луч по контуру рамки */
-        .card-featured {
-            position: relative;
-            overflow: hidden;
-            padding: 2px !important;
-            border: 1px solid transparent !important;
+        .tx-delete-btn {
+            opacity: 0.35;
+            transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease, transform 0.08s ease;
         }
-        .card-featured-glow {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent 0deg, var(--accent-color) 40deg, transparent 90deg);
-            animation: rotateGlow 4.5s linear infinite;
-            pointer-events: none;
-            z-index: 1;
-        }
-        .card-featured-inner {
-            position: relative;
-            z-index: 2;
-            background: var(--bg-card);
-            border-radius: calc(var(--card-radius) - 1px);
-            padding: 18px;
-            height: 100%;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        @keyframes rotateGlow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .tx-delete-btn:hover {
+            opacity: 1;
+            color: var(--color-expense) !important;
+            background: var(--color-expense-subtle) !important;
         }
 
-        /* каскадное появление элементов списка */
-        @keyframes cascadeSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-cascade {
-            animation: cascadeSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
-            animation-delay: calc(var(--item-idx, 0) * 35ms);
-        }
-
-        /* анимация плавного исчезновения при удалении строки */
-        .row-deleting {
-            animation: rowCollapse 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-            pointer-events: none !important;
-            overflow: hidden !important;
-        }
-        @keyframes rowCollapse {
-            0% {
-                opacity: 1;
-                transform: translateX(0);
-                max-height: 90px;
-            }
-            40% {
-                opacity: 0;
-                transform: translateX(35px);
-                max-height: 90px;
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(50px);
-                max-height: 0;
-                padding-top: 0 !important;
-                padding-bottom: 0 !important;
-                margin-top: 0 !important;
-                margin-bottom: 0 !important;
-                border-width: 0 !important;
-            }
+        /* Физический отклик кнопок при нажатии */
+        .btn-primary:active,
+        .btn-secondary:active,
+        .btn-danger:active,
+        .btn-quick-action:active,
+        .filter-chip:active,
+        .theme-toggle-switch:active,
+        .btn-alert-close:active,
+        .modal-close-btn:active,
+        .tx-delete-btn:active,
+        .cat-delete-btn:active {
+            transform: scale(0.972);
+            transition: transform 0.05s ease;
         }
 
-        /* эффект расходящейся круговой волны при нажатии (ripple) */
-        .btn-primary, .btn-secondary {
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            transform: scale(0);
-            animation: rippleAnim 0.55s ease-out;
-            pointer-events: none;
-        }
-        :root[data-theme="dark"] .btn-primary .btn-ripple {
-            background: rgba(0, 0, 0, 0.25);
-        }
-        @keyframes rippleAnim {
-            to {
-                transform: scale(4);
-                opacity: 0;
-            }
+        /* Мягкий фокус-контур в стиле Shadcn */
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        .nav-links a:focus-visible,
+        .theme-toggle-switch:focus-visible {
+            outline: none !important;
+            box-shadow: 0 0 0 2px var(--bg-card), 0 0 0 4px var(--accent-color) !important;
         }
 
-        /* анимация плавного закрытия модального окна */
-        @keyframes modalOverlayFadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        @keyframes modalContentPopOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.93); }
-        }
-        .modal-overlay.modal-closing {
-            animation: modalOverlayFadeOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .modal-overlay.modal-closing .modal-content {
-            animation: modalContentPopOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        /* Плавная кинетика смены страниц (Page Crossfade) */
+        .page-view {
+            animation: pageCrossfade 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        /* пульсирующее предупреждение о превышении бюджета */
-        @keyframes pulseAlertGlow {
-            0%, 100% {
-                box-shadow: 0 0 10px rgba(255, 0, 85, 0.15);
-            }
-            50% {
-                box-shadow: 0 0 22px rgba(255, 0, 85, 0.45);
-                border-color: rgba(255, 0, 85, 0.9);
-            }
+        /* Анимации */
+        @keyframes pageCrossfade {
+            from { opacity: 0; transform: translateY(4px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulseWarningGlow {
-            0%, 100% {
-                box-shadow: 0 0 10px rgba(243, 156, 18, 0.15);
-            }
-            50% {
-                box-shadow: 0 0 22px rgba(243, 156, 18, 0.45);
-                border-color: rgba(243, 156, 18, 0.9);
-            }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to   { opacity: 1; transform: scale(1); }
         }
-        .budget-alert-banner {
-            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulseAlertGlow 2.5s infinite ease-in-out !important;
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        .budget-alert-banner.warning {
-            animation: fadeInSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, pulseWarningGlow 2.5s infinite ease-in-out !important;
-        }
-        .budget-exceeded-pulse {
-            animation: pulseAlertGlow 2.2s infinite ease-in-out !important;
+        @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+        @keyframes shimmerWave {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
-        /* значок достижения цели накопления */
-        .goal-achieved-badge {
-            background: rgba(0, 255, 102, 0.15);
-            color: var(--color-income);
-            border: 1px solid var(--color-income);
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            animation: pulseAlertGlow 3s infinite ease-in-out;
+        /* Мобильная шапка и нижний таб-бар по умолчанию скрыты на десктопе */
+        .mobile-top-header {
+            display: none;
+        }
+        .mobile-bottom-nav {
+            display: none;
         }
 
-        /* вспомогательные классы разметки */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .tx-controls-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .tx-search-container {
-            flex: 1;
-            min-width: 220px;
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .tx-dropdowns-container {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .budget-actions-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-
-        .analytics-controls {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .analytics-charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
-        }
-
-        /* адаптация для мобильных устройств (ширина экрана до 768px) */
+        /* ========================================================
+           АДАПТИВНАЯ МОБИЛЬНАЯ ВЕРСТКА ДЛЯ ТЕЛЕФОНОВ И ПЛАНШЕТОВ
+           ======================================================== */
         @media (max-width: 768px) {
-            html, body {
-                height: 100%;
-                overflow: hidden;
-                width: 100vw;
-                max-width: 100%;
-                position: fixed;
-                inset: 0;
+            /* Скрытие десктопного сайдбара */
+            .sidebar {
+                display: none !important;
             }
 
             body {
-                flex-direction: column;
-                height: 100dvh;
-                min-height: 100vh;
-                width: 100%;
-                min-width: 0;
-                overflow: hidden;
+                flex-direction: column !important;
+                height: 100dvh !important;
+                min-height: 100vh !important;
+                width: 100vw !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+                position: fixed !important;
+                inset: 0 !important;
             }
 
-            /* трансформация десктопного сайдбара в нижний таб-бар */
-            .sidebar {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                min-width: 0;
-                max-width: 100%;
-                height: var(--bottom-nav-height);
-                min-height: calc(56px + var(--sab));
-                padding: 4px calc(6px + var(--sal)) var(--sab) calc(6px + var(--sar));
-                margin: 0;
-                background-color: var(--bg-sidebar-glass);
-                backdrop-filter: blur(24px) saturate(180%);
-                -webkit-backdrop-filter: blur(24px) saturate(180%);
-                border-top: 1px solid var(--border-color);
-                border-right: none;
-                border-bottom: none;
-                border-left: none;
+            /* Мобильная фиксированная шапка */
+            .mobile-top-header {
                 display: flex !important;
-                flex-direction: row !important;
                 align-items: center !important;
-                justify-content: space-around !important;
-                z-index: 1000;
-                box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
-                box-sizing: border-box;
+                justify-content: space-between !important;
+                padding: calc(8px + var(--sat)) calc(14px + var(--sar)) 8px calc(14px + var(--sal)) !important;
+                background-color: var(--bg-card);
+                border-bottom: 1px solid var(--border-color);
+                z-index: 100;
+                flex-shrink: 0;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+            }
+            :root[data-theme="dark"] .mobile-top-header {
+                background: rgba(15, 15, 18, 0.92) !important;
+                backdrop-filter: blur(16px) saturate(180%);
+                -webkit-backdrop-filter: blur(16px) saturate(180%);
+            }
+            :root[data-theme="light"] .mobile-top-header {
+                background: rgba(247, 244, 237, 0.94) !important;
+                backdrop-filter: blur(16px) saturate(180%);
+                -webkit-backdrop-filter: blur(16px) saturate(180%);
             }
 
-            /* скрытие логотипа и переключателя темы в нижнем таб-баре */
-            .sidebar .logo {
-                display: none !important;
+            .mobile-top-left {
+                display: flex;
+                align-items: center;
+                gap: 8px;
             }
-
-            .sidebar .theme-selector-container {
-                display: none !important;
-            }
-
-            /* горизонтальный ряд иконок таб-бара */
-            .sidebar .nav-links {
-                display: flex !important;
-                flex-direction: row !important;
-                width: 100% !important;
-                height: 100% !important;
-                justify-content: space-around !important;
-                align-items: center !important;
-                gap: 0 !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                list-style: none !important;
-            }
-
-            .sidebar .nav-links li {
-                flex: 1 1 0;
-                height: 100%;
+            .mobile-logo-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: var(--btn-radius);
+                background: var(--accent-color);
+                color: var(--accent-text);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                min-width: 0;
+                flex-shrink: 0;
+            }
+            .mobile-logo-title {
+                font-size: 15px;
+                font-weight: 700;
+                color: var(--text-title);
+                letter-spacing: -0.01em;
+            }
+            .mobile-top-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .mobile-action-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--bg-card);
+                border: 1px solid var(--border-color);
+                color: var(--text-main);
+                cursor: pointer;
+                transition: transform 0.1s ease, background 0.15s ease;
+                -webkit-tap-highlight-color: transparent;
+            }
+            .mobile-action-btn:active {
+                transform: scale(0.92);
+            }
+            .mobile-btn-add {
+                background: var(--accent-color) !important;
+                color: var(--accent-text) !important;
+                border-color: var(--accent-color) !important;
+                box-shadow: 0 2px 8px var(--accent-subtle);
+            }
+            :root[data-theme="dark"] .mobile-action-btn .theme-icon-sun { display: block; color: var(--accent-color); }
+            :root[data-theme="dark"] .mobile-action-btn .theme-icon-moon { display: none; }
+            :root[data-theme="light"] .mobile-action-btn .theme-icon-sun { display: none; }
+            :root[data-theme="light"] .mobile-action-btn .theme-icon-moon { display: block; color: var(--accent-color); }
+
+            /* Десктопный main-header на мобильном скрываем */
+            .main-header {
+                display: none !important;
             }
 
-            .sidebar .nav-links li a {
+            /* Мобильная нижняя панель навигации (Bottom Nav) */
+            .mobile-bottom-nav {
                 display: flex !important;
-                flex-direction: column !important;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                z-index: 1000 !important;
+                height: var(--bottom-nav-height) !important;
+                min-height: calc(56px + var(--sab)) !important;
+                padding: 4px calc(6px + var(--sal)) var(--sab) calc(6px + var(--sar)) !important;
+                box-sizing: border-box !important;
+                justify-content: space-around !important;
                 align-items: center !important;
-                justify-content: center !important;
-                gap: 3px !important;
-                width: 100% !important;
-                height: 100% !important;
-                min-height: 48px !important;
-                min-width: 44px !important;
-                padding: 4px 1px !important;
-                border-left: none !important;
-                border-top: none !important;
-                text-align: center;
-                background: transparent !important;
+                border-top: 1px solid var(--border-color) !important;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25) !important;
+            }
+            :root[data-theme="dark"] .mobile-bottom-nav {
+                background: rgba(15, 15, 18, 0.94) !important;
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+            }
+            :root[data-theme="light"] .mobile-bottom-nav {
+                background: rgba(247, 244, 237, 0.95) !important;
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
+            }
+
+            .mob-nav-item {
+                flex: 1 1 0;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2px;
+                min-height: 48px;
+                min-width: 44px;
+                padding: 4px 1px;
                 color: var(--text-muted);
                 text-decoration: none;
+                cursor: pointer;
                 transition: color 0.15s ease, transform 0.1s ease;
                 -webkit-tap-highlight-color: transparent;
                 user-select: none;
-                -webkit-user-select: none;
+                background: transparent;
+                border: none;
             }
-
-            .sidebar .nav-links li a svg {
-                width: 22px !important;
-                height: 22px !important;
-                stroke-width: 2;
-                transition: transform 0.15s ease, stroke 0.15s ease;
+            .mob-nav-item:active {
+                transform: scale(0.90);
+            }
+            .mob-nav-item svg {
+                width: 20px;
+                height: 20px;
                 flex-shrink: 0;
+                transition: stroke 0.15s ease, transform 0.15s ease;
             }
-
-            .sidebar .nav-links li a span:not(.kbd-hint) {
-                font-size: 10px !important;
-                font-weight: 600 !important;
-                line-height: 1.1 !important;
+            .mob-nav-item span {
+                font-size: 10px;
+                font-weight: 600;
+                line-height: 1.1;
                 letter-spacing: -0.2px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                max-width: 100%;
             }
-
-            /* скрытие подсказок горячих клавиш на сенсорных экранах */
-            .sidebar .nav-links li a .kbd-hint {
-                display: none !important;
-            }
-
-            /* тактильный отклик при нажатии на таб */
-            .sidebar .nav-links li a:active {
-                transform: scale(0.90);
-            }
-
-            /* активный таб в нижней панели */
-            .sidebar .nav-links li a.active {
+            .mob-nav-item.active {
                 color: var(--accent-color) !important;
-                padding-left: 1px !important;
-                border-left: none !important;
+            }
+            .mob-nav-item.active svg {
+                stroke: var(--accent-color) !important;
             }
 
-            :root[data-theme="dark"] .sidebar .nav-links li a.active svg {
-                filter: drop-shadow(0 0 6px var(--accent-color));
-            }
-
-            :root[data-theme="light"] .sidebar .nav-links li a.active svg {
-                stroke: var(--accent-color);
-            }
-
-            /* основная область с учетом безопасных зон safe-area */
+            /* Основная рабочая область */
             .main-content {
-                flex: 1;
-                width: 100%;
-                min-width: 0;
-                max-width: 100%;
-                overflow-y: auto;
-                overflow-x: hidden;
+                flex: 1 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                height: calc(100dvh - 54px) !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            .page-scroll-area {
+                flex: 1 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                padding: 14px calc(14px + var(--sal)) calc(var(--bottom-nav-height) + 24px) calc(14px + var(--sar)) !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
                 -webkit-overflow-scrolling: touch;
                 overscroll-behavior-y: contain;
-                padding-top: calc(14px + var(--sat)) !important;
-                padding-bottom: calc(var(--bottom-nav-height) + 24px) !important;
-                padding-left: calc(16px + var(--sal)) !important;
-                padding-right: calc(16px + var(--sar)) !important;
-                box-sizing: border-box;
+                box-sizing: border-box !important;
             }
 
-            /* мобильная шапка приложения */
-            .page-header {
-                margin-bottom: 16px;
-                padding-bottom: 12px;
-                border-bottom: 1px solid var(--border-color);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                min-width: 0;
-            }
-
-            .mobile-header-branding {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 11px;
-                font-weight: 700;
-                color: var(--accent-color);
-                margin-bottom: 2px;
-                text-shadow: var(--neon-glow-text);
-                letter-spacing: 0.6px;
-                text-transform: uppercase;
-            }
-
-            .page-header h1 {
-                font-size: 22px;
-                line-height: 1.2;
-                margin-bottom: 0;
-            }
-
-            /* кнопка переключения темы в мобильной шапке */
-            .mobile-header-theme-toggle {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 44px;
-                min-height: 44px;
-                width: 44px;
-                height: 44px;
-                background: var(--bg-card);
-                border: 1px solid var(--border-color);
-                border-radius: 50%;
-                cursor: pointer;
-                box-shadow: var(--card-shadow);
-                color: var(--text-main);
-                -webkit-tap-highlight-color: transparent;
-                transition: transform 0.15s ease, background-color 0.2s ease;
-                flex-shrink: 0;
-            }
-
-            .mobile-header-theme-toggle:active {
-                transform: scale(0.92);
-            }
-
-            :root[data-theme="dark"] .mobile-header-theme-toggle .theme-icon-sun {
-                display: block;
-                color: var(--accent-color);
-            }
-            :root[data-theme="dark"] .mobile-header-theme-toggle .theme-icon-moon {
-                display: none;
-            }
-            :root[data-theme="light"] .mobile-header-theme-toggle .theme-icon-sun {
-                display: none;
-            }
-            :root[data-theme="light"] .mobile-header-theme-toggle .theme-icon-moon {
-                display: block;
-                color: var(--accent-color);
-            }
-
-            /* адаптация карточек в одну колонку */
-            .card-grid {
-                grid-template-columns: 1fr !important;
+            /* Bento Grid на экранах телефонов */
+            .bento-grid {
+                display: flex !important;
+                flex-direction: column !important;
                 gap: 12px !important;
-                min-width: 0;
             }
-
-            .card {
+            .bento-hero,
+            .bento-savings-goals,
+            .bento-income,
+            .bento-expense,
+            .bento-top-categories,
+            .bento-accounts {
+                grid-column: span 12 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            .bento-card {
                 padding: 16px !important;
-                min-width: 0;
-                max-width: 100%;
             }
-
-            .card h3 {
-                font-size: 15px;
+            .bento-hero {
+                padding: 18px 16px !important;
             }
-
-            .card .amount {
-                font-size: 22px;
+            .hero-amount {
+                font-size: 26px !important;
             }
-
-            /* минимальные размеры кнопок и полей от 44px для сенсорного ввода */
-            .btn-primary, .btn-secondary {
-                min-height: 44px !important;
-                min-width: 44px !important;
-                padding: 10px 18px !important;
-                font-size: 15px !important;
-                display: inline-flex !important;
-                align-items: center !important;
+            .hero-quick-actions {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 8px !important;
+                margin-top: 14px !important;
+                padding-top: 14px !important;
+            }
+            .btn-quick-action {
+                width: 100% !important;
+                padding: 8px 4px !important;
+                font-size: 12px !important;
                 justify-content: center !important;
-                user-select: none;
-                -webkit-tap-highlight-color: transparent;
+                min-height: 44px !important;
             }
 
-            .btn-primary:active, .btn-secondary:active {
-                transform: scale(0.96) !important;
-            }
-
-            /* размер шрифта 16px предотвращает автозум в ios safari */
-            .form-input {
-                font-size: 16px !important;
+            /* Поля ввода и кнопки: комфортные touch-target */
+            .form-input, select, input {
+                font-size: 16px !important; /* предотвращает auto-zoom в iOS Safari */
                 min-height: 46px !important;
                 padding: 10px 12px !important;
             }
-
-            /* модальные окна в формате нижней шторки (bottom sheet) */
-            .modal-overlay {
-                padding: calc(16px + var(--sat)) calc(12px + var(--sar)) calc(var(--bottom-nav-height) + 12px) calc(12px + var(--sal)) !important;
-                align-items: flex-end !important;
-                z-index: 1100 !important;
+            .btn-primary, .btn-secondary, .btn-danger {
+                min-height: 44px !important;
+                min-width: 44px !important;
+                padding: 10px 16px !important;
+                font-size: 14px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
 
-            .modal-content,
-            .modal-account-detail,
-            .modal-confirm,
-            #confirm-modal .modal-content {
+            /* Модальные окна: формат Bottom Sheet */
+            .modal-overlay {
+                align-items: flex-end !important;
+                padding: 0 !important;
+                z-index: 1200 !important;
+            }
+            .modal-content {
                 width: 100% !important;
                 max-width: 100% !important;
                 margin: 0 !important;
-                max-height: calc(100dvh - var(--sat) - var(--sab) - 50px) !important;
+                border-radius: 18px 18px 0 0 !important;
+                max-height: 85dvh !important;
+                padding: 16px 18px calc(24px + var(--sab)) 18px !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch;
-                border-radius: 18px 18px 14px 14px !important;
-                padding: 22px 18px !important;
-                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4) !important;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45) !important;
+            }
+            .modal-content::before {
+                content: '';
+                display: block;
+                width: 38px;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--border-hover);
+                margin: 0 auto 12px auto;
             }
 
-            /* фильтры и таблица транзакций на мобильных */
-            .tx-controls-bar {
-                flex-direction: column !important;
-                gap: 10px !important;
+            /* Выдвижная панель деталей счета */
+            .sheet-overlay {
+                z-index: 1200 !important;
             }
-
-            .tx-search-container {
+            .sheet-panel {
                 width: 100% !important;
-                min-width: 100% !important;
+                max-width: 100% !important;
+                border-left: none !important;
+                padding-bottom: calc(24px + var(--sab)) !important;
             }
 
-            .tx-dropdowns-container {
-                display: flex !important;
-                gap: 8px !important;
+            /* Command Palette на мобильном */
+            .cmd-palette-box {
                 width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 18px 18px 0 0 !important;
+                margin-top: auto !important;
+                max-height: 80dvh !important;
             }
 
-            .tx-dropdowns-container .form-input {
-                flex: 1 1 50% !important;
-                width: 50% !important;
-                min-width: 0 !important;
-                margin-bottom: 0 !important;
-            }
-
+            /* Скроллируемые чипсы фильтров на странице транзакций */
             .chips-container {
                 gap: 8px;
-                margin-bottom: 14px;
+                margin-bottom: 12px;
             }
-
             .chips-row {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 6px !important;
             }
-
-            .chips-label {
-                font-size: 11px !important;
-            }
-
             .filter-chips {
                 width: 100% !important;
                 overflow-x: auto !important;
+                white-space: nowrap !important;
                 -webkit-overflow-scrolling: touch;
-                flex-wrap: nowrap !important;
-                padding-bottom: 6px !important;
                 scrollbar-width: none;
+                padding-bottom: 4px !important;
             }
-
             .filter-chips::-webkit-scrollbar {
                 display: none;
             }
-
             .filter-chip {
                 flex-shrink: 0 !important;
                 min-height: 38px !important;
@@ -1493,90 +2051,36 @@
                 font-size: 13px !important;
             }
 
-            .table-container {
-                padding: 12px 6px !important;
+            /* Таблица транзакций на мобильном */
+            .card table {
+                min-width: 100%;
             }
-
-            .table-responsive {
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            table th, table td {
-                padding: 10px 6px !important;
-                font-size: 13px !important;
-            }
-
             .tx-delete-btn, .cat-delete-btn {
                 min-width: 44px !important;
                 min-height: 44px !important;
                 display: inline-flex !important;
                 align-items: center !important;
                 justify-content: center !important;
-                font-size: 22px !important;
-                -webkit-tap-highlight-color: transparent;
             }
 
-            /* мобильная верстка страницы бюджетов */
-            .budget-actions-bar {
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-
-            .budget-actions-bar button {
-                width: 100% !important;
-            }
-
-            #categories-list {
+            /* Сетка счетов в 1 колонку */
+            #accounts-list {
                 grid-template-columns: 1fr !important;
-                gap: 10px !important;
-            }
-
-            .bud-edit-btn, .bud-delete-btn {
-                min-height: 44px !important;
-                padding: 8px 12px !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-            }
-
-            /* мобильная верстка страницы аналитики */
-            .analytics-controls {
-                flex-direction: column !important;
-                gap: 10px !important;
-            }
-
-            .analytics-controls .form-input,
-            .analytics-controls button {
-                width: 100% !important;
-            }
-
-            .analytics-charts-grid {
-                grid-template-columns: 1fr !important;
-                gap: 16px !important;
-            }
-
-            /* баннеры предупреждений о бюджете на мобильном */
-            .budget-alert-banner {
-                flex-direction: column !important;
-                align-items: stretch !important;
                 gap: 12px !important;
             }
 
-            .budget-alert-banner button {
-                width: 100% !important;
-                text-align: center !important;
+            /* Графики аналитики в 1 колонку */
+            .analytics-charts-grid {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
             }
 
-            /* позиционирование уведомлений над нижним баром */
+            /* Тосты позиционируются над нижним таб-баром */
             .toast-container {
                 left: calc(14px + var(--sal)) !important;
                 right: calc(14px + var(--sar)) !important;
                 bottom: calc(var(--bottom-nav-height) + 12px) !important;
-                align-items: stretch !important;
             }
-
             .toast {
                 min-width: 0 !important;
                 max-width: 100% !important;
@@ -1587,258 +2091,415 @@
 </head>
 <body>
 
-<!-- боковая панель (на мобильных экранах трансформируется в нижний таб-бар) -->
-<nav class="sidebar" aria-label="Основная навигация">
-    <div class="logo">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-        <span>Менеджер финансов</span>
+<!-- Мобильная шапка приложения (на мобильных устройствах <= 768px) -->
+<header class="mobile-top-header">
+    <div class="mobile-top-left">
+        <div class="mobile-logo-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        </div>
+        <span class="mobile-logo-title">Менеджер финансов</span>
     </div>
+    <div class="mobile-top-actions">
+        <button type="button" class="mobile-action-btn mobile-btn-add" onclick="openTxModal()" title="Новая операция" aria-label="Новая операция">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button type="button" class="mobile-action-btn" onclick="openCommandPalette()" title="Поиск (Ctrl+K)" aria-label="Поиск">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <button type="button" class="mobile-action-btn" onclick="toggleTheme()" title="Переключить тему" aria-label="Сменить тему">
+            <svg class="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <svg class="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+    </div>
+</header>
+
+<!-- ========================================================
+     БОКОВАЯ ПАНЕЛЬ НАВИГАЦИИ
+     ======================================================== -->
+<div class="sidebar">
+    <!-- Логотип приложения -->
+    <div class="logo-wrap">
+        <div class="logo-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        </div>
+        <div class="logo-text">
+            <span class="logo-title">Менеджер финансов</span>
+        </div>
+    </div>
+
+    <!-- Кнопка быстрого поиска / Command Palette (Ctrl+K) -->
+    <button type="button" class="cmd-trigger-btn" onclick="openCommandPalette()" title="Открыть меню команд (Ctrl+K)">
+        <span class="cmd-trigger-left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Поиск и команды</span>
+        </span>
+        <span class="kbd-hint">Ctrl K</span>
+    </button>
+
+    <!-- Основные ссылки навигации -->
     <ul class="nav-links">
         <li>
-            <a class="active" onclick="switchPage('dashboard', this)" title="Главная">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+            <a class="active" onclick="switchPage('dashboard', this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                 <span>Главная</span>
-                <span class="kbd-hint">[1]</span>
+                <span class="kbd-hint">1</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('accounts', this)" title="Счета">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+            <a onclick="switchPage('accounts', this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
                 <span>Счета</span>
-                <span class="kbd-hint">[2]</span>
+                <span class="kbd-hint">2</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('transactions', this)" title="Операции">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
-                <span>Операции</span>
-                <span class="kbd-hint">[3]</span>
+            <a onclick="switchPage('transactions', this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+                <span>Транзакции</span>
+                <span class="kbd-hint">3</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('budget', this)" title="Бюджет">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+            <a onclick="switchPage('budget', this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
                 <span>Бюджет</span>
-                <span class="kbd-hint">[4]</span>
+                <span class="kbd-hint">4</span>
             </a>
         </li>
         <li>
-            <a onclick="switchPage('analytics', this)" title="Аналитика">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+            <a onclick="switchPage('analytics', this)">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 <span>Аналитика</span>
-                <span class="kbd-hint">[5]</span>
+                <span class="kbd-hint">5</span>
             </a>
         </li>
     </ul>
+
+    <!-- Переключатель темы -->
     <div class="theme-selector-container">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer;" onclick="toggleTheme()" title="Переключить тему">Тема оформления</span>
-            <div class="theme-toggle-switch" onclick="toggleTheme()" title="Переключить тему">
-                <span class="theme-toggle-track">
-                    <svg class="theme-icon-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="event.stopPropagation(); changeAppTheme('dark');" title="Тёмная тема"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    <svg class="theme-icon-sun" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" onclick="event.stopPropagation(); changeAppTheme('light');" title="Светлая тема"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                    <span class="theme-toggle-thumb"></span>
-                </span>
-            </div>
+        <div class="theme-toggle-switch" onclick="toggleTheme()" title="Переключить тему оформления">
+            <span class="theme-toggle-label">Оформление</span>
+            <span class="theme-toggle-track">
+                <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <span class="theme-toggle-thumb"></span>
+            </span>
         </div>
     </div>
-</nav>
+</div>
 
-<!-- основная область содержимого страниц -->
-<main class="main-content">
-    <header class="page-header">
-        <div>
-            <div class="mobile-header-branding">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-                <span>Finance Manager</span>
-            </div>
+<!-- ========================================================
+     ОСНОВНАЯ РАБОЧАЯ ОБЛАСТЬ СТРАНИЦ
+     ======================================================== -->
+<div class="main-content">
+    <!-- Шапка страницы -->
+    <div class="main-header">
+        <div class="main-header-left">
             <h1 id="page-title">Главная</h1>
         </div>
-        <button type="button" class="mobile-header-theme-toggle" onclick="toggleTheme()" aria-label="Сменить тему" title="Сменить тему">
-            <svg class="theme-icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-            <svg class="theme-icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-        </button>
-    </header>
-    <div id="page-content">
-
-        <!-- страница: главная (дашборд) -->
-        <div id="view-dashboard" class="page-view">
-            <div id="dashboard-budget-alerts"></div>
-            <div class="card-grid">
-                <div class="card card-featured">
-                    <div class="card-featured-glow"></div>
-                    <div class="card-featured-inner">
-                        <h3>Общий баланс</h3>
-                        <div class="amount" id="balance-val">Загрузка..</div>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3 style="color: var(--color-expense);">Расходы за месяц</h3>
-                    <div class="amount" id="expenses-val">Загрузка..</div>
-                </div>
-                <div class="card">
-                    <h3 style="color: var(--color-income);">Доход за месяц</h3>
-                    <div class="amount" id="incomes-val">Загрузка..</div>
-                </div>
-            </div>
-            <div style="margin-top: 32px;">
-                <h3 style="margin-bottom: 16px;">Топ расходов за месяц</h3>
-                <div id="top-categories-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
-            </div>
+        <div class="main-header-actions" id="main-header-actions">
+            <button type="button" class="btn-primary" onclick="openTxModal()" title="Новая транзакция (хоткей N)">
+                <span>+ Операция</span>
+                <span class="kbd-hint">N</span>
+            </button>
         </div>
+    </div>
 
-        <!-- страница: счета -->
-        <div id="view-accounts" class="page-view" style="display: none;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                <button onclick="openAccountModal()" class="btn-primary">+ Добавить счет</button>
-            </div>
-            <div id="accounts-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
-        </div>
+    <!-- Область прокручиваемого контента -->
+    <div class="page-scroll-area">
+        <div id="page-content">
 
-        <!-- страница: транзакции -->
-        <div id="view-transactions" class="page-view" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <button onclick="openTxModal()" class="btn-primary">+ Добавить операцию <span class="kbd-hint">[N]</span></button>
-            </div>
+            <!-- ====================================================
+                 СТРАНИЦА 1: ДАШБОРД (BENTO GRID)
+                 ==================================================== -->
+            <div id="view-dashboard" class="page-view">
+                <!-- Контейнер баннеров превышения лимитов -->
+                <div id="dashboard-budget-alerts"></div>
 
-            <!-- быстрые фильтры-плашки по типу и периоду операций -->
-            <div class="chips-container">
-                <div class="chips-row">
-                    <span class="chips-label">Тип:</span>
-                    <div class="filter-chips" id="tx-type-chips">
-                        <button type="button" class="filter-chip active" data-type="all">Все операции</button>
-                        <button type="button" class="filter-chip" data-type="expense"><span class="chip-badge expense">↓</span> Расходы</button>
-                        <button type="button" class="filter-chip" data-type="income"><span class="chip-badge income">↑</span> Доходы</button>
-                        <button type="button" class="filter-chip" data-type="transfer"><span class="chip-badge transfer">⇄</span> Переводы</button>
-                        <button type="button" class="filter-chip" data-type="regular_expense"><span class="chip-badge regular">↻</span> Регулярные</button>
+                <!-- Bento Grid разметка дашборда -->
+                <div class="bento-grid">
+                    <!-- 1. Hero Bento Card: Общий баланс, динамика, быстрые действия (8 колонок) -->
+                    <div class="bento-card bento-hero">
+                        <div class="bento-hero-header">
+                            <div>
+                                <span class="bento-label">Общий капитал (все счета)</span>
+                                <div class="amount hero-amount" id="balance-val">Загрузка..</div>
+                            </div>
+                            <div class="hero-sparkline-wrap" id="hero-sparkline-wrap" title="Тренд баланса за последние 30 дней">
+                                <span class="sparkline-tag" id="sparkline-tag">Динамика 30 дней</span>
+                                <div id="hero-sparkline-svg" class="sparkline-svg-container"></div>
+                            </div>
+                            <div class="hero-net-flow">
+                                <span class="net-flow-badge" id="net-flow-badge">+0 BYN</span>
+                                <span class="net-flow-subtext">чистый поток за месяц</span>
+                            </div>
+                        </div>
+
+                        <!-- Кнопки быстрых действий -->
+                        <div class="hero-quick-actions">
+                            <button type="button" class="btn-quick-action action-income" onclick="openTxModal('income')">
+                                <span class="action-icon" style="color: var(--color-income);">↑</span>
+                                <span>+ Доход</span>
+                            </button>
+                            <button type="button" class="btn-quick-action action-expense" onclick="openTxModal('expense')">
+                                <span class="action-icon" style="color: var(--color-expense);">↓</span>
+                                <span>− Расход</span>
+                            </button>
+                            <button type="button" class="btn-quick-action action-transfer" onclick="openTxModal('transfer')">
+                                <span class="action-icon" style="color: var(--color-transfer);">⇄</span>
+                                <span>⇄ Перевод</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Копилки и цели (4 колонки) -->
+                    <div class="bento-card bento-savings-goals">
+                        <div class="bento-card-top">
+                            <span class="bento-card-title">Копилки и цели</span>
+                            <button type="button" class="btn-text-link" onclick="switchPage('accounts')" title="Перейти к списку счетов">
+                                <span>Все счета</span>
+                                <span style="font-size: 11px;">→</span>
+                            </button>
+                        </div>
+                        <div id="bento-savings-list" class="bento-savings-list">
+                            <!-- Заполняется динамически в loadDashboard() -->
+                        </div>
+                    </div>
+
+                    <!-- 3. Доход за месяц (6 колонок) -->
+                    <div class="bento-card bento-income">
+                        <div class="bento-card-top">
+                            <span class="bento-card-title">Доход за месяц</span>
+                            <span class="stat-pill pill-income">↑ Поступления</span>
+                        </div>
+                        <div class="amount metric-val income-color" id="incomes-val">0 BYN</div>
+                        <div class="bento-stat-subtext" id="income-subtext">Текущий расчетный период</div>
+                    </div>
+
+                    <!-- 4. Расход за месяц с расчетом среднего чека / дня (6 колонок) -->
+                    <div class="bento-card bento-expense">
+                        <div class="bento-card-top">
+                            <span class="bento-card-title">Расход за месяц</span>
+                            <span class="stat-pill pill-expense">↓ Траты</span>
+                        </div>
+                        <div class="amount metric-val expense-color" id="expenses-val">0 BYN</div>
+                        <div class="bento-stat-subtext" id="expense-daily-avg">~0 BYN / день в среднем</div>
+                    </div>
+
+                    <!-- 5. Топ категорий расходов с барами и бейджами (8 колонок) -->
+                    <div class="bento-card bento-top-categories">
+                        <div class="bento-card-top">
+                            <span class="bento-card-title">Топ расходов за месяц</span>
+                            <span class="bento-muted-badge">по категориям</span>
+                        </div>
+                        <div id="top-categories-list" class="bento-categories-list">
+                            <span style="color: var(--text-muted); font-size: 13px;">Загрузка...</span>
+                        </div>
+                    </div>
+
+                    <!-- 6. Счета пользователя (мини-список счетов) (4 колонки) -->
+                    <div class="bento-card bento-accounts">
+                        <div class="bento-card-top">
+                            <span class="bento-card-title">Мои счета</span>
+                            <button type="button" class="bento-link-btn" onclick="switchPage('accounts')">Все счета →</button>
+                        </div>
+                        <div class="bento-mini-accounts-list" id="bento-accounts-list">
+                            <span style="color: var(--text-muted); font-size: 13px;">Загрузка счетов...</span>
+                        </div>
                     </div>
                 </div>
-                <div class="chips-row">
-                    <span class="chips-label">Период:</span>
-                    <div class="filter-chips" id="tx-period-chips">
-                        <button type="button" class="filter-chip active" data-period="all">Все время</button>
-                        <button type="button" class="filter-chip" data-period="this_month">Этот месяц</button>
-                        <button type="button" class="filter-chip" data-period="prev_month">Прошлый месяц</button>
-                        <button type="button" class="filter-chip" data-period="last_30">30 дней</button>
-                    </div>
-                </div>
             </div>
 
-            <div class="tx-controls-bar">
-                <div class="tx-search-container">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; color: var(--text-muted); opacity: 0.6; pointer-events: none;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
-                           class="form-input" style="width: 100%; margin-bottom: 0; padding-left: 36px;">
+            <!-- ====================================================
+                 СТРАНИЦА 2: СПИСОК СЧЕТОВ
+                 ==================================================== -->
+            <div id="view-accounts" class="page-view" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13.5px;">Управление наличными, банковскими картами и финансовыми целями</p>
+                    </div>
+                    <button onclick="openAccountModal()" class="btn-primary">+ Добавить счет</button>
+                </div>
+                <div id="accounts-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;"></div>
+            </div>
+
+            <!-- ====================================================
+                 СТРАНИЦА 3: ЖУРНАЛ ТРАНЗАКЦИЙ
+                 ==================================================== -->
+            <div id="view-transactions" class="page-view" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13.5px;">Полная история доходов, расходов и переводов</p>
+                    </div>
+                    <button onclick="openTxModal()" class="btn-primary">+ Добавить операцию <span class="kbd-hint">N</span></button>
                 </div>
 
-                <select id="tx-filter-type" class="form-input" style="display: none;">
-                    <option value="all">Все типы</option>
-                    <option value="income">Доходы</option>
-                    <option value="expense">Расходы</option>
-                    <option value="transfer">Переводы</option>
-                    <option value="regular_expense">Регулярные</option>
-                </select>
+                <!-- Быстрые чипсы фильтрации -->
+                <div class="chips-container">
+                    <div class="chips-row">
+                        <span class="chips-label">Тип:</span>
+                        <div class="filter-chips" id="tx-type-chips">
+                            <button type="button" class="filter-chip active" data-type="all">Все операции</button>
+                            <button type="button" class="filter-chip" data-type="expense"><span class="chip-badge expense">↓</span> Расходы</button>
+                            <button type="button" class="filter-chip" data-type="income"><span class="chip-badge income">↑</span> Доходы</button>
+                            <button type="button" class="filter-chip" data-type="transfer"><span class="chip-badge transfer">⇄</span> Переводы</button>
+                            <button type="button" class="filter-chip" data-type="regular_expense">↻ Регулярные</button>
+                        </div>
+                    </div>
+                    <div class="chips-row">
+                        <span class="chips-label">Период:</span>
+                        <div class="filter-chips" id="tx-period-chips">
+                            <button type="button" class="filter-chip active" data-period="all">Все время</button>
+                            <button type="button" class="filter-chip" data-period="this_month">Этот месяц</button>
+                            <button type="button" class="filter-chip" data-period="prev_month">Прошлый месяц</button>
+                            <button type="button" class="filter-chip" data-period="last_30">Последние 30 дней</button>
+                        </div>
+                    </div>
+                </div>
 
-                <div class="tx-dropdowns-container">
-                    <select id="tx-filter-account" class="form-input" style="cursor: pointer; margin-bottom: 0;">
+                <!-- Поиск и фильтры по счету / сортировке -->
+                <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 240px; position: relative; display: flex; align-items: center;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 12px; color: var(--text-muted); pointer-events: none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="tx-search" placeholder="Поиск (категория, сумма, дата)..."
+                               class="form-input" style="width: 100%; margin-bottom: 0; padding-left: 36px;">
+                    </div>
+
+                    <select id="tx-filter-type" class="form-input" style="display: none;">
+                        <option value="all">Все типы</option>
+                        <option value="income">Доходы</option>
+                        <option value="expense">Расходы</option>
+                        <option value="transfer">Переводы</option>
+                        <option value="regular_expense">Регулярные</option>
+                    </select>
+
+                    <select id="tx-filter-account" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                         <option value="all">Все счета</option>
                     </select>
 
-                    <select id="tx-sort" class="form-input" style="cursor: pointer; margin-bottom: 0;">
+                    <select id="tx-sort" class="form-input" style="width: auto; margin-bottom: 0; cursor: pointer;">
                         <option value="date-desc">Сначала новые</option>
                         <option value="date-asc">Сначала старые</option>
                         <option value="amount-desc">По сумме (убывание)</option>
                         <option value="amount-asc">По сумме (возрастание)</option>
                     </select>
                 </div>
-            </div>
-            <div class="card table-container" style="padding: 20px;">
-                <div class="table-responsive">
+
+                <!-- Таблица транзакций -->
+                <div class="card" style="overflow: hidden;">
                     <table style="width: 100%; text-align: left; border-collapse: collapse;">
                         <thead>
-                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
-                            <th style="padding: 12px 8px;">Дата</th>
-                            <th style="padding: 12px 8px;">Категория</th>
-                            <th style="padding: 12px 8px;">Сумма</th>
-                            <th style="padding: 12px 8px; width: 44px;"></th>
+                        <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <th style="padding: 12px 16px;">Дата</th>
+                            <th style="padding: 12px 16px;">Категория</th>
+                            <th style="padding: 12px 16px;">Сумма</th>
+                            <th style="padding: 12px 16px; width: 44px;"></th>
                         </tr>
                         </thead>
                         <tbody id="transactions-table"></tbody>
                     </table>
                 </div>
             </div>
-        </div>
 
-        <!-- страница: бюджеты и категории -->
-        <div id="view-budget" class="page-view" style="display: none;">
-            <div class="budget-actions-bar">
-                <button onclick="openCategoryModal()" class="btn-secondary" style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius); padding: 8px 16px;">+ Новая категория</button>
-                <button onclick="openBudgetModal()" class="btn-primary">+ Установить лимит</button>
-            </div>
-            <h3 style="margin-bottom: 16px;">Мои категории</h3>
-            <div id="categories-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;"></div>
-
-            <h3 style="margin-top: 32px; margin-bottom: 16px;">Бюджеты</h3>
-            <div id="budget-list" style="display: flex; flex-direction: column; gap: 16px;"></div>
-        </div>
-
-        <!-- страница: аналитика и графики -->
-        <div id="view-analytics" class="page-view" style="display: none;">
-            <div class="analytics-controls">
-                <input type="month" id="analytics-month" class="form-input" style="width: auto; margin: 0;">
-                <select id="analytics-currency" class="form-input" style="width: auto; margin: 0; cursor: pointer;">
-                    <option value="byn" selected>BYN (Белорусский рубль)</option>
-                    <option value="usd">USD ($)</option>
-                    <option value="eur">EUR (€)</option>
-                    <option value="rub">RUB (₽)</option>
-                </select>
-                <button onclick="loadAnalytics()" class="btn-primary">Применить</button>
-            </div>
-            <div class="card-grid" style="margin-bottom: 24px;">
-                <div class="card">
-                    <h3>Доход за месяц</h3>
-                    <div class="amount" id="stat-income" style="color: var(--color-income);">0 ₽</div>
-                </div>
-                <div class="card">
-                    <h3>Расходы за месяц</h3>
-                    <div class="amount" id="stat-expense" style="color: var(--color-expense);">0 ₽</div>
-                </div>
-                <div class="card">
-                    <h3>Общий баланс</h3>
-                    <div class="amount" id="stat-balance">0 ₽</div>
-                </div>
-            </div>
-            <div class="analytics-charts-grid">
-                <div class="card" style="display: flex; flex-direction: column; align-items: center;">
-                    <h3 style="align-self: flex-start;">Структура расходов</h3>
-                    <div style="width: 100%; max-width: 250px;">
-                        <canvas id="categoryChart"></canvas>
+            <!-- ====================================================
+                 СТРАНИЦА 4: БЮДЖЕТ И КАТЕГОРИИ
+                 ==================================================== -->
+            <div id="view-budget" class="page-view" style="display: none;">
+                <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; justify-content: space-between;">
+                    <div>
+                        <p style="color: var(--text-muted); font-size: 13.5px;">Контроль месячных лимитов и справочник категорий трат</p>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="openCategoryModal()" class="btn-secondary">+ Категория</button>
+                        <button onclick="openBudgetModal()" class="btn-primary">+ Установить лимит</button>
                     </div>
                 </div>
-                <div class="card">
-                    <h3>Годовой отчет</h3>
-                    <canvas id="yearlyChart"></canvas>
+
+                <!-- Сетка лимитов бюджета -->
+                <h3 style="margin-bottom: 14px;">Месячные лимиты расходов</h3>
+                <div id="budget-list" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px;"></div>
+
+                <!-- Сетка категорий -->
+                <h3 style="margin-bottom: 14px;">Категории операций</h3>
+                <div id="categories-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;"></div>
+            </div>
+
+            <!-- ====================================================
+                 СТРАНИЦА 5: АНАЛИТИКА И ОТЧЕТЫ
+                 ==================================================== -->
+            <div id="view-analytics" class="page-view" style="display: none;">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+                    <input type="month" id="analytics-month" class="form-input" style="width: auto; margin: 0;">
+                    <select id="analytics-currency" class="form-input" style="width: auto; margin: 0; cursor: pointer;">
+                        <option value="byn" selected>BYN (Белорусский рубль)</option>
+                        <option value="usd">USD ($)</option>
+                        <option value="eur">EUR (€)</option>
+                        <option value="rub">RUB (₽)</option>
+                    </select>
+                    <button onclick="loadAnalytics()" class="btn-primary">Применить</button>
+                </div>
+
+                <!-- Сводные метрики месяца -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                    <div class="card" style="padding: 18px;">
+                        <span class="bento-label">Доход за месяц</span>
+                        <div class="amount metric-val income-color" id="stat-income">0 BYN</div>
+                    </div>
+                    <div class="card" style="padding: 18px;">
+                        <span class="bento-label">Расходы за месяц</span>
+                        <div class="amount metric-val expense-color" id="stat-expense">0 BYN</div>
+                    </div>
+                    <div class="card" style="padding: 18px;">
+                        <span class="bento-label">Чистый баланс</span>
+                        <div class="amount metric-val" id="stat-balance">0 BYN</div>
+                    </div>
+                </div>
+
+                <!-- Графики -->
+                <div class="analytics-charts-grid">
+                    <div class="card analytics-category-card">
+                        <div class="analytics-card-header">
+                            <h3>Структура расходов</h3>
+                        </div>
+                        <div class="category-chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                        <div id="category-chart-legend" class="category-legend-grid"></div>
+                    </div>
+                    <div class="card analytics-yearly-card">
+                        <div class="analytics-card-header">
+                            <h3>Годовой отчет доходов и расходов</h3>
+                        </div>
+                        <div class="yearly-chart-container">
+                            <canvas id="yearlyChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
+
         </div>
-
     </div>
-</main>
+</div>
 
-<!-- модальные окна -->
+<!-- ========================================================
+     КОМПАКТНЫЕ ЦЕНТРИРОВАННЫЕ МОДАЛЬНЫЕ ОКНА
+     ======================================================== -->
 
-<!-- модальное окно: добавление операции -->
-<div id="tx-modal" class="modal-overlay">
+<!-- Модальное окно: Добавление транзакции -->
+<div id="tx-modal" class="modal-overlay" onclick="if(event.target===this)closeTxModal()">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px;">Новая транзакция</h2>
+        <div class="modal-header">
+            <h2>Новая операция</h2>
+            <button type="button" class="modal-close-btn" onclick="closeTxModal()">✕</button>
+        </div>
         <form id="tx-form">
             <input type="number" id="tx-amount" placeholder="Сумма" step="0.01" required class="form-input">
             <input type="date" id="tx-date" required class="form-input">
             <select id="tx-type" onchange="toggleTxFields()" class="form-input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
-                <option value="regular_expense">Постоянный расход</option>
-                <option value="transfer">Перевод</option>
+                <option value="regular_expense">Регулярный расход</option>
+                <option value="transfer">Перевод между счетами</option>
             </select>
             <select id="tx-account" required class="form-input">
                 <option value="" disabled selected>Счет списания...</option>
@@ -1852,209 +2513,281 @@
                 <option value="monthly">Ежемесячно</option>
                 <option value="yearly">Ежегодно</option>
             </select>
-            <select id="tx-category" required class="form-input" style="margin-bottom: 24px;">
+            <select id="tx-category" required class="form-input">
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeTxModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button type="button" onclick="closeTxModal()" class="btn-secondary">Отмена <span class="kbd-hint">Esc</span></button>
                 <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- модальное окно: создание и редактирование счета -->
-<div id="account-modal" class="modal-overlay">
+<!-- Модальное окно: Создание / Редактирование счета -->
+<div id="account-modal" class="modal-overlay" onclick="if(event.target===this)closeAccountModal()">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px;">Новый счет</h2>
+        <div class="modal-header">
+            <h2>Новый счет</h2>
+            <button type="button" class="modal-close-btn" onclick="closeAccountModal()">✕</button>
+        </div>
         <form id="account-form">
             <input type="text" id="acc-name" placeholder="Название (напр. Зарплатная карта)" required class="form-input">
-            <input type="number" id="acc-balance" placeholder="Баланс" step="0.01" required class="form-input">
+            <input type="number" id="acc-balance" placeholder="Начальный баланс" step="0.01" required class="form-input">
             <select id="acc-currency" required class="form-input">
-                <option value="byn">BYN - Белорусский рубль</option>
-                <option value="usd">USD - Доллар США</option>
-                <option value="eur">EUR - Евро</option>
-                <option value="rub">RUB - Российский рубль</option>
+                <option value="byn">BYN — Белорусский рубль</option>
+                <option value="usd">USD — Доллар США</option>
+                <option value="eur">EUR — Евро</option>
+                <option value="rub">RUB — Российский рубль</option>
             </select>
             <select id="acc-type" onchange="toggleAccountFields()" required class="form-input">
                 <option value="cash_account">Наличные</option>
-                <option value="bank_account">Банковский счет</option>
-                <option value="savings_account">Копилка</option>
+                <option value="bank_account">Банковский счет / Карта</option>
+                <option value="savings_account">Копилка / Финансовая цель</option>
             </select>
-            <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры (напр. 1234)" maxlength="4" style="display: none;" class="form-input">
+            <input type="text" id="acc-bank-digits" placeholder="Последние 4 цифры карты" maxlength="4" style="display: none;" class="form-input">
             <input type="number" id="acc-goal" placeholder="Сумма цели" step="0.01" style="display: none;" class="form-input">
-            <input type="date" id="acc-deadline" style="display: none; margin-bottom: 24px;" class="form-input">
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeAccountModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
-                <button type="submit" class="btn-primary">Добавить</button>
+            <input type="date" id="acc-deadline" style="display: none;" class="form-input">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button type="button" onclick="closeAccountModal()" class="btn-secondary">Отмена <span class="kbd-hint">Esc</span></button>
+                <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- модальное окно: установка лимита бюджета -->
-<div id="budget-modal" class="modal-overlay">
+<!-- Модальное окно: Установка лимита бюджета -->
+<div id="budget-modal" class="modal-overlay" onclick="if(event.target===this)closeBudgetModal()">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px;">Установить лимит расходов</h2>
+        <div class="modal-header">
+            <h2>Установить лимит расходов</h2>
+            <button type="button" class="modal-close-btn" onclick="closeBudgetModal()">✕</button>
+        </div>
         <form id="budget-form">
             <select id="budget-category" required class="form-input">
                 <option value="" disabled selected>Выберите категорию...</option>
             </select>
-            <input type="number" id="budget-limit" placeholder="Лимит" step="0.01" required class="form-input" style="margin-bottom: 24px;">
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeBudgetModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
+            <input type="number" id="budget-limit" placeholder="Лимит в месяц" step="0.01" required class="form-input">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button type="button" onclick="closeBudgetModal()" class="btn-secondary">Отмена <span class="kbd-hint">Esc</span></button>
                 <button type="submit" class="btn-primary">Сохранить</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- модальное окно: создание категории -->
-<div id="category-modal" class="modal-overlay">
+<!-- Модальное окно: Создание категории -->
+<div id="category-modal" class="modal-overlay" onclick="if(event.target===this)closeCategoryModal()">
     <div class="modal-content">
-        <h2 style="margin-bottom: 20px;">Новая категория</h2>
+        <div class="modal-header">
+            <h2>Новая категория</h2>
+            <button type="button" class="modal-close-btn" onclick="closeCategoryModal()">✕</button>
+        </div>
         <form id="category-form">
             <input type="text" id="cat-name" placeholder="Название (напр. Продукты)" required class="form-input">
             <select id="cat-type" required class="form-input">
                 <option value="expense">Расход</option>
                 <option value="income">Доход</option>
             </select>
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-                <label style="color: var(--text-muted);">Цвет маркера:</label>
-                <input type="color" id="cat-color" value="#1db954" style="background: transparent; border: none; cursor: pointer; height: 32px; width: 32px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 6px 12px; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: var(--input-radius);">
+                <label style="color: var(--text-muted); font-size: 13px;">Цвет маркера:</label>
+                <input type="color" id="cat-color" value="#10b981" style="background: transparent; border: none; cursor: pointer; height: 28px; width: 36px;">
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 12px;">
-                <button type="button" onclick="closeCategoryModal()" class="btn-secondary">Отмена <span class="kbd-hint">[Esc]</span></button>
-                <button type="submit" class="btn-primary">Добавить</button>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeCategoryModal()" class="btn-secondary">Отмена <span class="kbd-hint">Esc</span></button>
+                <button type="submit" class="btn-primary">Создать</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- модальное окно: подробная информация о счете -->
-<div id="account-detail-modal" class="modal-overlay">
-    <div class="modal-content modal-account-detail" style="max-height: 80vh; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="modal-acc-name">Название счёта</h2>
-            <button onclick="closeAccountDetailModal()" class="btn-secondary" style="font-size: 20px;">×</button>
-        </div>
-
-        <div id="modal-acc-info" style="color: var(--text-muted); margin-bottom: 20px;"></div>
-
-        <h3 style="margin-bottom: 12px;">Последние транзакции</h3>
-        <div id="modal-acc-transactions" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: auto;">
-            <button id="btn-edit-account" class="btn-secondary" style="background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Редактировать</button>
-            <button id="btn-delete-account" class="btn-secondary" style="color: var(--color-expense);">Удалить счет</button>
+<!-- Модальное окно: Подтверждение опасного действия -->
+<div id="confirm-modal" class="modal-overlay">
+    <div class="modal-content" style="width: 380px;">
+        <h3 id="confirm-title" style="margin-bottom: 8px;">Подтверждение</h3>
+        <p id="confirm-message" style="color: var(--text-muted); font-size: 13.5px; margin-bottom: 20px; line-height: 1.5;"></p>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="confirm-btn-cancel" class="btn-secondary">Отмена <span class="kbd-hint">Esc</span></button>
+            <button id="confirm-btn-ok" class="btn-danger">Удалить</button>
         </div>
     </div>
 </div>
 
-<!-- диалог подтверждения опасных действий (удаления) -->
-<div id="confirm-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content modal-confirm">
-        <h3 id="confirm-title" style="margin-top: 0;">Подтверждение</h3>
-        <p id="confirm-message" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;"></p>
-        <div style="display: flex; justify-content: flex-end; gap: 12px;">
-            <button id="confirm-btn-cancel" class="btn-secondary" style="border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--card-radius);">Отмена <span class="kbd-hint">[Esc]</span></button>
-            <button id="confirm-btn-ok" style="background: var(--color-expense); border: none; color: #fff; padding: 8px 16px; border-radius: var(--card-radius); cursor: pointer; font-weight: bold;">Удалить</button>
+<!-- ========================================================
+     COMMAND PALETTE (CTRL+K) МОДАЛЬНОЕ ОКНО
+     ======================================================== -->
+<div id="command-palette-modal" class="modal-overlay" onclick="if(event.target===this)closeCommandPalette()">
+    <div class="cmd-palette-box">
+        <div class="cmd-palette-search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="cmd-palette-input" class="cmd-palette-input" placeholder="Поиск действий или разделов..." autocomplete="off">
+            <span class="kbd-hint">ESC</span>
+        </div>
+        <div class="cmd-palette-list" id="cmd-palette-list">
+            <!-- Список динамических команд -->
+        </div>
+        <div class="cmd-palette-footer">
+            <span><span class="kbd-hint">↑↓</span> Навигация</span>
+            <span><span class="kbd-hint">↵</span> Выбрать</span>
+            <span><span class="kbd-hint">ESC</span> Закрыть</span>
         </div>
     </div>
 </div>
 
-<!-- html-шаблоны для клонирования в javascript -->
+<!-- ========================================================
+     ВЫДВИЖНАЯ БОКОВАЯ ПАНЕЛЬ СПРАВА (SHEET / DRAWER 400PX)
+     ДЛЯ ДЕТАЛЬНОГО ПРОСМОТРА СЧЕТА (#account-detail-modal)
+     ======================================================== -->
+<div id="account-detail-modal" class="sheet-overlay" onclick="if(event.target===this)closeAccountDetailModal()">
+    <div class="sheet-panel">
+        <div class="sheet-header">
+            <div>
+                <span class="sheet-eyebrow">Детали счёта</span>
+                <h2 id="modal-acc-name">Название счёта</h2>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeAccountDetailModal()" title="Закрыть (Esc)">✕</button>
+        </div>
 
-<!-- шаблон элемента списка топ-категорий -->
+        <div class="sheet-body">
+            <!-- Блок ключевой информации о счете -->
+            <div id="modal-acc-info" style="margin-bottom: 20px;"></div>
+
+            <!-- Список последних операций счета -->
+            <div class="sheet-section-title">Последние операции по счету</div>
+            <div id="modal-acc-transactions" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div class="sheet-footer">
+            <button id="btn-edit-account" class="btn-secondary">Редактировать</button>
+            <button id="btn-delete-account" class="btn-danger">Удалить счёт</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     ШАБЛОНЫ ДЛЯ ДИНАМИЧЕСКОГО КЛОНИРОВАНИЯ В JS
+     ======================================================== -->
+
+<!-- Шаблон элемента топ-категории в Bento -->
 <template id="tpl-top-category">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--card-radius); box-shadow: var(--card-shadow); transition: transform 0.2s ease;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="tc-dot" style="width: 10px; height: 10px; border-radius: 50%; display: inline-block;"></span>
-            <span class="tc-name" style="font-weight: bold;"></span>
+    <div class="bento-cat-row">
+        <span class="bento-cat-dot tc-dot"></span>
+        <span class="bento-cat-name tc-name"></span>
+        <div class="bento-cat-bar-wrap">
+            <div class="bento-cat-bar-fill tc-bar" style="width: 0%;"></div>
         </div>
-        <span class="tc-amount" style="font-weight: bold; color: var(--text-main);"></span>
+        <span class="bento-cat-amount tc-amount"></span>
     </div>
 </template>
 
-<!-- шаблон карточки счета -->
+<!-- Шаблон карточки счета -->
 <template id="tpl-account-card">
-    <div class="card account-card-item" style="cursor: pointer; margin-bottom: 12px; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+    <div class="card account-card-item" style="cursor: pointer; padding: 18px; transition: all 0.15s ease;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="acc-icon" style="font-size: 16px;">💳</span>
-                    <div class="acc-name" style="font-weight: bold; font-size: 16px; color: var(--text-title);"></div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="acc-icon" style="font-size: 20px;">💳</span>
+                <div>
+                    <div class="acc-name" style="font-weight: 600; font-size: 15px; color: var(--text-title);"></div>
+                    <div class="acc-meta" style="color: var(--text-muted); font-size: 12px; margin-top: 2px;"></div>
                 </div>
-                <div class="acc-meta" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;"></div>
             </div>
             <span class="acc-badge badge-pill">BYN</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-            <div class="acc-number" style="font-size: 13px; color: var(--text-muted); font-family: monospace;">•••• 1234</div>
-            <div class="acc-balance" style="font-size: 20px; font-weight: bold; color: var(--color-income);"></div>
+            <div class="acc-number" style="font-size: 12px; color: var(--text-muted);">•••• 1234</div>
+            <div class="acc-balance" style="font-size: 20px; font-weight: 700; color: var(--text-title);"></div>
         </div>
         <div class="acc-goal-bar-wrap" style="display: none; margin-top: 12px;">
-            <div style="width: 100%; height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden;">
-                <div class="acc-goal-bar" style="height: 100%; background: var(--accent-color); border-radius: 3px; transition: width 0.5s ease;"></div>
+            <div style="width: 100%; height: 6px; background: var(--bg-hover); border-radius: 3px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div class="acc-goal-bar" style="height: 100%; background: var(--accent-color); border-radius: 3px; transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);"></div>
             </div>
         </div>
     </div>
 </template>
 
-<!-- шаблон строки таблицы транзакций -->
+<!-- Шаблон строки транзакции -->
 <template id="tpl-transaction-row">
-    <tr style="border-bottom: 1px solid var(--border-color);">
-        <td class="tx-date" style="padding: 12px 8px; color: var(--text-muted); font-size: 13px;"></td>
-        <td style="padding: 12px 8px;">
+    <tr style="border-bottom: 1px solid var(--border-color); transition: background-color 0.1s ease;">
+        <td class="tx-date" style="padding: 12px 16px; color: var(--text-muted); font-size: 13px;"></td>
+        <td style="padding: 12px 16px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span class="tx-badge"></span>
-                <span class="tx-category" style="font-weight: 500;"></span>
+                <span class="tx-category" style="font-weight: 500; font-size: 13.5px;"></span>
             </div>
         </td>
-        <td class="tx-amount" style="padding: 12px 8px; font-weight: bold; color: var(--text-title);"></td>
-        <td style="padding: 12px 8px; text-align: right; width: 40px;">
-            <button class="tx-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 18px; line-height: 1;" title="Удалить">×</button>
+        <td class="tx-amount" style="padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--text-title);"></td>
+        <td style="padding: 12px 16px; text-align: right; width: 44px;">
+            <button class="tx-delete-btn" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; line-height: 1;" title="Удалить">✕</button>
         </td>
     </tr>
 </template>
 
-<!-- шаблон карточки категории -->
+<!-- Шаблон карточки категории -->
 <template id="tpl-category-card">
-    <div class="card" style="padding: 16px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div class="cat-color-dot" style="width: 16px; height: 16px; border-radius: 50%;"></div>
+    <div class="card" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="cat-color-dot" style="width: 12px; height: 12px; border-radius: 50%;"></div>
             <div>
-                <div class="cat-name" style="font-weight: bold; color: var(--text-title); font-size: 15px;"></div>
-                <div class="cat-type" style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"></div>
+                <div class="cat-name" style="font-weight: 600; color: var(--text-title); font-size: 14px;"></div>
+                <div class="cat-type" style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;"></div>
             </div>
         </div>
-        <button class="cat-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 18px;" title="Удалить">×</button>
+        <button class="cat-delete-btn" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 16px; padding: 4px;" title="Удалить">✕</button>
     </div>
 </template>
 
-<!-- шаблон карточки шкалы бюджета -->
+<!-- Шаблон карточки шкалы бюджета -->
 <template id="tpl-budget-bar">
-    <div class="card" style="padding: 16px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span class="b-name" style="font-weight: bold; color: var(--text-title);"></span>
-            <span style="color: var(--text-muted);">
-                <span class="b-current" style="color: var(--text-title);"></span> / <span class="b-limit"></span> (<span class="b-percent-text"></span>%)
+    <div class="card" style="padding: 16px 20px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 8px; align-items: baseline;">
+            <span class="b-name" style="font-weight: 600; color: var(--text-title); font-size: 14.5px;"></span>
+            <span style="color: var(--text-muted); font-size: 13px;">
+                <span class="b-current" style="color: var(--text-title); font-weight: 600;"></span> / <span class="b-limit"></span> (<span class="b-percent-text"></span>%)
             </span>
         </div>
-        <div style="width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; overflow: hidden;">
-            <div class="b-progress-bar" style="height: 100%; transition: width 0.3s;"></div>
+        <div style="width: 100%; height: 8px; background: var(--bg-hover); border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden;">
+            <div class="b-progress-bar" style="height: 100%; transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 3px;"></div>
         </div>
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
-            <button class="bud-edit-btn" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 13px;">Редактировать</button>
-            <button class="bud-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 13px;">Удалить</button>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 10px;">
+            <button class="bud-edit-btn" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 12.5px; font-weight: 500;">Редактировать</button>
+            <button class="bud-delete-btn" style="background: transparent; color: var(--color-expense); border: none; cursor: pointer; font-size: 12.5px; font-weight: 500;">Удалить</button>
         </div>
     </div>
 </template>
 
-<!-- контейнер всплывающих уведомлений -->
+<!-- Контейнер всплывающих тост-уведомлений -->
 <div id="toast-container" class="toast-container"></div>
 
-<!-- подключение скриптов приложения -->
-<!-- модули ядра webassembly и виртуальная файловая система idbfs -->
+<!-- Canvas для анимации конфетти при успехе -->
+<canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999; display: none;"></canvas>
+
+
+<!-- Мобильная нижняя панель навигации (на мобильных устройствах <= 768px) -->
+<nav class="mobile-bottom-nav" aria-label="Мобильная навигация">
+    <a class="mob-nav-item active" onclick="switchPage('dashboard', this)" title="Главная">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Главная</span>
+    </a>
+    <a class="mob-nav-item" onclick="switchPage('accounts', this)" title="Счета">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+        <span>Счета</span>
+    </a>
+    <a class="mob-nav-item" onclick="switchPage('transactions', this)" title="Операции">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/></svg>
+        <span>Операции</span>
+    </a>
+    <a class="mob-nav-item" onclick="switchPage('budget', this)" title="Бюджет">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
+        <span>Бюджет</span>
+    </a>
+    <a class="mob-nav-item" onclick="switchPage('analytics', this)" title="Аналитика">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        <span>Аналитика</span>
+    </a>
+</nav>
+
+<!-- Подключение скриптов приложения -->
+<!-- Модули ядра WebAssembly и виртуальная файловая система IDBFS -->
 <script src="assets/wasm/finance_manager.js"></script>
 <script src="assets/js/wasm-loader.js"></script>
 
@@ -2067,16 +2800,15 @@
 <script src="assets/js/pages/analytics.js"></script>
 <script src="assets/js/modals.js"></script>
 
-<!-- полноэкранный canvas для анимации конфетти при успехе -->
-<canvas id="confetti-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99999; display: none;"></canvas>
-
-<!-- регистрация service worker для оффлайн работы и установки pwa -->
+<!-- Регистрация Service Worker для оффлайн работы и PWA -->
 <script>
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('[PWA] Service Worker зарегистрирован:', reg.scope))
-            .catch(err => console.error('[PWA] Ошибка регистрации Service Worker:', err));
+        setTimeout(() => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('[PWA] Service Worker зарегистрирован:', reg.scope))
+                .catch(err => console.error('[PWA] Ошибка регистрации Service Worker:', err));
+        }, 1000);
     });
 }
 </script>

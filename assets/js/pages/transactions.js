@@ -5,19 +5,17 @@ let currentPeriodFilter = 'all';
 
 //отрисовка скелетона во время загрузки данных
 function renderTransactionsSkeleton() {
-    //поиск тела таблицы
     const tbody = document.getElementById('transactions-table');
     if (!tbody) return;
 
-    //генерация временных мерцающих строк
     let skeletonHtml = '';
     for (let i = 0; i < 4; i++) {
         skeletonHtml += `
             <tr class="skeleton-row" style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 16px 8px;"><div class="skeleton skeleton-text" style="width: 80px; height: 14px; margin: 0;"></div></td>
-                <td style="padding: 16px 8px;"><div class="skeleton skeleton-text" style="width: 140px; height: 14px; margin: 0;"></div></td>
-                <td style="padding: 16px 8px;"><div class="skeleton skeleton-text" style="width: 90px; height: 16px; margin: 0;"></div></td>
-                <td style="padding: 16px 8px; width: 40px;"><div class="skeleton skeleton-text" style="width: 20px; height: 14px; margin: 0;"></div></td>
+                <td style="padding: 14px 16px;"><div class="skeleton skeleton-text" style="width: 80px; height: 14px; margin: 0;"></div></td>
+                <td style="padding: 14px 16px;"><div class="skeleton skeleton-text" style="width: 140px; height: 14px; margin: 0;"></div></td>
+                <td style="padding: 14px 16px;"><div class="skeleton skeleton-text" style="width: 90px; height: 16px; margin: 0;"></div></td>
+                <td style="padding: 14px 16px; width: 44px;"><div class="skeleton skeleton-text" style="width: 20px; height: 14px; margin: 0;"></div></td>
             </tr>
         `;
     }
@@ -27,16 +25,9 @@ function renderTransactionsSkeleton() {
 //загрузка списка транзакций из с++
 async function loadTransactions() {
     try {
-        //показ скелетона
         renderTransactionsSkeleton();
-
-        //запрос транзакций из с++ бэкенда
         allTransactions = await windowAPI.getTransactions();
-
-        //заполнение фильтра счетов при первом открытии
         await populateAccountFilter();
-
-        //применение фильтров и отрисовка таблицы
         applyFiltersAndRender();
     } catch (error) {
         console.error("Ошибка загрузки транзакций:", error);
@@ -46,11 +37,9 @@ async function loadTransactions() {
 //заполнение выпадающего списка счетов в панели фильтра
 async function populateAccountFilter() {
     const accSelect = document.getElementById('tx-filter-account');
-    //проверка: заполняем только один раз
     if (!accSelect || accSelect.dataset.loaded) return;
 
     try {
-        //запрос счетов из с++
         const accounts = await windowAPI.getAccounts();
         accSelect.innerHTML = '<option value="all">Все счета</option>';
         accounts.forEach(acc => {
@@ -59,7 +48,6 @@ async function populateAccountFilter() {
             opt.textContent = acc.name;
             accSelect.appendChild(opt);
         });
-        //отметка об успешном заполнении
         accSelect.dataset.loaded = 'true';
     } catch (e) {
         console.error("Ошибка загрузки счетов для фильтра:", e);
@@ -68,7 +56,6 @@ async function populateAccountFilter() {
 
 //фильтрация, сортировка и вызов рендера таблицы
 function applyFiltersAndRender() {
-    //считывание параметров фильтрации и поиска
     const searchInput = document.getElementById('tx-search');
     const typeSelect = document.getElementById('tx-filter-type');
     const accountSelect = document.getElementById('tx-filter-account');
@@ -83,12 +70,9 @@ function applyFiltersAndRender() {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
 
-    //фильтрация массива транзакций
     let filtered = allTransactions.filter(tx => {
-        //фильтр по типу операции
         if (typeFilter !== 'all' && tx.type !== typeFilter) return false;
 
-        //фильтр по периоду дат
         if (currentPeriodFilter !== 'all' && tx.date) {
             const txDate = new Date(tx.date);
             if (currentPeriodFilter === 'this_month') {
@@ -103,14 +87,12 @@ function applyFiltersAndRender() {
             }
         }
 
-        //фильтр по счету списания или зачисления
         if (accountFilter !== 'all') {
             const accId = Number(accountFilter);
             const matchesAccount = (tx.account_id === accId) || (tx.destination_id === accId);
             if (!matchesAccount) return false;
         }
 
-        //поиск по сумме, дате или названию категории
         if (searchQuery) {
             const category = categoriesMap[tx.category_id] || { name: "" };
             const matchesCategory = category.name.toLowerCase().includes(searchQuery);
@@ -122,16 +104,14 @@ function applyFiltersAndRender() {
         return true;
     });
 
-    //сортировка массива
     filtered.sort((a, b) => {
-        if (sortBy === 'date-desc') return b.date.localeCompare(a.date);
-        if (sortBy === 'date-asc') return a.date.localeCompare(b.date);
-        if (sortBy === 'amount-desc') return b.amount - a.amount;
-        if (sortBy === 'amount-asc') return a.amount - b.amount;
+        if (sortBy === 'date-desc') return (b.date || '').localeCompare(a.date || '');
+        if (sortBy === 'date-asc') return (a.date || '').localeCompare(b.date || '');
+        if (sortBy === 'amount-desc') return (b.amount || 0) - (a.amount || 0);
+        if (sortBy === 'amount-asc') return (a.amount || 0) - (b.amount || 0);
         return 0;
     });
 
-    //отрисовка строк в таблице
     renderTransactionsTable(filtered);
 }
 
@@ -141,21 +121,19 @@ function renderTransactionsTable(transactions) {
     const template = document.getElementById('tpl-transaction-row');
     if (!tbody || !template) return;
 
-    //очистка старых строк
     tbody.innerHTML = '';
 
-    //если транзакций нет, вывод пустого состояния
     if (!transactions.length) {
         tbody.innerHTML = `
             <tr class="empty-row">
-                <td colspan="4" style="padding: 32px 0; border: none; background: transparent !important;">
+                <td colspan="4" style="padding: 36px 0; border: none; background: transparent !important;">
                     <div class="empty-state">
                         <div class="empty-state-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                         </div>
                         <h4>Операций не найдено</h4>
-                        <p>По выбранным фильтрам нет подходящих транзакций или список пуст.</p>
-                        <button onclick="openTxModal()" class="btn-primary" style="font-size: 13px; pointer-events: auto;">+ Создать операцию <span class="kbd-hint">[N]</span></button>
+                        <p>По выбранным параметрам нет подходящих записей или список пуст.</p>
+                        <button type="button" onclick="openTxModal()" class="btn-primary" style="font-size: 13px;">+ Создать операцию <span class="kbd-hint">N</span></button>
                     </div>
                 </td>
             </tr>
@@ -163,66 +141,63 @@ function renderTransactionsTable(transactions) {
         return;
     }
 
-    //цикл по транзакциям
-    transactions.forEach((tx, idx) => {
-        //клонирование шаблона строки
+    transactions.forEach((tx) => {
         const clone = template.content.cloneNode(true);
-        const row = clone.querySelector('tr');
-        if (row) {
-            //каскадная анимация появления
-            row.classList.add('animate-cascade');
-            row.style.setProperty('--item-idx', Math.min(idx, 25));
-        }
+        const category = categoriesMap[tx.category_id] || { name: (tx.type === 'transfer' ? 'Перевод' : 'Без категории'), color: "var(--text-title)" };
+        const isInc = tx.type === "income";
+        const isTransfer = tx.type === "transfer";
+        const sign = isInc ? '+' : isTransfer ? '' : '−';
 
-        //получение категории из словаря
-        const category = categoriesMap[tx.category_id] || { name: "-", color: "var(--text-title)" };
-        const sign = tx.type === "income" ? '+' : '-';
-
-        //настройка иконки и типа бейджа
         const badge = clone.querySelector('.tx-badge');
         if (badge) {
-            if (tx.type === 'income') {
+            if (isInc) {
                 badge.className = 'tx-badge income';
                 badge.textContent = '↑';
-            } else if (tx.type === 'expense' || tx.type === 'regular_expense') {
-                badge.className = 'tx-badge expense';
-                badge.textContent = '↓';
-            } else {
+            } else if (isTransfer) {
                 badge.className = 'tx-badge transfer';
                 badge.textContent = '⇄';
+            } else {
+                badge.className = 'tx-badge expense';
+                badge.textContent = '↓';
             }
         }
 
-        //заполнение даты
-        clone.querySelector('.tx-date').textContent = tx.date;
+        let dateFormatted = tx.date || '';
+        if (tx.date && tx.date.length === 10) {
+            const parts = tx.date.split('-');
+            if (parts.length === 3) dateFormatted = `${parts[2]}.${parts[1]}.${parts[0]}`;
+        }
+        clone.querySelector('.tx-date').textContent = dateFormatted;
 
-        //заполнение категории и цвета
         const catCell = clone.querySelector('.tx-category');
         catCell.textContent = category.name;
         catCell.style.color = category.color || 'var(--text-title)';
 
-        //заполнение суммы и валюты
-        const cur = tx.currency;
-        const sym = CURRENCY_SYMBOLS[cur] || cur;
+        const cur = (tx.currency || 'byn').toLowerCase();
+        const sym = CURRENCY_SYMBOLS[cur] || cur.toUpperCase();
         const amountEl = clone.querySelector('.tx-amount');
-        amountEl.textContent = `${sign}${tx.amount.toLocaleString()} ${sym}`;
-        amountEl.style.color = tx.type === 'income' ? 'var(--color-income)' : 'var(--text-title)';
+        amountEl.textContent = `${sign}${Number(tx.amount).toLocaleString()} ${sym}`;
 
-        //обработчик кнопки удаления
+        if (isInc) {
+            amountEl.style.color = 'var(--color-income)';
+        } else if (isTransfer) {
+            amountEl.style.color = 'var(--color-transfer)';
+        } else {
+            amountEl.style.color = 'var(--text-title)';
+        }
+
         clone.querySelector('.tx-delete-btn').onclick = (e) => {
             const tr = e.target.closest('tr');
             handleRemoveTransaction(tx, tr);
         };
 
-        //добавление строки в таблицу
         tbody.appendChild(clone);
     });
 }
 
 //привязка событий кнопок быстрых фильтров (чипсов)
 function initTransactionChips() {
-    //кнопки фильтра по типу
-    const typeButtons = document.querySelectorAll('#tx-type-chips .segmented-btn, #tx-type-chips .filter-chip');
+    const typeButtons = document.querySelectorAll('#tx-type-chips .filter-chip');
     typeButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             typeButtons.forEach(c => c.classList.remove('active'));
@@ -233,8 +208,7 @@ function initTransactionChips() {
         });
     });
 
-    //кнопки фильтра по периоду
-    const periodButtons = document.querySelectorAll('#tx-period-chips .segmented-btn, #tx-period-chips .filter-chip');
+    const periodButtons = document.querySelectorAll('#tx-period-chips .filter-chip');
     periodButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             periodButtons.forEach(c => c.classList.remove('active'));
@@ -245,10 +219,8 @@ function initTransactionChips() {
     });
 }
 
-//инициализация чипсов при загрузке
 initTransactionChips();
 
-//слушатели ввода в поиск и смены выпадающих списков
 document.getElementById('tx-search')?.addEventListener('input', applyFiltersAndRender);
 document.getElementById('tx-filter-type')?.addEventListener('change', applyFiltersAndRender);
 document.getElementById('tx-filter-account')?.addEventListener('change', applyFiltersAndRender);
@@ -256,32 +228,31 @@ document.getElementById('tx-sort')?.addEventListener('change', applyFiltersAndRe
 
 //удаление транзакции с подтверждением
 async function handleRemoveTransaction(tx, row) {
-    //запрос подтверждения у пользователя
     const ok = await showConfirm({
-        title: 'Удаление транзакции',
-        message: 'Удалить эту операцию? Баланс счёта будет пересчитан.',
+        title: 'Удаление операции',
+        message: 'Удалить эту операцию? Баланс привязанного счёта будет пересчитан.',
         confirmText: 'Удалить'
     });
     if (!ok) return;
 
     try {
-        //анимация исчезновения строки таблицы
         if (row) {
-            row.classList.add('row-deleting');
-            await new Promise(r => setTimeout(r, 260));
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(20px)';
+            await new Promise(r => setTimeout(r, 150));
         }
 
-        //вызов удаления транзакции в с++
         await windowAPI.removeTransaction(tx.id);
-
-        //уведомление
         if (typeof showToast === 'function') showToast('Операция удалена', 'info');
 
-        //перезагрузка списка транзакций
         loadTransactions();
+        if (document.getElementById('view-dashboard').style.display === 'block') loadDashboard();
     } catch (e) {
-        if (row) row.classList.remove('row-deleting');
-        console.error("Ошибка удаления: " + e.message);
+        if (row) {
+            row.style.opacity = '1';
+            row.style.transform = 'none';
+        }
+        console.error("Ошибка удаления транзакции:", e);
         if (typeof showToast === 'function') showToast(e.message, 'error');
     }
 }

@@ -1,5 +1,5 @@
 //имя кэша для версионирования статических ресурсов
-const CACHE_NAME = 'finance-manager-v4';
+const CACHE_NAME = 'finance-manager-v5';
 
 //список всех файлов для оффлайн работы приложения
 const STATIC_ASSETS = [
